@@ -812,6 +812,7 @@ limitations under the License.
         {
             Console.WriteLine("");
             Console.WriteLine(" Tone file tool - (c)2020 Team RevvoX");
+            Console.WriteLine("     (build  " + ThisAssembly.Git.SemVer.Major + "." + ThisAssembly.Git.SemVer.Minor + "." + ThisAssembly.Git.SemVer.Patch + "-" + ThisAssembly.Git.Branch + "+" + ThisAssembly.Git.Commit + (ThisAssembly.Git.IsDirty ? ",dirty" : "") + ")");
             Console.WriteLine("--------------------------------------");
             Console.WriteLine("");
             Console.WriteLine("Start with:");
