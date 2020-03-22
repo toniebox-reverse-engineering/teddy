@@ -330,8 +330,10 @@ namespace TonieFile
         private void GenerateAudio(List<string> sourceFiles, uint audioId, int bitRate, bool useVbr, string prefixLocation = null)
         {
             int channels = 2;
-            int samplingRate = 44100;
+            int samplingRate = 48000;
             List<uint> chapters = new List<uint>();
+
+            var outFormat = new WaveFormat(samplingRate, 2);
 
             OpusEncoder encoder = OpusEncoder.Create(48000, 2, OpusApplication.OPUS_APPLICATION_AUDIO);
             encoder.Bitrate = bitRate;
@@ -375,10 +377,11 @@ namespace TonieFile
 
                         Console.Write(" Track " + track.ToString().PadLeft(3) + " - " + shortName + "  [");
 
+
                         /* prepend a audio file for e.g. chapter number */
                         if (prefixLocation != null)
                         {
-                            string prefixFile = Path.Combine(prefixLocation, track + ".mp3");
+                            string prefixFile = Path.Combine(prefixLocation, track.ToString("0000") + ".mp3");
 
                             if(!File.Exists(prefixFile))
                             {
@@ -388,10 +391,11 @@ namespace TonieFile
                             try
                             {
                                 var prefixStream = new Mp3FileReader(prefixFile);
+                                var prefixResampled = new MediaFoundationResampler(prefixStream, outFormat);
 
                                 while (true)
                                 {
-                                    bytesReturned = prefixStream.Read(buffer, 0, buffer.Length);
+                                    bytesReturned = prefixResampled.Read(buffer, 0, buffer.Length);
 
                                     if (bytesReturned <= 0)
                                     {
@@ -416,10 +420,11 @@ namespace TonieFile
 
                         /* then the real audio file */
                         var stream = new Mp3FileReader(sourceFile);
+                        var streamResampled = new MediaFoundationResampler(stream, outFormat);
 
                         while (true)
                         {
-                            bytesReturned = stream.Read(buffer, 0, buffer.Length);
+                            bytesReturned = streamResampled.Read(buffer, 0, buffer.Length);
 
                             if(bytesReturned <= 0)
                             {
