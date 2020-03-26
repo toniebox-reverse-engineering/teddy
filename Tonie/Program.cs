@@ -41,7 +41,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using TonieFile;
 
-namespace Tonie
+namespace Teddy
 {
     class Program
     {
@@ -54,7 +54,6 @@ namespace Tonie
             FormatCSV,
             FormatJSON
         };
-
 
         private class TonieData
         {
@@ -100,7 +99,6 @@ namespace Tonie
                     HttpWebResponse response = (HttpWebResponse)request.GetResponse();
                     TextReader reader = new StreamReader(response.GetResponseStream());
 
-                    //TonieInfos.Tonies = JsonConvert.DeserializeObject<TonieData[]>(reader.ReadToEnd());
                     TonieInfos = JsonConvert.DeserializeObject<TonieData[]>(reader.ReadToEnd());
                 }
                 else if (File.Exists(path))
@@ -202,9 +200,9 @@ namespace Tonie
             }
             catch (OptionException e)
             {
-                Console.Write("Tonie.exe: ");
+                Console.Write("Teddy.exe: ");
                 Console.WriteLine(e.Message);
-                Console.WriteLine("Try `Tonie.exe --help' for more information.");
+                Console.WriteLine("Try `Teddy.exe --help' for more information.");
                 return;
             }
 
@@ -811,15 +809,15 @@ limitations under the License.
         private static void ShowHelp(OptionSet p)
         {
             Console.WriteLine("");
-            Console.WriteLine(" Tone file tool - (c)2020 Team RevvoX");
-            Console.WriteLine("     (build  " + ThisAssembly.Git.SemVer.Major + "." + ThisAssembly.Git.SemVer.Minor + "." + ThisAssembly.Git.SemVer.Patch + "-" + ThisAssembly.Git.Branch + "+" + ThisAssembly.Git.Commit + (ThisAssembly.Git.IsDirty ? ",dirty" : "") + ")");
-            Console.WriteLine("--------------------------------------");
+            Console.WriteLine(" Tonie Encoder Decoder for DIYs - (c)2020 Team RevvoX");
+            Console.WriteLine("------------------------------------------------------");
+            Console.WriteLine("                   (build " + ThisAssembly.Git.SemVer.Major + "." + ThisAssembly.Git.SemVer.Minor + "." + ThisAssembly.Git.SemVer.Patch + "-" + ThisAssembly.Git.Branch + "+" + ThisAssembly.Git.Commit + (ThisAssembly.Git.IsDirty ? ",dirty" : "") + ")");
             Console.WriteLine("");
             Console.WriteLine("Start with:");
-            Console.WriteLine("  Tonie.exe -m decode [options] <toniefile>          - Dump tonie file content");
-            Console.WriteLine("  Tonie.exe -m info [options] <toniefile>            - Show header details");
-            Console.WriteLine("  Tonie.exe -m encode [options] <folder>             - Create a tonie file from all MP3 in this folder");
-            Console.WriteLine("  Tonie.exe -m encode [options] <file1> <file2> ...  - Create a tonie file from specified MP3 files");
+            Console.WriteLine("  Teddy.exe -m decode [options] <toniefile>          - Dump tonie file content");
+            Console.WriteLine("  Teddy.exe -m info [options] <toniefile>            - Show header details");
+            Console.WriteLine("  Teddy.exe -m encode [options] <folder>             - Create a tonie file from all MP3 in this folder");
+            Console.WriteLine("  Teddy.exe -m encode [options] <file1> <file2> ...  - Create a tonie file from specified MP3 files");
             Console.WriteLine("");
             Console.WriteLine("Options:");
             p.WriteOptionDescriptions(Console.Out);

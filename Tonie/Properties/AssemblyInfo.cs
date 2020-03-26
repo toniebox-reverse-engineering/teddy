@@ -5,11 +5,11 @@ using System.Runtime.InteropServices;
 // Allgemeine Informationen über eine Assembly werden über die folgenden
 // Attribute gesteuert. Ändern Sie diese Attributwerte, um die Informationen zu ändern,
 // die einer Assembly zugeordnet sind.
-[assembly: AssemblyTitle("Tonie")]
+[assembly: AssemblyTitle("Teddy")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("Tonie file editor")]
+[assembly: AssemblyProduct("Tonie Encoder Decoder for DIYs")]
 [assembly: AssemblyCopyright("Copyright ©2020 Team RevvoX")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
