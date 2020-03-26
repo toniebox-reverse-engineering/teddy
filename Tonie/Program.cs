@@ -811,7 +811,7 @@ limitations under the License.
             Console.WriteLine("");
             Console.WriteLine(" Tonie Encoder Decoder for DIYs - (c)2020 Team RevvoX");
             Console.WriteLine("------------------------------------------------------");
-            Console.WriteLine("                   (build " + ThisAssembly.Git.SemVer.Major + "." + ThisAssembly.Git.SemVer.Minor + "." + ThisAssembly.Git.SemVer.Patch + "-" + ThisAssembly.Git.Branch + "+" + ThisAssembly.Git.Commit + (ThisAssembly.Git.IsDirty ? ",dirty" : "") + ")");
+            Console.WriteLine("                         (build " + ThisAssembly.Git.SemVer.Major + "." + ThisAssembly.Git.SemVer.Minor + "." + ThisAssembly.Git.SemVer.Patch + "-" + ThisAssembly.Git.Branch + "+" + ThisAssembly.Git.Commit + (ThisAssembly.Git.IsDirty ? ",dirty" : "") + ")");
             Console.WriteLine("");
             Console.WriteLine("Start with:");
             Console.WriteLine("  Teddy.exe -m decode [options] <toniefile>          - Dump tonie file content");
