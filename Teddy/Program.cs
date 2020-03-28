@@ -823,7 +823,7 @@ limitations under the License.
             p.WriteOptionDescriptions(Console.Out);
             Console.WriteLine("");
             Console.WriteLine("Hints:");
-            Console.WriteLine("  Prefix files are files named '1.mp3', '2.mp3', ..., '999.mp3' and will get prepended to the");
+            Console.WriteLine("  Prefix files are files named '0001.mp3', '0002.mp3', ..., '9999.mp3' and will get prepended to the");
             Console.WriteLine("  real track audio data. These are meant to add the track number in front of the file so the");
             Console.WriteLine("  kids know which track number is played right now.");
             Console.WriteLine("");
