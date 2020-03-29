@@ -237,23 +237,41 @@ namespace TonieFile
 
         private void BuildFileList(string[] sources)
         {
-            foreach (var item in sources)
+            foreach (var source in sources)
             {
+                string item = source.Trim('"').Trim(Path.DirectorySeparatorChar);
+
                 if (Directory.Exists(item))
                 {
-                    var filesInDir = Directory.GetFiles(item, "*.mp3");
-                    var fileTuples = filesInDir.Select(f => new Tuple<string, Id3Tag>(f, new Mp3(f, Mp3Permissions.Read).GetAllTags().FirstOrDefault()));
+                    var filesInDir = Directory.GetFiles(item, "*.mp3").OrderBy(n => n).ToArray();
+                    string[] sourceFiles = filesInDir;
+                    bool failed = false;
 
-                    string[] sourceFiles = fileTuples.Where(t => t.Item2 != null).OrderBy(m => m.Item2.Track.Value).Select(t => t.Item1).ToArray();
-
-                    if (sourceFiles.Length < filesInDir.Length)
+                    try
                     {
-                        Console.WriteLine("[INFO] Tried to sort using MP3 tag for track number, but not all");
-                        Console.WriteLine("[INFO] files in this folder have ID3 tags. Using unsorted file list.");
-                        Console.WriteLine("[INFO] Please make sure all files have correct ID3 fields to have them sorted correctly.");
-                        Console.WriteLine("");
+                        var fileTuples = filesInDir.Select(f => new Tuple<string, Id3Tag>(f, new Mp3(f, Mp3Permissions.Read).GetAllTags().FirstOrDefault()));
 
-                        sourceFiles = filesInDir;
+                        sourceFiles = fileTuples.Where(t => t.Item2 != null).OrderBy(m => m.Item2.Track.Value).Select(t => t.Item1).ToArray();
+
+                        if (sourceFiles.Length < filesInDir.Length)
+                        {
+                            failed = true;
+                            sourceFiles = filesInDir;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        failed = true;
+                    }
+
+                    if (failed)
+                    {
+                        Console.WriteLine("[INFO] Tried to sort using MP3 tag for track number, but not all files in");
+                        Console.WriteLine("[INFO] this folder have valid ID3 tags. ");
+                        Console.WriteLine("[INFO] Please make sure all files have correct ID3 fields to have them sorted correctly.");
+                        Console.WriteLine("[INFO] ");
+                        Console.WriteLine("[INFO] Sorting files by their filename.");
+                        Console.WriteLine("");
                     }
 
                     FileList.AddRange(sourceFiles);
@@ -370,8 +388,19 @@ namespace TonieFile
 
                         int lastPct = 0;
                         int snipLen = 15;
-                        var tag = new Mp3(sourceFile, Mp3Permissions.Read).GetAllTags().FirstOrDefault();
-                        string displayName = (tag != null && tag.Title.IsAssigned) ? tag.Title.Value : new FileInfo(sourceFile).Name;
+                        string displayName = new FileInfo(sourceFile).Name;
+                        try
+                        {
+                            var tag = new Mp3(sourceFile, Mp3Permissions.Read).GetAllTags().FirstOrDefault();
+                            if (tag != null && tag.Title.IsAssigned)
+                            {
+                                displayName = tag.Title.Value;
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+
+                        }
 
                         string shortName = displayName.PadRight(snipLen).Substring(0, snipLen);
 
