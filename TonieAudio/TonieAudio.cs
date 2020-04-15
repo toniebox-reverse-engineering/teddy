@@ -362,7 +362,9 @@ namespace TonieFile
                 audioId = (uint)((DateTimeOffset)DateTime.UtcNow).ToUnixTimeSeconds();
             }
 
-            using (MemoryStream outputData = new MemoryStream())
+            string tempName = Path.GetTempFileName();
+
+            using (Stream outputData = new FileStream(tempName,FileMode.OpenOrCreate))
             {
                 byte[] buffer = new byte[2880 * channels * 2];
                 OpusTags tags = new OpusTags();
@@ -375,9 +377,17 @@ namespace TonieFile
 
                 uint lastIndex = 0;
                 int track = 0;
+                bool warned = false;
+                long maxSize = 0x77359400;
 
                 foreach (var sourceFile in sourceFiles)
                 {
+                    if ((outputData.Length + 0x1000) >= maxSize)
+                    {
+                        Console.WriteLine("Error: Close to 2 GiB, aborting");
+                        break;
+                    }
+
                     try
                     {
                         int bytesReturned = 1;
@@ -436,6 +446,10 @@ namespace TonieFile
                                     {
                                         float[] sampleBuffer = ConvertToFloat(buffer, bytesReturned, channels);
 
+                                        if ((outputData.Length + 0x1000 + sampleBuffer.Length) >= maxSize)
+                                        {
+                                            break;
+                                        }
                                         oggOut.WriteSamples(sampleBuffer, 0, sampleBuffer.Length);
                                     }
                                     lastIndex = (uint)oggOut.PageCounter;
@@ -512,18 +526,27 @@ namespace TonieFile
                         Console.WriteLine();
                         throw new Exception("Failed processing " + sourceFile);
                     }
+
+                    if (!warned && outputData.Length >= maxSize / 2)
+                    {
+                        Console.WriteLine("Warning: Approaching 2 GiB, please reduce the bitrate");
+                        warned = true;
+                    }
                 }
 
                 oggOut.Finish();
-                Audio = outputData.ToArray();
-
-                var prov = new SHA1CryptoServiceProvider();
-                Header.Hash = prov.ComputeHash(Audio);
-                Header.AudioChapters = chapters.ToArray();
                 Header.AudioId = oggOut.LogicalStreamId;
-                Header.AudioLength = Audio.Length;
-                Header.Padding = new byte[0];
             }
+
+            Audio = File.ReadAllBytes(tempName);
+
+            var prov = new SHA1CryptoServiceProvider();
+            Header.Hash = prov.ComputeHash(Audio);
+            Header.AudioChapters = chapters.ToArray();
+            Header.AudioLength = Audio.Length;
+            Header.Padding = new byte[0];
+
+            File.Delete(tempName);
         }
 
         private static float ShortToSample(short pcmValue)
