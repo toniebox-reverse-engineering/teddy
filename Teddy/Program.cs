@@ -170,6 +170,17 @@ namespace Teddy
             return string.Concat(filename.Split(Path.GetInvalidFileNameChars()));
         }
 
+        private static string FileChecksum(string filename)
+        {
+            using (var sha = SHA1.Create())
+            {
+                using (var stream = File.OpenRead(filename))
+                {
+                    return BitConverter.ToString(sha.ComputeHash(stream)).Replace("-", "").ToLowerInvariant();
+                }
+            }
+        }
+
         static void Main(string[] args)
         {
             bool showLicense = false;
@@ -194,7 +205,7 @@ namespace Teddy
                 { "vbr",        "Use VBR encoding",                                 r => useVbr = true },
                 { "j|json=",    "Set JSON file/URL with details about tonies",      (string r) => jsonFile = r },
                 { "f|format=",  "Output details as: csv, json or text",             v => { switch(v) { case "csv":  dumpFormat = eDumpFormat.FormatCSV; break; case "json":  dumpFormat = eDumpFormat.FormatJSON; break; case "text":  dumpFormat = eDumpFormat.FormatText; break; } } },
-                { "y",          "really rename files",                              v => { reallyRename = true; } },
+                { "y",          "really rename files, else its a dry run",          v => { reallyRename = true; } },
                 { "v",          "increase debug message verbosity",                 v => { if (v != null) ++Verbosity; } },
                 { "h|help",     "show this message and exit",                       h => showHelp = true },
                 { "license",    "show licenses and disclaimer",                     h => showLicense = true },
@@ -730,17 +741,6 @@ namespace Teddy
                         Console.WriteLine("   Stacktrace: " + e.StackTrace);
                     }
                     break;
-            }
-        }
-
-        private static string FileChecksum(string filename)
-        {
-            using (var sha = SHA1.Create())
-            {
-                using (var stream = File.OpenRead(filename))
-                {
-                    return BitConverter.ToString(sha.ComputeHash(stream)).Replace("-", "").ToLowerInvariant();
-                }
             }
         }
 
