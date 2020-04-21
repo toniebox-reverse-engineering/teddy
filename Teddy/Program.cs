@@ -36,9 +36,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using TonieFile;
 
 namespace Teddy
@@ -165,12 +165,18 @@ namespace Teddy
             return cue.ToString();
         }
 
+        public static string RemoveInvalidChars(string filename)
+        {
+            return string.Concat(filename.Split(Path.GetInvalidFileNameChars()));
+        }
+
         static void Main(string[] args)
         {
             bool showLicense = false;
             bool showHelp = false;
             eDumpFormat dumpFormat = eDumpFormat.FormatText;
             bool useVbr = false;
+            bool reallyRename = false;
             string mode = "";
             string outputLocation = "";
             string prefixLocation = null;
@@ -180,7 +186,7 @@ namespace Teddy
             int bitRate = 96;
 
             var p = new OptionSet {
-                { "m|mode=",    "Operating mode: info, decode, encode",             (string n) => mode = n },
+                { "m|mode=",    "Operating mode: info, decode, encode, rename",     (string n) => mode = n },
                 { "o|output=",  "Location where to write the file(s) to",           (string r) => outputLocation = r },
                 { "p|prefix=",  "Location where to find prefix files",              (string r) => prefixLocation = r },
                 { "i|id=",      "Set AudioID for encoding (default: current time)", (string r) => audioId = r },
@@ -188,6 +194,7 @@ namespace Teddy
                 { "vbr",        "Use VBR encoding",                                 r => useVbr = true },
                 { "j|json=",    "Set JSON file/URL with details about tonies",      (string r) => jsonFile = r },
                 { "f|format=",  "Output details as: csv, json or text",             v => { switch(v) { case "csv":  dumpFormat = eDumpFormat.FormatCSV; break; case "json":  dumpFormat = eDumpFormat.FormatJSON; break; case "text":  dumpFormat = eDumpFormat.FormatText; break; } } },
+                { "y",          "really rename files",                              v => { reallyRename = true; } },
                 { "v",          "increase debug message verbosity",                 v => { if (v != null) ++Verbosity; } },
                 { "h|help",     "show this message and exit",                       h => showHelp = true },
                 { "license",    "show licenses and disclaimer",                     h => showLicense = true },
@@ -225,6 +232,107 @@ namespace Teddy
                 default:
                     ShowHelp(p);
                     return;
+
+                case "rename":
+                    {
+                        Dictionary<string, string> renameList = new Dictionary<string, string>();
+                        List<string> files = new List<string>();
+
+                        if (extra.Count < 2 || (!Directory.Exists(extra[0]) && !Directory.Exists(extra[1])))
+                        {
+                            Console.WriteLine("Error: You must specify a source and a destination directory");
+                            return;
+                        }
+
+                        FindTonieFiles(files, extra[0]);
+
+                        Console.WriteLine(" Scan files...");
+                        foreach (string file in files.ToArray())
+                        {
+                            try
+                            {
+                                TonieAudio dumpFile = TonieAudio.FromFile(file);
+
+                                var found = TonieInfos.Where(t => t.AudioIds.Contains(dumpFile.Header.AudioId));
+                                string destFileName = "(unknown)";
+
+                                if (found.Count() > 0)
+                                {
+                                    var info = found.First();
+                                    destFileName = info.Title;
+                                    if (!string.IsNullOrEmpty(info.Model))
+                                    {
+                                        string destName = extra[1] + Path.DirectorySeparatorChar + info.Model + " - " + dumpFile.Header.AudioId.ToString("X8") + " - " + RemoveInvalidChars(destFileName).Trim();
+                                        renameList.Add(file, destName);
+                                    }
+                                }
+
+                                Console.WriteLine("  '" + file + "' -> '" + destFileName + "'");
+                            }
+                            catch (FileNotFoundException ex)
+                            {
+                                Console.WriteLine("File not found: " + file);
+                            }
+                            catch (InvalidDataException ex)
+                            {
+                                Console.WriteLine("  '" + file + "' -> (corrupt)");
+                            }
+                            catch (Exception e)
+                            {
+                                Console.WriteLine();
+                                Console.WriteLine("[ERROR] Failed to process '" + file + "'");
+                                Console.WriteLine("   Exception:  " + e.GetType());
+                                Console.WriteLine("   Message:    " + e.Message);
+                                Console.WriteLine("   Stacktrace: " + e.StackTrace);
+                            }
+                        }
+
+                        Console.WriteLine("");
+                        Console.WriteLine(" Rename files...");
+                        int renamed = 0;
+                        foreach (var key in renameList.Keys)
+                        {
+                            string dest = renameList[key];
+
+                            Console.WriteLine("  Rename '" + key + "' -> '" + dest + "'");
+                            if (File.Exists(dest))
+                            {
+                                if (FileChecksum(dest) == FileChecksum(key))
+                                {
+                                    Console.WriteLine("    Skipped, destination file content matches");
+                                }
+                                else
+                                {
+                                    Console.WriteLine("    Skipped, destination file already exists but has different content");
+                                }
+                                continue;
+                            }
+
+                            if (reallyRename)
+                            {
+                                var di = new FileInfo(key).Directory;
+
+                                try
+                                {
+                                    File.Move(key, dest);
+                                    renamed++;
+                                    if (di.GetFiles().Length == 0)
+                                    {
+                                        di.Delete();
+                                    }
+                                }
+                                catch (Exception e)
+                                {
+                                    Console.WriteLine("[ERROR] Failed to rename '" + key + "'");
+                                }
+                            }
+                        }
+                        Console.WriteLine("");
+                        Console.WriteLine(" Renamed " + renamed + " files");
+
+                        break;
+                    }
+
 
                 case "info":
                     {
@@ -430,7 +538,7 @@ namespace Teddy
                                 Console.WriteLine("   Message:    " + e.Message);
                                 Console.WriteLine("   Stacktrace: " + e.StackTrace);
                             }
-                            
+
                             if (first)
                             {
                                 first = false;
@@ -625,6 +733,17 @@ namespace Teddy
             }
         }
 
+        private static string FileChecksum(string filename)
+        {
+            using (var sha = SHA1.Create())
+            {
+                using (var stream = File.OpenRead(filename))
+                {
+                    return BitConverter.ToString(sha.ComputeHash(stream)).Replace("-", "").ToLowerInvariant();
+                }
+            }
+        }
+
         private static void ShowLicense(OptionSet p)
         {
             Console.WriteLine();
@@ -802,7 +921,10 @@ limitations under the License.
             }
             foreach (var dir in new DirectoryInfo(v).GetDirectories())
             {
-                FindTonieFiles(files, dir.FullName);
+                if (!dir.Name.StartsWith("."))
+                {
+                    FindTonieFiles(files, dir.FullName);
+                }
             }
         }
 
