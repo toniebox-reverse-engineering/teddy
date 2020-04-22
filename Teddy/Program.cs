@@ -306,7 +306,10 @@ namespace Teddy
                                     if (!string.IsNullOrEmpty(info.Model))
                                     {
                                         string destName = extra[1] + Path.DirectorySeparatorChar + info.Model + " - " + dumpFile.Header.AudioId.ToString("X8") + " - " + RemoveInvalidChars(destFileName).Trim();
-                                        renameList.Add(file, destName);
+                                        if (file != destName)
+                                        {
+                                            renameList.Add(file, destName);
+                                        }
                                     }
                                 }
 
