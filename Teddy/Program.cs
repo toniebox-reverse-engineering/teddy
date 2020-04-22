@@ -290,6 +290,12 @@ namespace Teddy
                             {
                                 TonieAudio dumpFile = TonieAudio.FromFile(file);
 
+                                /* skip creative tonies for now */
+                                if(dumpFile.Header.AudioId > 1)
+                                {
+                                    continue;
+                                }
+
                                 var found = TonieInfos.Where(t => t.AudioIds.Contains(dumpFile.Header.AudioId));
                                 string destFileName = "(unknown)";
 
