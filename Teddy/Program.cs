@@ -57,6 +57,8 @@ namespace Teddy
 
         private class TonieData
         {
+            [JsonProperty("model")]
+            public string Model;
             [JsonProperty("audio_id")]
             public string[] AudioId_;
             [JsonIgnore]
@@ -75,20 +77,24 @@ namespace Teddy
                     return ids.ToArray();
                 }
             }
+            [JsonProperty("hash")]
+            public string[] Hash;
             [JsonProperty("title")]
             public string Title;
+            [JsonProperty("series")]
+            public string Series;
+            [JsonProperty("episodes")]
+            public string Episodes;
             [JsonProperty("tracks")]
             public string[] Tracks;
-            [JsonProperty("model")]
-            public string Model;
+            [JsonProperty("release")]
+            public string Release;
+            [JsonProperty("language")]
+            public string Language;
             [JsonProperty("category")]
             public string Category;
             [JsonProperty("pic")]
             public string Pic;
-            [JsonProperty("pic_crop")]
-            public string PicCrop;
-            [JsonProperty("hash")]
-            public string[] Hash;
         }
 
         public static void LoadJson(string path)
@@ -107,6 +113,20 @@ namespace Teddy
                 {
                     TonieInfos = JsonConvert.DeserializeObject<TonieData[]>(File.ReadAllText(path));
                 }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Failed to load JSON:");
+                Console.WriteLine(e.Message);
+                return;
+            }
+        }
+
+        public static void SaveJson(string path)
+        {
+            try
+            {
+                File.WriteAllText(path, JsonConvert.SerializeObject(TonieInfos, Formatting.Indented));
             }
             catch (Exception e)
             {
@@ -195,6 +215,7 @@ namespace Teddy
             string outputLocation = "";
             string prefixLocation = null;
             string audioId = "";
+            string writeJson = null;
             string jsonFile = "tonies.json";
 
             int bitRate = 96;
@@ -208,6 +229,7 @@ namespace Teddy
                 { "vbr",        "encode: Use VBR encoding",                                 r => useVbr = true },
                 { "y",          "rename: really rename files, else its a dry run",          v => { reallyRename = true; } },
                 { "d",          "rename: delete duplicates",                                v => { deleteDuplicates = true; } },
+                { "w|write=",   "info: write updated json to local file",                   (string v) => { writeJson = v; } },
                 { "j|json=",    "Set JSON file/URL with details about tonies",              (string r) => jsonFile = r },
                 { "f|format=",  "Output details as: csv, json or text",                     v => { switch(v) { case "csv":  dumpFormat = eDumpFormat.FormatCSV; break; case "json":  dumpFormat = eDumpFormat.FormatJSON; break; case "text":  dumpFormat = eDumpFormat.FormatText; break; } } },
                 { "v",          "increase debug message verbosity",                         v => { if (v != null) ++Verbosity; } },
@@ -466,16 +488,16 @@ namespace Teddy
 
                                             string[] titles = null;
                                             var found = TonieInfos.Where(t => t.AudioIds.Contains(dumpFile.Header.AudioId));
+                                            TonieData info = null;
                                             string infoHashString = null;
+                                            int infoIndex = 0;
                                             if (found.Count() > 0)
                                             {
-                                                var info = found.First();
+                                                info = found.First();
                                                 titles = info.Tracks;
-                                                int index = Array.IndexOf(info.AudioIds, dumpFile.Header.AudioId);
-                                                if (index < info.Hash.Length)
-                                                {
-                                                    infoHashString = info.Hash[index];
-                                                }
+                                                infoIndex = Array.IndexOf(info.AudioIds, dumpFile.Header.AudioId);
+                                                Array.Resize(ref info.Hash, info.AudioIds.Length);
+                                                infoHashString = info.Hash[infoIndex];
 
                                                 Console.WriteLine("  Header: JSON Name   '" + info.Title + "'");
                                             }
@@ -486,6 +508,11 @@ namespace Teddy
                                             Console.WriteLine("  Header: AudioLen    0x" + dumpFile.Header.AudioLength.ToString("X8") + " " + (dumpFile.Header.AudioLength == dumpFile.Audio.Length ? "[OK]" : "[INCORRECT]"));
                                             Console.WriteLine("  Header: Checksum    " + hashString + " " + (dumpFile.HashCorrect ? "[OK]" : "[INCORRECT]") + " " + (infoHashString != null ? (infoHashString == hashString ? "[JSON MATCH]" : "[JSON MISMATCH]") : "[NO JSON INFO]"));
                                             Console.WriteLine("  Header: Chapters    ");
+
+                                            if(info != null && infoHashString == null)
+                                            {
+                                                info.Hash[infoIndex] = hashString;
+                                            }
 
                                             TimeSpan prevTime = new TimeSpan();
                                             for (int track = 1; track <= dumpFile.Header.AudioChapters.Length; track++)
@@ -594,6 +621,11 @@ namespace Teddy
                                 break;
                             case eDumpFormat.FormatText:
                                 break;
+                        }
+
+                        if(writeJson != null)
+                        {
+                            SaveJson(writeJson);
                         }
                         break;
                     }
@@ -943,9 +975,10 @@ limitations under the License.
         {
             foreach (var file in new DirectoryInfo(v).GetFiles())
             {
-                if (file.Name == "500304E0")
+                /* search for original tonie files or those we renamed */
+                if (file.Name == "500304E0" || Regex.Matches(file.Name, @"[A-Za-z0-9-]+ - [A-F0-9]+ - .*").Count == 1)
                 {
-                    files.Add(v + Path.DirectorySeparatorChar + "500304E0");
+                    files.Add(v + Path.DirectorySeparatorChar + file.Name);
                 }
             }
             foreach (var dir in new DirectoryInfo(v).GetDirectories())
