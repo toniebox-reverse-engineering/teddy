@@ -190,6 +190,7 @@ namespace Teddy
             eDumpFormat dumpFormat = eDumpFormat.FormatText;
             bool useVbr = false;
             bool reallyRename = false;
+            bool deleteDuplicates = false;
             string mode = "";
             string outputLocation = "";
             string prefixLocation = null;
@@ -199,18 +200,19 @@ namespace Teddy
             int bitRate = 96;
 
             var p = new OptionSet {
-                { "m|mode=",    "Operating mode: info, decode, encode, rename",     (string n) => mode = n },
-                { "o|output=",  "Location where to write the file(s) to",           (string r) => outputLocation = r },
-                { "p|prefix=",  "Location where to find prefix files",              (string r) => prefixLocation = r },
-                { "i|id=",      "Set AudioID for encoding (default: current time)", (string r) => audioId = r },
-                { "b|bitrate=", "Set opus bit rate (default: "+bitRate+" kbps)",    (int r) => bitRate = r },
-                { "vbr",        "Use VBR encoding",                                 r => useVbr = true },
-                { "j|json=",    "Set JSON file/URL with details about tonies",      (string r) => jsonFile = r },
-                { "f|format=",  "Output details as: csv, json or text",             v => { switch(v) { case "csv":  dumpFormat = eDumpFormat.FormatCSV; break; case "json":  dumpFormat = eDumpFormat.FormatJSON; break; case "text":  dumpFormat = eDumpFormat.FormatText; break; } } },
-                { "y",          "really rename files, else its a dry run",          v => { reallyRename = true; } },
-                { "v",          "increase debug message verbosity",                 v => { if (v != null) ++Verbosity; } },
-                { "h|help",     "show this message and exit",                       h => showHelp = true },
-                { "license",    "show licenses and disclaimer",                     h => showLicense = true },
+                { "m|mode=",    "Operating mode: info, decode, encode, rename",             (string n) => mode = n },
+                { "o|output=",  "Location where to write the file(s) to",                   (string r) => outputLocation = r },
+                { "p|prefix=",  "encode: Location where to find prefix files",              (string r) => prefixLocation = r },
+                { "i|id=",      "encode: Set AudioID for encoding (default: current time)", (string r) => audioId = r },
+                { "b|bitrate=", "encode: Set opus bit rate (default: "+bitRate+" kbps)",    (int r) => bitRate = r },
+                { "vbr",        "encode: Use VBR encoding",                                 r => useVbr = true },
+                { "y",          "rename: really rename files, else its a dry run",          v => { reallyRename = true; } },
+                { "d",          "rename: delete duplicates",                                v => { deleteDuplicates = true; } },
+                { "j|json=",    "Set JSON file/URL with details about tonies",              (string r) => jsonFile = r },
+                { "f|format=",  "Output details as: csv, json or text",                     v => { switch(v) { case "csv":  dumpFormat = eDumpFormat.FormatCSV; break; case "json":  dumpFormat = eDumpFormat.FormatJSON; break; case "text":  dumpFormat = eDumpFormat.FormatText; break; } } },
+                { "v",          "increase debug message verbosity",                         v => { if (v != null) ++Verbosity; } },
+                { "h|help",     "show this message and exit",                               h => showHelp = true },
+                { "license",    "show licenses and disclaimer",                             h => showLicense = true },
             };
 
             List<string> extra;
@@ -312,7 +314,24 @@ namespace Teddy
                             {
                                 if (FileChecksum(dest) == FileChecksum(key))
                                 {
-                                    Console.WriteLine("    Skipped, destination file content matches");
+                                    if (deleteDuplicates)
+                                    {
+                                        if (reallyRename)
+                                        {
+                                            var di = new FileInfo(key).Directory;
+                                            File.Delete(key);
+                                            renamed++;
+                                            if (di.GetFiles().Length == 0)
+                                            {
+                                                di.Delete();
+                                            }
+                                        }
+                                    }
+                                    else
+                                    {
+
+                                        Console.WriteLine("    Skipped, destination file content matches");
+                                    }
                                 }
                                 else
                                 {

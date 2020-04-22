@@ -173,6 +173,7 @@ namespace TonieFile
                 highestGranule = Math.Max(highestGranule, granule);
                 lastGranule = granule;
             }
+            file.Close();
         }
 
         public ulong[] ParsePositions()
@@ -214,6 +215,7 @@ namespace TonieFile
                 curPos += 0x1000;
             }
 
+            file.Close();
             return positions.ToArray();
         }
 
@@ -305,6 +307,8 @@ namespace TonieFile
             {
                 throw new InvalidDataException();
             }
+
+            file.Close();
 
             FileContent = buffer;
             ParseBuffer();
