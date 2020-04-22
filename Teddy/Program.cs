@@ -291,7 +291,7 @@ namespace Teddy
                                 TonieAudio dumpFile = TonieAudio.FromFile(file);
 
                                 /* skip creative tonies for now */
-                                if(dumpFile.Header.AudioId > 1)
+                                if(dumpFile.Header.AudioId == 1)
                                 {
                                     continue;
                                 }
