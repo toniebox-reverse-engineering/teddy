@@ -293,6 +293,7 @@ namespace Teddy
                                 /* skip creative tonies for now */
                                 if(dumpFile.Header.AudioId == 1)
                                 {
+                                    Console.WriteLine("  '" + file + "' -> '(creative)'");
                                     continue;
                                 }
 
