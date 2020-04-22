@@ -87,6 +87,8 @@ namespace Teddy
             public string Pic;
             [JsonProperty("pic_crop")]
             public string PicCrop;
+            [JsonProperty("hash")]
+            public string[] Hash;
         }
 
         public static void LoadJson(string path)
@@ -445,17 +447,25 @@ namespace Teddy
 
                                             string[] titles = null;
                                             var found = TonieInfos.Where(t => t.AudioIds.Contains(dumpFile.Header.AudioId));
+                                            string infoHashString = null;
                                             if (found.Count() > 0)
                                             {
                                                 var info = found.First();
                                                 titles = info.Tracks;
+                                                int index = Array.IndexOf(info.AudioIds, dumpFile.Header.AudioId);
+                                                if (index < info.Hash.Length)
+                                                {
+                                                    infoHashString = info.Hash[index];
+                                                }
 
                                                 Console.WriteLine("  Header: JSON Name   '" + info.Title + "'");
                                             }
+                                            string hashString = BitConverter.ToString(dumpFile.Header.Hash).Replace("-", "");
+
                                             Console.WriteLine("  Header: Length      0x" + dumpFile.HeaderLength.ToString("X8") + " " + ((dumpFile.HeaderLength != 0xFFC) ? " [WARNING: EXTRA DATA]" : "[OK]"));
                                             Console.WriteLine("  Header: Padding     0x" + dumpFile.Header.Padding.Length.ToString("X8"));
                                             Console.WriteLine("  Header: AudioLen    0x" + dumpFile.Header.AudioLength.ToString("X8") + " " + (dumpFile.Header.AudioLength == dumpFile.Audio.Length ? "[OK]" : "[INCORRECT]"));
-                                            Console.WriteLine("  Header: Checksum    " + BitConverter.ToString(dumpFile.Header.Hash).Replace("-", "") + " " + (dumpFile.HashCorrect ? "[OK]" : "[INCORRECT]"));
+                                            Console.WriteLine("  Header: Checksum    " + hashString + " " + (dumpFile.HashCorrect ? "[OK]" : "[INCORRECT]") + " " + (infoHashString != null ? (infoHashString == hashString ? "[JSON MATCH]" : "[JSON MISMATCH]") : "[NO JSON INFO]"));
                                             Console.WriteLine("  Header: Chapters    ");
 
                                             TimeSpan prevTime = new TimeSpan();
