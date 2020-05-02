@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Concentus.Oggfile", "Concen
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ID3", "ID3\ID3.csproj", "{123B448A-3042-43C1-AA5D-2FCD0443A71D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TeddyBench", "TeddyBench\TeddyBench.csproj", "{797C9F84-CF24-4371-B6E0-01D69321F191}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug (Release Settings)|Any CPU = Debug (Release Settings)|Any CPU
@@ -83,6 +85,18 @@ Global
 		{123B448A-3042-43C1-AA5D-2FCD0443A71D}.Release|Any CPU.Build.0 = Release|Any CPU
 		{123B448A-3042-43C1-AA5D-2FCD0443A71D}.Release|x64.ActiveCfg = Release|Any CPU
 		{123B448A-3042-43C1-AA5D-2FCD0443A71D}.Release|x64.Build.0 = Release|Any CPU
+		{797C9F84-CF24-4371-B6E0-01D69321F191}.Debug (Release Settings)|Any CPU.ActiveCfg = Debug (Release settings)|Any CPU
+		{797C9F84-CF24-4371-B6E0-01D69321F191}.Debug (Release Settings)|Any CPU.Build.0 = Debug (Release settings)|Any CPU
+		{797C9F84-CF24-4371-B6E0-01D69321F191}.Debug (Release Settings)|x64.ActiveCfg = Release|Any CPU
+		{797C9F84-CF24-4371-B6E0-01D69321F191}.Debug (Release Settings)|x64.Build.0 = Release|Any CPU
+		{797C9F84-CF24-4371-B6E0-01D69321F191}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{797C9F84-CF24-4371-B6E0-01D69321F191}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{797C9F84-CF24-4371-B6E0-01D69321F191}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{797C9F84-CF24-4371-B6E0-01D69321F191}.Debug|x64.Build.0 = Debug|Any CPU
+		{797C9F84-CF24-4371-B6E0-01D69321F191}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{797C9F84-CF24-4371-B6E0-01D69321F191}.Release|Any CPU.Build.0 = Release|Any CPU
+		{797C9F84-CF24-4371-B6E0-01D69321F191}.Release|x64.ActiveCfg = Release|Any CPU
+		{797C9F84-CF24-4371-B6E0-01D69321F191}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
