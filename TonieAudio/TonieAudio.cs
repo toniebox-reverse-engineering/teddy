@@ -39,7 +39,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
-using System.Text;
 using static TonieFile.ProtoCoder;
 
 namespace TonieFile
@@ -89,7 +88,7 @@ namespace TonieFile
 
         public ulong GetGranuleByPage(uint page)
         {
-            if(PageGranuleMap.ContainsKey(page))
+            if (PageGranuleMap.ContainsKey(page))
             {
                 return PageGranuleMap[page];
             }
@@ -373,7 +372,7 @@ namespace TonieFile
 
             string tempName = Path.GetTempFileName();
 
-            using (Stream outputData = new FileStream(tempName,FileMode.OpenOrCreate))
+            using (Stream outputData = new FileStream(tempName, FileMode.OpenOrCreate))
             {
                 byte[] buffer = new byte[2880 * channels * 2];
                 OpusTags tags = new OpusTags();
@@ -431,7 +430,7 @@ namespace TonieFile
                         {
                             string prefixFile = Path.Combine(prefixLocation, track.ToString("0000") + ".mp3");
 
-                            if(!File.Exists(prefixFile))
+                            if (!File.Exists(prefixFile))
                             {
                                 throw new FileNotFoundException("Missing prefix file '" + prefixFile + "'");
                             }
@@ -464,7 +463,7 @@ namespace TonieFile
                                     lastIndex = (uint)oggOut.PageCounter;
                                 }
                             }
-                            catch(Exception ex)
+                            catch (Exception ex)
                             {
                                 throw new Exception("Failed processing prefix file '" + prefixFile + "'");
                             }
@@ -478,7 +477,7 @@ namespace TonieFile
                         {
                             bytesReturned = streamResampled.Read(buffer, 0, buffer.Length);
 
-                            if(bytesReturned <= 0)
+                            if (bytesReturned <= 0)
                             {
                                 break;
                             }
@@ -515,7 +514,7 @@ namespace TonieFile
                         Console.WriteLine("]");
                         stream.Close();
                     }
-                    catch(OpusOggWriteStream.PaddingException e)
+                    catch (OpusOggWriteStream.PaddingException e)
                     {
                         Console.WriteLine();
                         throw new EncodingException("Failed to pad opus data properly. Please try CBR with bitrates a multiple of 24 kbps");

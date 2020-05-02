@@ -293,7 +293,7 @@ namespace Teddy
                                 TonieAudio dumpFile = TonieAudio.FromFile(file);
 
                                 /* skip creative tonies for now */
-                                if(dumpFile.Header.AudioId == 1)
+                                if (dumpFile.Header.AudioId == 1)
                                 {
                                     Console.WriteLine("  '" + file + "' -> '(creative)'");
                                     continue;
@@ -308,7 +308,7 @@ namespace Teddy
                                     destFileName = info.Title;
                                     if (!string.IsNullOrEmpty(info.Model))
                                     {
-                                        string destName = extra[1] + Path.DirectorySeparatorChar + info.Model + " - " + dumpFile.Header.AudioId.ToString("X8") + " - " + RemoveInvalidChars(destFileName).Trim();
+                                        string destName = Path.Combine(extra[1], info.Model + " - " + dumpFile.Header.AudioId.ToString("X8") + " - " + RemoveInvalidChars(destFileName).Trim());
                                         if (file != destName)
                                         {
                                             renameList.Add(file, destName);
@@ -521,7 +521,7 @@ namespace Teddy
                                             Console.WriteLine("  Header: Checksum    " + hashString + " " + (dumpFile.HashCorrect ? "[OK]" : "[INCORRECT]") + " " + (infoHashString != null ? (infoHashString == hashString ? "[JSON MATCH]" : "[JSON MISMATCH]") : "[NO JSON INFO]"));
                                             Console.WriteLine("  Header: Chapters    ");
 
-                                            if(info != null && infoHashString == null)
+                                            if (info != null && infoHashString == null)
                                             {
                                                 info.Hash[infoIndex] = hashString;
                                             }
@@ -635,7 +635,7 @@ namespace Teddy
                                 break;
                         }
 
-                        if(writeJson != null)
+                        if (writeJson != null)
                         {
                             SaveJson(writeJson);
                         }
@@ -686,7 +686,7 @@ namespace Teddy
                                     Console.WriteLine("Error: Output directory '" + outDirectory + "' does not exist");
                                     return;
                                 }
-                                string outFile = outDirectory + Path.DirectorySeparatorChar + inFile;
+                                string outFile = Path.Combine(outDirectory, inFile);
 
                                 try
                                 {
@@ -773,7 +773,7 @@ namespace Teddy
                         }
                         else
                         {
-                            outFile = outLocationEncode + Path.DirectorySeparatorChar + "500304E0";
+                            outFile = Path.Combine(outLocationEncode, "500304E0");
                         }
 
                         TonieAudio generated = new TonieAudio(extra.ToArray(), id, bitRate * 1000, useVbr, prefixLocation);
@@ -990,7 +990,7 @@ limitations under the License.
                 /* search for original tonie files or those we renamed */
                 if (file.Name == "500304E0" || Regex.Matches(file.Name, @"[A-Za-z0-9-]+ - [A-F0-9]+ - .*").Count == 1)
                 {
-                    files.Add(v + Path.DirectorySeparatorChar + file.Name);
+                    files.Add(Path.Combine(v, file.Name));
                 }
             }
             foreach (var dir in new DirectoryInfo(v).GetDirectories())
