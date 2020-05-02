@@ -962,6 +962,7 @@ namespace TeddyBench
 
         private void exitToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            StopThreads();
             Application.Exit();
         }
     }
