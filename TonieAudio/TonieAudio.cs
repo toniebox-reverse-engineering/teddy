@@ -229,10 +229,10 @@ namespace TonieFile
             BuildFromFiles(FileList, audioId, bitRate, useVbr, prefixLocation);
         }
 
-        public static TonieAudio FromFile(string file)
+        public static TonieAudio FromFile(string file, bool readAudio = true)
         {
             TonieAudio audio = new TonieAudio();
-            audio.ReadFile(file);
+            audio.ReadFile(file, readAudio);
 
             return audio;
         }
@@ -293,7 +293,7 @@ namespace TonieFile
             }
         }
 
-        public void ReadFile(string fileName)
+        public void ReadFile(string fileName, bool readAudio = true)
         {
             Filename = fileName;
             var file = File.OpenRead(fileName);
@@ -301,16 +301,21 @@ namespace TonieFile
             {
                 throw new InvalidDataException();
             }
-            byte[] buffer = new byte[file.Length];
+
+            long len = file.Length;
+            if (!readAudio)
+            {
+                len = 4096;
+            }
+            byte[] buffer = new byte[len];
 
             if (file.Read(buffer, 0, buffer.Length) != buffer.Length)
             {
                 throw new InvalidDataException();
             }
+            FileContent = buffer;
 
             file.Close();
-
-            FileContent = buffer;
             ParseBuffer();
             CalculateStatistics(out _, out _, out _, out _, out _, out _, out _);
         }
@@ -589,7 +594,6 @@ namespace TonieFile
 
             Array.Copy(FileContent, 4, protoBuf, 0, protoBufLength);
             Array.Copy(FileContent, protoBufLength + 4, payload, 0, payloadLength);
-
 
             var coder = new ProtoCoder();
             FileHeader header = coder.Deserialize<FileHeader>(protoBuf);
