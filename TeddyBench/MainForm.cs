@@ -37,7 +37,7 @@ namespace TeddyBench
         private static TonieData[] TonieInfos;
         private static Dictionary<string, string> CustomTonies = new Dictionary<string, string>();
         private ListViewItem LastSelectediItem = null;
-        private string TitleString => "TeddyBench - " + Assembly.GetExecutingAssembly().GetName().Version.ToString();
+        private string TitleString => "TeddyBench (beta) - " + Assembly.GetExecutingAssembly().GetName().Version.ToString();
 
 
         public class TonieData
