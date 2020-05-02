@@ -959,5 +959,10 @@ namespace TeddyBench
             (listView1.ListViewItemSorter as ListViewItemComparer).Characteristic = cmbSorting.SelectedIndex;
             listView1.Sort();
         }
+
+        private void exitToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Application.Exit();
+        }
     }
 }
