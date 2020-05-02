@@ -57,6 +57,8 @@ namespace Teddy
 
         private class TonieData
         {
+            [JsonProperty("no")]
+            public int SortNumber;
             [JsonProperty("model")]
             public string Model;
             [JsonProperty("audio_id")]
