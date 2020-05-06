@@ -10,6 +10,7 @@ using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Http.Headers;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -37,7 +38,7 @@ namespace TeddyBench
         private static TonieData[] TonieInfos;
         private static Dictionary<string, string> CustomTonies = new Dictionary<string, string>();
         private ListViewItem LastSelectediItem = null;
-        private string TitleString => "TeddyBench (beta) - " + Application.ProductVersion + (ThisAssembly.Git.IsDirty ? ",dirty" : "");
+        private string TitleString => "TeddyBench (beta) - " + GetVersion();
 
 
         public class TonieData
@@ -229,12 +230,12 @@ namespace TeddyBench
         {
             InitializeComponent();
 
-            listView1.LargeImageList = new ImageList();
-            listView1.LargeImageList.ImageSize = new Size(128, 128);
-            listView1.LargeImageList.ColorDepth = ColorDepth.Depth32Bit;
-            listView1.LargeImageList.Images.Add("unknown", ResizeImage(Resources.unknown, 128, 128));
-            listView1.LargeImageList.Images.Add("custom", ResizeImage(Resources.unknown, 128, 128));
-            listView1.ListViewItemSorter = new ListViewItemComparer(2);
+            lstTonies.LargeImageList = new ImageList();
+            lstTonies.LargeImageList.ImageSize = new Size(128, 128);
+            lstTonies.LargeImageList.ColorDepth = ColorDepth.Depth32Bit;
+            lstTonies.LargeImageList.Images.Add("unknown", ResizeImage(Resources.unknown, 128, 128));
+            lstTonies.LargeImageList.Images.Add("custom", ResizeImage(Resources.unknown, 128, 128));
+            lstTonies.ListViewItemSorter = new ListViewItemComparer(2);
             cmbSorting.SelectedIndex = 2;
             Text = TitleString;
 
@@ -437,7 +438,7 @@ namespace TeddyBench
                 Enabled = true;
                 txtLog.Visible = false;
                 grpCardContent.Visible = true;
-                listView1.Items.Clear();
+                lstTonies.Items.Clear();
                 RegisteredItems.Clear();
 
                 try
@@ -454,9 +455,9 @@ namespace TeddyBench
                             item.Tag = tag;
                             item.Text = tag.Uid;
                             item.ImageKey = "unknown";
-                            item.Group = listView1.Groups[3];
+                            item.Group = lstTonies.Groups[3];
 
-                            listView1.Items.Add(item);
+                            lstTonies.Items.Add(item);
 
                             RegisteredItems.Add(item.Tag as ListViewTag, item);
                         }
@@ -465,7 +466,7 @@ namespace TeddyBench
                 catch (Exception ex)
                 {
                 }
-                listView1.Sort();
+                lstTonies.Sort();
             }
 
             StartAnalyzeThread();
@@ -521,7 +522,7 @@ namespace TeddyBench
                                     {
                                         tonieName = info.Model + " - " + tonieName;
                                     }
-                                    if (!string.IsNullOrEmpty(info.Pic) && !listView1.LargeImageList.Images.ContainsKey(hash))
+                                    if (!string.IsNullOrEmpty(info.Pic) && !lstTonies.LargeImageList.Images.ContainsKey(hash))
                                     {
                                         HttpWebRequest request = (HttpWebRequest)WebRequest.Create(info.Pic);
                                         HttpWebResponse response = (HttpWebResponse)request.GetResponse();
@@ -529,7 +530,7 @@ namespace TeddyBench
 
                                         this.BeginInvoke(new Action(() =>
                                         {
-                                            listView1.LargeImageList.Images.Add(hash, img);
+                                            lstTonies.LargeImageList.Images.Add(hash, img);
                                         }));
                                     }
                                     image = hash;
@@ -791,7 +792,7 @@ namespace TeddyBench
 
             StopAnalyzeThread();
 
-            if (listView1.SelectedItems.Count > 1)
+            if (lstTonies.SelectedItems.Count > 1)
             {
                 switch (MessageBox.Show("Delete all selected files?", "Delete files?", MessageBoxButtons.YesNoCancel))
                 {
@@ -805,7 +806,7 @@ namespace TeddyBench
                 }
             }
 
-            foreach (ListViewItem item in listView1.SelectedItems)
+            foreach (ListViewItem item in lstTonies.SelectedItems)
             {
                 ListViewTag tag = item.Tag as ListViewTag;
                 string current = item.Text;
@@ -835,9 +836,9 @@ namespace TeddyBench
 
         private void listView1_DoubleClick(object sender, EventArgs e)
         {
-            if (listView1.SelectedItems.Count == 1)
+            if (lstTonies.SelectedItems.Count == 1)
             {
-                ListViewItem item = listView1.SelectedItems[0];
+                ListViewItem item = lstTonies.SelectedItems[0];
 
                 ListViewTag tag = item.Tag as ListViewTag;
                 var fi = new FileInfo(tag.FileName);
@@ -881,27 +882,27 @@ namespace TeddyBench
 
         private void listView1_KeyDown(object sender, KeyEventArgs e)
         {
-            if (e.KeyData == Keys.F2 && listView1.SelectedItems.Count > 0)
+            if (e.KeyData == Keys.F2 && lstTonies.SelectedItems.Count > 0)
             {
-                if (listView1.SelectedItems[0].ImageKey == "custom")
+                if (lstTonies.SelectedItems[0].ImageKey == "custom")
                 {
-                    listView1.SelectedItems[0].BeginEdit();
+                    lstTonies.SelectedItems[0].BeginEdit();
                 }
             }
         }
 
         private void listView1_Click(object sender, EventArgs e)
         {
-            if (listView1.SelectedItems.Count == 1)
+            if (lstTonies.SelectedItems.Count == 1)
             {
-                if (listView1.SelectedItems[0] == LastSelectediItem)
+                if (lstTonies.SelectedItems[0] == LastSelectediItem)
                 {
-                    if (listView1.SelectedItems[0].ImageKey == "custom")
+                    if (lstTonies.SelectedItems[0].ImageKey == "custom")
                     {
                         LastSelectediItem.BeginEdit();
                     }
                 }
-                LastSelectediItem = listView1.SelectedItems[0];
+                LastSelectediItem = lstTonies.SelectedItems[0];
             }
         }
 
@@ -915,7 +916,7 @@ namespace TeddyBench
 
         private void listView1_AfterLabelEdit(object sender, LabelEditEventArgs e)
         {
-            ListViewItem item = listView1.Items[e.Item];
+            ListViewItem item = lstTonies.Items[e.Item];
             ListViewTag tag = item.Tag as ListViewTag;
 
             if (e.Label == null)
@@ -934,36 +935,132 @@ namespace TeddyBench
 
         private void cmbSorting_SelectedIndexChanged(object sender, EventArgs e)
         {
-            foreach (ListViewItem item in listView1.Items)
+            foreach (ListViewItem item in lstTonies.Items)
             {
                 if (cmbSorting.SelectedIndex == 3)
                 {
                     switch (item.ImageKey)
                     {
                         case "unknown":
-                            item.Group = listView1.Groups[0];
+                            item.Group = lstTonies.Groups[0];
                             break;
                         case "custom":
-                            item.Group = listView1.Groups[1];
+                            item.Group = lstTonies.Groups[1];
                             break;
                         default:
-                            item.Group = listView1.Groups[2];
+                            item.Group = lstTonies.Groups[2];
                             break;
                     }
                 }
                 else
                 {
-                    item.Group = listView1.Groups[3];
+                    item.Group = lstTonies.Groups[3];
                 }
             }
-            (listView1.ListViewItemSorter as ListViewItemComparer).Characteristic = cmbSorting.SelectedIndex;
-            listView1.Sort();
+            (lstTonies.ListViewItemSorter as ListViewItemComparer).Characteristic = cmbSorting.SelectedIndex;
+            lstTonies.Sort();
         }
 
         private void exitToolStripMenuItem_Click(object sender, EventArgs e)
         {
             StopThreads();
             Application.Exit();
+        }
+
+        private void btnSave_Click(object sender, EventArgs e)
+        {
+            bool saveAll = false;
+
+            if (lstTonies.SelectedItems.Count > 1)
+            {
+                switch (MessageBox.Show("Save all selected files?", "Save audio content?", MessageBoxButtons.YesNoCancel))
+                {
+                    case DialogResult.Cancel:
+                        return;
+                    case DialogResult.Yes:
+                        saveAll = true;
+                        break;
+                    case DialogResult.No:
+                        break;
+                }
+            }
+            FolderBrowserDialog dlg = new FolderBrowserDialog();
+
+            if (dlg.ShowDialog() == DialogResult.OK)
+            {
+                string outputLocation = dlg.SelectedPath;
+
+                MessageBox.Show("You are about to export audio content of the tonie files on your SD card. " + 
+                    "Please *do not* share these files as they can contain information which can be used to identify you. " +  
+                    "Also be aware that sharing these files is most likely illegal in your country.", "Legal information", MessageBoxButtons.OK);
+
+                foreach (ListViewItem item in lstTonies.SelectedItems)
+                {
+                    ListViewTag tag = item.Tag as ListViewTag;
+                    string current = item.Text;
+
+                    if (!saveAll)
+                    {
+                        if (MessageBox.Show("Save '" + current + "'?", "Save audio content?", MessageBoxButtons.YesNo) == DialogResult.No)
+                        {
+                            continue;
+                        }
+                    }
+                    try
+                    {
+                        string file = tag.FileName;
+
+                        TonieAudio dump = TonieAudio.FromFile(file);
+
+                        string[] titles = null;
+                        List<string> tags = new List<string>();
+                        tags.Add("TeddyVersion=" + GetVersion());
+                        tags.Add("TeddyFile=" + file);
+
+                        string hashString = BitConverter.ToString(dump.Header.Hash).Replace("-", "");
+                        var found = TonieInfos.Where(t => t.Hash.Contains(hashString));
+                        if (found.Count() > 0)
+                        {
+                            TonieData info = found.First();
+                            titles = info.Tracks;
+                            tags.Add("ALBUM=" + info.Title);
+                            tags.Add("ARTIST=" + info.Series);
+                            tags.Add("LANGUAGE=" + info.Language);
+                        }
+                        tags.Add("HASH=" + hashString);
+
+                        string inFile = new FileInfo(file).Name;
+                        string inDir = new FileInfo(file).DirectoryName;
+                        string outDirectory = !string.IsNullOrEmpty(outputLocation) ? outputLocation : inDir;
+
+                        if (!Directory.Exists(outDirectory))
+                        {
+                            Console.WriteLine("Error: Output directory '" + outDirectory + "' does not exist");
+                            return;
+                        }
+
+                        try
+                        {
+                            dump.DumpAudioFiles(outDirectory, inFile, false, tags.ToArray(), titles);
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine("[ERROR] Failed to write .ogg/.cue'");
+                            Console.WriteLine("   Message:    " + ex.Message);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show("Failed to save file '" + tag.FileName + "'");
+                        return;
+                    }
+                }
+            }
+        }
+
+        private string GetVersion()
+        {
+            return Application.ProductVersion + (ThisAssembly.Git.IsDirty ? ",dirty" : "");
         }
     }
 }

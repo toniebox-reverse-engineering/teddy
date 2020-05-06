@@ -36,6 +36,7 @@
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.openDirectoryToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.grpCardContent = new System.Windows.Forms.GroupBox();
@@ -43,12 +44,12 @@
             this.splitContainer2 = new System.Windows.Forms.SplitContainer();
             this.label1 = new System.Windows.Forms.Label();
             this.cmbSorting = new System.Windows.Forms.ComboBox();
-            this.listView1 = new System.Windows.Forms.ListView();
+            this.lstTonies = new System.Windows.Forms.ListView();
             this.columnHeader1 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.btnSave = new System.Windows.Forms.Button();
             this.btnDelete = new System.Windows.Forms.Button();
             this.btnAdd = new System.Windows.Forms.Button();
             this.txtLog = new System.Windows.Forms.TextBox();
-            this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.grpCardContent.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
@@ -84,9 +85,16 @@
             // openDirectoryToolStripMenuItem
             // 
             this.openDirectoryToolStripMenuItem.Name = "openDirectoryToolStripMenuItem";
-            this.openDirectoryToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.openDirectoryToolStripMenuItem.Size = new System.Drawing.Size(154, 22);
             this.openDirectoryToolStripMenuItem.Text = "&Open Directory";
             this.openDirectoryToolStripMenuItem.Click += new System.EventHandler(this.openDirectoryToolStripMenuItem_Click);
+            // 
+            // exitToolStripMenuItem
+            // 
+            this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
+            this.exitToolStripMenuItem.Size = new System.Drawing.Size(154, 22);
+            this.exitToolStripMenuItem.Text = "E&xit";
+            this.exitToolStripMenuItem.Click += new System.EventHandler(this.exitToolStripMenuItem_Click);
             // 
             // helpToolStripMenuItem
             // 
@@ -131,10 +139,11 @@
             // 
             // splitContainer1.Panel2
             // 
+            this.splitContainer1.Panel2.Controls.Add(this.btnSave);
             this.splitContainer1.Panel2.Controls.Add(this.btnDelete);
             this.splitContainer1.Panel2.Controls.Add(this.btnAdd);
             this.splitContainer1.Size = new System.Drawing.Size(788, 401);
-            this.splitContainer1.SplitterDistance = 693;
+            this.splitContainer1.SplitterDistance = 678;
             this.splitContainer1.TabIndex = 1;
             // 
             // splitContainer2
@@ -153,8 +162,8 @@
             // 
             // splitContainer2.Panel2
             // 
-            this.splitContainer2.Panel2.Controls.Add(this.listView1);
-            this.splitContainer2.Size = new System.Drawing.Size(693, 401);
+            this.splitContainer2.Panel2.Controls.Add(this.lstTonies);
+            this.splitContainer2.Size = new System.Drawing.Size(678, 401);
             this.splitContainer2.SplitterDistance = 25;
             this.splitContainer2.TabIndex = 1;
             // 
@@ -182,11 +191,11 @@
             this.cmbSorting.TabIndex = 0;
             this.cmbSorting.SelectedIndexChanged += new System.EventHandler(this.cmbSorting_SelectedIndexChanged);
             // 
-            // listView1
+            // lstTonies
             // 
-            this.listView1.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
+            this.lstTonies.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
             this.columnHeader1});
-            this.listView1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.lstTonies.Dock = System.Windows.Forms.DockStyle.Fill;
             listViewGroup1.Header = "Unknown";
             listViewGroup1.Name = "Unknown";
             listViewGroup2.Header = "Custom";
@@ -195,36 +204,46 @@
             listViewGroup3.Name = "Retail";
             listViewGroup4.Header = "";
             listViewGroup4.Name = "listViewGroup1";
-            this.listView1.Groups.AddRange(new System.Windows.Forms.ListViewGroup[] {
+            this.lstTonies.Groups.AddRange(new System.Windows.Forms.ListViewGroup[] {
             listViewGroup1,
             listViewGroup2,
             listViewGroup3,
             listViewGroup4});
-            this.listView1.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.None;
-            this.listView1.HideSelection = false;
-            this.listView1.LabelEdit = true;
-            this.listView1.Location = new System.Drawing.Point(0, 0);
-            this.listView1.Name = "listView1";
-            this.listView1.ShowItemToolTips = true;
-            this.listView1.Size = new System.Drawing.Size(693, 372);
-            this.listView1.TabIndex = 0;
-            this.listView1.TileSize = new System.Drawing.Size(64, 64);
-            this.listView1.UseCompatibleStateImageBehavior = false;
-            this.listView1.AfterLabelEdit += new System.Windows.Forms.LabelEditEventHandler(this.listView1_AfterLabelEdit);
-            this.listView1.ItemSelectionChanged += new System.Windows.Forms.ListViewItemSelectionChangedEventHandler(this.listView1_ItemSelectionChanged);
-            this.listView1.Click += new System.EventHandler(this.listView1_Click);
-            this.listView1.DoubleClick += new System.EventHandler(this.listView1_DoubleClick);
-            this.listView1.KeyDown += new System.Windows.Forms.KeyEventHandler(this.listView1_KeyDown);
+            this.lstTonies.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.None;
+            this.lstTonies.HideSelection = false;
+            this.lstTonies.LabelEdit = true;
+            this.lstTonies.Location = new System.Drawing.Point(0, 0);
+            this.lstTonies.Name = "lstTonies";
+            this.lstTonies.ShowItemToolTips = true;
+            this.lstTonies.Size = new System.Drawing.Size(678, 372);
+            this.lstTonies.TabIndex = 0;
+            this.lstTonies.TileSize = new System.Drawing.Size(64, 64);
+            this.lstTonies.UseCompatibleStateImageBehavior = false;
+            this.lstTonies.AfterLabelEdit += new System.Windows.Forms.LabelEditEventHandler(this.listView1_AfterLabelEdit);
+            this.lstTonies.ItemSelectionChanged += new System.Windows.Forms.ListViewItemSelectionChangedEventHandler(this.listView1_ItemSelectionChanged);
+            this.lstTonies.Click += new System.EventHandler(this.listView1_Click);
+            this.lstTonies.DoubleClick += new System.EventHandler(this.listView1_DoubleClick);
+            this.lstTonies.KeyDown += new System.Windows.Forms.KeyEventHandler(this.listView1_KeyDown);
             // 
             // columnHeader1
             // 
             this.columnHeader1.Text = "Product Name";
             // 
+            // btnSave
+            // 
+            this.btnSave.Location = new System.Drawing.Point(4, 61);
+            this.btnSave.Name = "btnSave";
+            this.btnSave.Size = new System.Drawing.Size(96, 23);
+            this.btnSave.TabIndex = 1;
+            this.btnSave.Text = "Save as .ogg...";
+            this.btnSave.UseVisualStyleBackColor = true;
+            this.btnSave.Click += new System.EventHandler(this.btnSave_Click);
+            // 
             // btnDelete
             // 
             this.btnDelete.Location = new System.Drawing.Point(4, 32);
             this.btnDelete.Name = "btnDelete";
-            this.btnDelete.Size = new System.Drawing.Size(84, 23);
+            this.btnDelete.Size = new System.Drawing.Size(96, 23);
             this.btnDelete.TabIndex = 0;
             this.btnDelete.Text = "Delete...";
             this.btnDelete.UseVisualStyleBackColor = true;
@@ -232,9 +251,9 @@
             // 
             // btnAdd
             // 
-            this.btnAdd.Location = new System.Drawing.Point(3, 3);
+            this.btnAdd.Location = new System.Drawing.Point(4, 3);
             this.btnAdd.Name = "btnAdd";
-            this.btnAdd.Size = new System.Drawing.Size(84, 23);
+            this.btnAdd.Size = new System.Drawing.Size(96, 23);
             this.btnAdd.TabIndex = 0;
             this.btnAdd.Text = "Add...";
             this.btnAdd.UseVisualStyleBackColor = true;
@@ -252,13 +271,6 @@
             this.txtLog.Size = new System.Drawing.Size(800, 426);
             this.txtLog.TabIndex = 1;
             this.txtLog.Visible = false;
-            // 
-            // exitToolStripMenuItem
-            // 
-            this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
-            this.exitToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
-            this.exitToolStripMenuItem.Text = "E&xit";
-            this.exitToolStripMenuItem.Click += new System.EventHandler(this.exitToolStripMenuItem_Click);
             // 
             // TeddyMain
             // 
@@ -299,7 +311,7 @@
         private System.Windows.Forms.Button btnDelete;
         private System.Windows.Forms.Button btnAdd;
         private System.Windows.Forms.ColumnHeader columnHeader1;
-        private System.Windows.Forms.ListView listView1;
+        private System.Windows.Forms.ListView lstTonies;
         private System.Windows.Forms.ToolStripMenuItem helpToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem aboutToolStripMenuItem;
         private System.Windows.Forms.TextBox txtLog;
@@ -307,6 +319,7 @@
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.ComboBox cmbSorting;
         private System.Windows.Forms.ToolStripMenuItem exitToolStripMenuItem;
+        private System.Windows.Forms.Button btnSave;
     }
 }
 

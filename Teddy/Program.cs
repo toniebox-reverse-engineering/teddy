@@ -36,6 +36,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Runtime.InteropServices;
+using System.Runtime.Remoting.Messaging;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -213,6 +215,7 @@ namespace Teddy
             bool useVbr = false;
             bool reallyRename = false;
             bool deleteDuplicates = false;
+            bool singleOgg = false;
             string mode = "";
             string outputLocation = "";
             string prefixLocation = null;
@@ -229,6 +232,7 @@ namespace Teddy
                 { "i|id=",      "encode: Set AudioID for encoding (default: current time)", (string r) => audioId = r },
                 { "b|bitrate=", "encode: Set opus bit rate (default: "+bitRate+" kbps)",    (int r) => bitRate = r },
                 { "vbr",        "encode: Use VBR encoding",                                 r => useVbr = true },
+                { "s",          "decode: Export as single .ogg file",                       r => singleOgg = true },
                 { "y",          "rename: really rename files, else its a dry run",          v => { reallyRename = true; } },
                 { "d",          "rename: delete duplicates",                                v => { deleteDuplicates = true; } },
                 { "w|write=",   "info: write updated json to local file",                   (string v) => { writeJson = v; } },
@@ -499,7 +503,8 @@ namespace Teddy
                                             Console.WriteLine("  Header: AudioID     0x" + dumpFile.Header.AudioId.ToString("X8") + " (" + date.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss") + ")");
 
                                             string[] titles = null;
-                                            var found = TonieInfos.Where(t => t.AudioIds.Contains(dumpFile.Header.AudioId));
+                                            string hashString = BitConverter.ToString(dumpFile.Header.Hash).Replace("-", "");
+                                            var found = TonieInfos.Where(t => t.Hash.Contains(hashString));
                                             TonieData info = null;
                                             string infoHashString = null;
                                             int infoIndex = 0;
@@ -513,7 +518,6 @@ namespace Teddy
 
                                                 Console.WriteLine("  Header: JSON Name   '" + info.Title + "'");
                                             }
-                                            string hashString = BitConverter.ToString(dumpFile.Header.Hash).Replace("-", "");
 
                                             Console.WriteLine("  Header: Length      0x" + dumpFile.HeaderLength.ToString("X8") + " " + ((dumpFile.HeaderLength != 0xFFC) ? " [WARNING: EXTRA DATA]" : "[OK]"));
                                             Console.WriteLine("  Header: Padding     0x" + dumpFile.Header.Padding.Length.ToString("X8"));
@@ -675,8 +679,26 @@ namespace Teddy
                         {
                             try
                             {
-                                Console.WriteLine("Dumping '" + file + "'");
                                 TonieAudio dump2 = TonieAudio.FromFile(file);
+
+                                string[] titles = null;
+                                List<string> tags = new List<string>();
+                                tags.Add("TeddyVersion=" + GetVersion());
+                                tags.Add("TeddyFile=" + file);
+
+                                string hashString = BitConverter.ToString(dump2.Header.Hash).Replace("-", "");
+                                var found = TonieInfos.Where(t => t.Hash.Contains(hashString));
+                                TonieData info = null;
+                                if (found.Count() > 0)
+                                {
+                                    info = found.First();
+                                    titles = info.Tracks;
+                                    tags.Add("ALBUM=" + info.Title);
+                                    tags.Add("ARTIST=" + info.Series);
+                                    tags.Add("LANGUAGE=" + info.Language);
+                                }
+                                tags.Add("HASH=" + hashString);
+
                                 string inFile = new FileInfo(file).Name;
                                 string inDir = new FileInfo(file).DirectoryName;
                                 string outDirectory = !string.IsNullOrEmpty(outputLocation) ? outputLocation : inDir;
@@ -686,19 +708,16 @@ namespace Teddy
                                     Console.WriteLine("Error: Output directory '" + outDirectory + "' does not exist");
                                     return;
                                 }
-                                string outFile = Path.Combine(outDirectory, inFile);
 
                                 try
                                 {
-                                    File.WriteAllBytes(outFile + ".ogg", dump2.Audio);
-                                    File.WriteAllText(outFile + ".cue", BuildCueSheet(dump2), Encoding.UTF8);
+                                    dump2.DumpAudioFiles(outDirectory, inFile, singleOgg, tags.ToArray(), titles);
                                 }
                                 catch (Exception ex)
                                 {
-                                    Console.WriteLine("[ERROR] Failed to write file '" + outFile + ".occ/.cue'");
+                                    Console.WriteLine("[ERROR] Failed to write .ogg/.cue'");
                                     Console.WriteLine("   Message:    " + ex.Message);
                                 }
-                                Console.WriteLine("Written content to " + outFile + ".ogg/.cue");
                             }
                             catch (FileNotFoundException ex)
                             {
@@ -988,7 +1007,7 @@ limitations under the License.
             foreach (var file in new DirectoryInfo(v).GetFiles())
             {
                 /* search for original tonie files or those we renamed */
-                if (file.Name == "500304E0" || Regex.Matches(file.Name, @"[A-Za-z0-9-]+ - [A-F0-9]+ - .*").Count == 1)
+                if (file.Name.EndsWith("0304E0") || Regex.Matches(file.Name, @"[A-Za-z0-9-]+ - [A-F0-9]+ - .*").Count == 1)
                 {
                     files.Add(Path.Combine(v, file.Name));
                 }
@@ -1007,7 +1026,7 @@ limitations under the License.
             Console.WriteLine("");
             Console.WriteLine(" Tonie Encoder Decoder for DIYs - (c)2020 Team RevvoX");
             Console.WriteLine("------------------------------------------------------");
-            Console.WriteLine("                         (build " + ThisAssembly.Git.SemVer.Major + "." + ThisAssembly.Git.SemVer.Minor + "." + ThisAssembly.Git.SemVer.Patch + "-" + ThisAssembly.Git.Branch + "+" + ThisAssembly.Git.Commit + (ThisAssembly.Git.IsDirty ? ",dirty" : "") + ")");
+            Console.WriteLine("                         (build " + GetVersion() + ")");
             Console.WriteLine("");
             Console.WriteLine("Start with:");
             Console.WriteLine("  Teddy.exe -m decode [options] <toniefile>          - Dump tonie file content");
@@ -1024,6 +1043,11 @@ limitations under the License.
             Console.WriteLine("  kids know which track number is played right now.");
             Console.WriteLine("");
             Console.WriteLine("  As JSON file you could specify also a link like e.g. http://gt-blog.de/JSON/tonies.json");
+        }
+
+        private static string GetVersion()
+        {
+            return ThisAssembly.Git.SemVer.Major + "." + ThisAssembly.Git.SemVer.Minor + "." + ThisAssembly.Git.SemVer.Patch + "-" + ThisAssembly.Git.Branch + "+" + ThisAssembly.Git.Commit + (ThisAssembly.Git.IsDirty ? ",dirty" : "");
         }
     }
 }

@@ -38,7 +38,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Security.Cryptography;
+using System.Text;
 using static TonieFile.ProtoCoder;
 
 namespace TonieFile
@@ -612,5 +614,398 @@ namespace TonieFile
             Audio = payload;
             Header = header;
         }
+
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
+        private struct OggPageHeader
+        {
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]
+            public byte[] Header;
+            public byte Version;
+            public byte Type;
+            public ulong GranulePosition;
+            public uint BitstreamSerialNumber;
+            public uint PageSequenceNumber;
+            public uint Checksum;
+            public byte PageSegments;
+        }
+
+        private class OggPage
+        {
+            public OggPageHeader Header;
+            public byte SegmentTableLength => (byte)SegmentTable.Length;
+            public int TotalSegmentLengths => Segments.Sum(s => s.Length);
+            public byte[] SegmentTable
+            {
+                get
+                {
+                    int lengthBytes = Segments.Length + Segments.Sum(s => s.Length / 0xFF);
+                    byte[] table = new byte[lengthBytes];
+
+                    int tableIndex = 0;
+                    for (int pos = 0; pos < Segments.Length; pos++)
+                    {
+                        int len = Segments[pos].Length;
+
+                        while (len >= 0xFF)
+                        {
+                            table[tableIndex++] = 0xFF;
+                            len -= 0xFF;
+                        }
+                        table[tableIndex++] = (byte)len;
+                    }
+                    return table;
+                }
+            }
+            public byte[][] Segments;
+            public int Size;
+
+            public class Crc
+            {
+                const uint CRC32_POLY = 0x04c11db7;
+                static uint[] crcTable = new uint[256];
+
+                static Crc()
+                {
+                    for (uint i = 0; i < 256; i++)
+                    {
+                        uint s = i << 24;
+                        for (int j = 0; j < 8; ++j)
+                        {
+                            s = (s << 1) ^ (s >= (1U << 31) ? CRC32_POLY : 0);
+                        }
+                        crcTable[i] = s;
+                    }
+                }
+
+                uint _crc;
+
+                public Crc()
+                {
+                    Reset();
+                }
+
+                public void Reset()
+                {
+                    _crc = 0U;
+                }
+
+                public void Update(byte nextVal)
+                {
+                    _crc = (_crc << 8) ^ crcTable[nextVal ^ (_crc >> 24)];
+                }
+
+                public void Update(byte[] buf)
+                {
+                    foreach (byte val in buf)
+                    {
+                        Update(val);
+                    }
+                }
+
+                public bool Test(uint checkCrc)
+                {
+                    return _crc == checkCrc;
+                }
+
+                public uint Value
+                {
+                    get
+                    {
+                        return _crc;
+                    }
+                }
+            }
+
+            public OggPage()
+            {
+            }
+
+            public OggPage(OggPage src)
+            {
+                Header = src.Header;
+                Size = src.Size;
+                Segments = new byte[src.Segments.Length][];
+                for (int pos = 0; pos < Segments.Length; pos++)
+                {
+                    Segments[pos] = new byte[src.Segments[pos].Length];
+                    Array.Copy(src.Segments[pos], Segments[pos], Segments[pos].Length);
+                }
+            }
+
+            public void Write(Stream outFile)
+            {
+                UpdateHeader();
+                WriteInternal(outFile);
+            }
+
+            private void UpdateHeader()
+            {
+                MemoryStream memStream = new MemoryStream();
+
+                Header.PageSegments = SegmentTableLength;
+                Header.Checksum = 0;
+                WriteInternal(memStream);
+
+                OggPage.Crc crc = new OggPage.Crc();
+                crc.Update(memStream.ToArray());
+
+                Header.Checksum = crc.Value;
+                Size = (int)memStream.Length;
+            }
+
+            private void WriteInternal(Stream stream)
+            {
+                byte[] data = StructureToByteArray(Header);
+
+                stream.Write(data, 0, data.Length);
+                stream.Write(SegmentTable, 0, SegmentTable.Length);
+
+                foreach (var seg in Segments)
+                {
+                    stream.Write(seg, 0, seg.Length);
+                }
+            }
+        }
+
+        public void DumpAudioFiles(string outDirectory, string inFile, bool singleOgg, string[] tags, string[] titles)
+        {
+            int hdrOffset = 0;
+            OggPage[] metaPages = GetOggHeaders(ref hdrOffset);
+            AddTags(metaPages, tags);
+
+            if (singleOgg)
+            {
+                string outFile = Path.Combine(outDirectory, inFile);
+
+                File.WriteAllBytes(outFile + ".ogg", Audio);
+                //File.WriteAllText(outFile + ".cue", BuildCueSheet(tonie), Encoding.UTF8);
+            }
+            else
+            {
+                for (int chapter = 0; chapter < Header.AudioChapters.Length; chapter++)
+                {
+                    string fileName = Path.Combine(outDirectory, inFile + " - Track #" + (chapter + 1) + ".ogg");
+                    FileStream outFile = File.Open(fileName, FileMode.Create, FileAccess.Write);
+                    OggPage[] metaPagesTrack = metaPages.Select(p => new OggPage(p)).ToArray();
+
+                    if (titles != null && chapter < titles.Length)
+                    {
+                        string[] trackTags = new[] { "TITLE=" + titles[chapter] };
+                        AddTags(metaPagesTrack, trackTags);
+                    }
+
+                    foreach (OggPage page in metaPagesTrack)
+                    {
+                        page.Write(outFile);
+                    }
+
+                    int offset = Math.Max(0, (int)(0x1000 * (Header.AudioChapters[chapter] - 2)));
+                    int endOffset = int.MaxValue;
+
+                    if (chapter + 1 < Header.AudioChapters.Length)
+                    {
+                        endOffset = Math.Max(0, (int)(0x1000 * (Header.AudioChapters[chapter + 1] - 2)));
+                    }
+
+                    bool done = false;
+                    ulong granuleStart = ulong.MaxValue;
+                    uint pageStart = uint.MaxValue;
+                    while (!done)
+                    {
+                        OggPage page = GetOggPage(ref offset);
+
+                        if (page == null)
+                        {
+                            break;
+                        }
+
+                        /* reached the end of this chapter? */
+                        if (offset >= endOffset || offset >= Audio.Length)
+                        {
+                            /* set EOS flag */
+                            page.Header.Type = 4;
+                            done = true;
+                        }
+
+                        /* do not write meta headers again. only applies to first chapter */
+                        if (!IsMeta(page))
+                        {
+                            /* set granule position relative to chapter start */
+                            if (granuleStart == ulong.MaxValue)
+                            {
+                                granuleStart = page.Header.GranulePosition;
+                                pageStart = page.Header.PageSequenceNumber;
+                            }
+
+                            page.Header.GranulePosition -= granuleStart;
+                            page.Header.PageSequenceNumber -= pageStart;
+                            page.Header.PageSequenceNumber += 2;
+
+
+                            page.Write(outFile);
+                        }
+                    }
+
+                    outFile.Close();
+                }
+            }
+        }
+
+
+        private static byte[] StructureToByteArray(object obj)
+        {
+            int len = Marshal.SizeOf(obj);
+            byte[] arr = new byte[len];
+            IntPtr ptr = Marshal.AllocHGlobal(len);
+            Marshal.StructureToPtr(obj, ptr, true);
+            Marshal.Copy(ptr, arr, 0, len);
+            Marshal.FreeHGlobal(ptr);
+
+            return arr;
+        }
+
+        private static void ByteArrayToStructure<T>(byte[] bytearray, int offset, ref T obj)
+        {
+            int len = Marshal.SizeOf(obj);
+            IntPtr i = Marshal.AllocHGlobal(len);
+            Marshal.Copy(bytearray, offset, i, len);
+            obj = (T)Marshal.PtrToStructure(i, typeof(T));
+            Marshal.FreeHGlobal(i);
+        }
+
+        private void AddTags(OggPage[] pages, string[] tags)
+        {
+            foreach(OggPage header in pages)
+            {
+                if (IsMetaType(header, "OpusTags"))
+                {
+                    uint entryPos = 8 + 4 + GetUint(header.Segments[0], 8);
+                    foreach (string tag in tags)
+                    {
+                        byte[] tagBytes = Encoding.UTF8.GetBytes(tag);
+                        byte[] append = new byte[4 + tagBytes.Length];
+
+                        WriteUint(append, 0, (uint)tagBytes.Length);
+
+                        Array.Copy(tagBytes, 0, append, 4, tagBytes.Length);
+                        Array.Resize(ref header.Segments[0], header.Segments[0].Length + append.Length);
+
+                        Array.Copy(append, 0, header.Segments[0], header.Segments[0].Length - append.Length, append.Length);
+
+                        WriteUint(header.Segments[0], entryPos, GetUint(header.Segments[0], entryPos) + 1);
+                    }
+                }
+            }
+        }
+
+        private OggPage[] GetOggHeaders(ref int offset)
+        {
+            List<OggPage> headers = new List<OggPage>();
+            bool done = false;
+
+            while (!done)
+            {
+                int curOffset = offset;
+                OggPage header = GetOggPage(ref curOffset);
+
+                if (header.Segments.Length < 1)
+                {
+                    done = true;
+                }
+
+                if (IsMeta(header))
+                {
+                    headers.Add(header);
+                    offset = curOffset;
+                }
+                else
+                {
+                    done = true;
+                }
+            }
+
+            return headers.ToArray();
+        }
+
+        private static void WriteUint(byte[] buf, uint pos, uint value)
+        {
+            buf[pos + 0] = (byte)value;
+            buf[pos + 1] = (byte)(value >> 8);
+            buf[pos + 2] = (byte)(value >> 16);
+            buf[pos + 3] = (byte)(value >> 24);
+        }
+
+        private static uint GetUint(byte[] buf, uint pos)
+        {
+            return (uint)buf[pos] | ((uint)buf[pos + 1] << 8) | ((uint)buf[pos + 2] << 16) | ((uint)buf[pos + 3] << 24);
+        }
+
+        private static bool IsMetaType(OggPage header, string type)
+        {
+            return Encoding.UTF8.GetString(header.Segments[0], 0, 8) == type;
+        }
+
+        private static bool IsMeta(OggPage header)
+        {
+            switch (Encoding.UTF8.GetString(header.Segments[0], 0, 8))
+            {
+                case "OpusHead":
+                case "OpusTags":
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
+        private OggPage GetOggPage(ref int offset)
+        {
+            OggPageHeader hdr = new OggPageHeader();
+            OggPage page = new OggPage();
+            int pageSize = 0;
+            ByteArrayToStructure(Audio, offset, ref hdr);
+
+            if (hdr.Header[0] != 'O' || hdr.Header[1] != 'g' || hdr.Header[2] != 'g' || hdr.Header[3] != 'S')
+            {
+                return null;
+            }
+
+            page.Header = hdr;
+            pageSize += Marshal.SizeOf(hdr);
+
+            page.Segments = new byte[0][];
+
+            /* where will the segment data start */
+            int segmentDataPos = pageSize + hdr.PageSegments;
+            /* position in page segment table */
+            int pageSegTablePos = 0;
+            /* logical number of the segment */
+            int pageSegNum = 0;
+            while (pageSegTablePos < hdr.PageSegments)
+            {
+                int lenEntry = Audio[offset + pageSize];
+                int len = lenEntry;
+                pageSize++;
+                pageSegTablePos++;
+
+                while (lenEntry == 0xFF)
+                {
+                    lenEntry = Audio[offset + pageSize];
+                    len += lenEntry;
+                    pageSize++;
+                    pageSegTablePos++;
+                }
+                Array.Resize(ref page.Segments, pageSegNum + 1);
+                page.Segments[pageSegNum] = new byte[len];
+                Array.Copy(Audio, offset + segmentDataPos, page.Segments[pageSegNum], 0, len);
+                segmentDataPos += page.Segments[pageSegNum].Length;
+                pageSegNum++;
+            }
+
+            page.Size = segmentDataPos;
+            offset += segmentDataPos;
+
+            return page;
+        }
+
     }
 }
