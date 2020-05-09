@@ -767,7 +767,7 @@ namespace TonieFile
             }
         }
 
-        public void DumpAudioFiles(string outDirectory, string inFile, bool singleOgg, string[] tags, string[] titles)
+        public void DumpAudioFiles(string outDirectory, string outFileName, bool singleOgg, string[] tags, string[] titles)
         {
             int hdrOffset = 0;
             OggPage[] metaPages = GetOggHeaders(ref hdrOffset);
@@ -775,7 +775,7 @@ namespace TonieFile
 
             if (singleOgg)
             {
-                string outFile = Path.Combine(outDirectory, inFile);
+                string outFile = Path.Combine(outDirectory, outFileName);
 
                 File.WriteAllBytes(outFile + ".ogg", Audio);
                 //File.WriteAllText(outFile + ".cue", BuildCueSheet(tonie), Encoding.UTF8);
@@ -784,7 +784,7 @@ namespace TonieFile
             {
                 for (int chapter = 0; chapter < Header.AudioChapters.Length; chapter++)
                 {
-                    string fileName = Path.Combine(outDirectory, inFile + " - Track #" + (chapter + 1) + ".ogg");
+                    string fileName = Path.Combine(outDirectory, outFileName + " - Track #" + (chapter + 1) + ".ogg");
                     FileStream outFile = File.Open(fileName, FileMode.Create, FileAccess.Write);
                     OggPage[] metaPagesTrack = metaPages.Select(p => new OggPage(p)).ToArray();
 

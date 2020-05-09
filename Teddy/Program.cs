@@ -221,7 +221,7 @@ namespace Teddy
             string prefixLocation = null;
             string audioId = "";
             string writeJson = null;
-            string jsonFile = "tonies.json";
+            string jsonFile = "http://gt-blog.de/JSON/tonies.json?source=Teddy&version=" + ThisAssembly.Git.BaseTag;
 
             int bitRate = 96;
 
@@ -711,7 +711,7 @@ namespace Teddy
 
                                 try
                                 {
-                                    dump2.DumpAudioFiles(outDirectory, inFile, singleOgg, tags.ToArray(), titles);
+                                    dump2.DumpAudioFiles(outDirectory, inFile + "-" + dump2.Header.AudioId.ToString("X8"), singleOgg, tags.ToArray(), titles);
                                 }
                                 catch (Exception ex)
                                 {

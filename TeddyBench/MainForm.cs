@@ -1,4 +1,6 @@
-﻿using Newtonsoft.Json;
+﻿using GitHubUpdate;
+using Newtonsoft.Json;
+using Octokit;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -18,6 +20,7 @@ using System.Threading;
 using System.Windows.Forms;
 using TeddyBench.Properties;
 using TonieFile;
+using Application = System.Windows.Forms.Application;
 
 namespace TeddyBench
 {
@@ -30,6 +33,7 @@ namespace TeddyBench
         private Thread EncodeThread = null;
         private Thread LogThread;
         private bool LogThreadStop;
+        private Thread UpdateCheckThread = null;
 
         private string CurrentDirectory = null;
         private bool AutoOpenDrive = true;
@@ -38,6 +42,7 @@ namespace TeddyBench
         private static TonieData[] TonieInfos;
         private static Dictionary<string, string> CustomTonies = new Dictionary<string, string>();
         private ListViewItem LastSelectediItem = null;
+
         private string TitleString => "TeddyBench (beta) - " + GetVersion();
 
 
@@ -180,7 +185,7 @@ namespace TeddyBench
             {
                 try
                 {
-                    HttpWebRequest request = (HttpWebRequest)WebRequest.Create("http://gt-blog.de/JSON/tonies.json?source=TeddyBench");
+                    HttpWebRequest request = (HttpWebRequest)WebRequest.Create("http://gt-blog.de/JSON/tonies.json?source=TeddyBench&version=" + ThisAssembly.Git.BaseTag);
                     HttpWebResponse response = (HttpWebResponse)request.GetResponse();
                     TextReader reader = new StreamReader(response.GetResponseStream());
                     string content = reader.ReadToEnd();
@@ -242,8 +247,39 @@ namespace TeddyBench
             LoadJson();
             StartThreads();
 
+            UpdateCheckThread = new Thread(UpdateCheck);
+            UpdateCheckThread.Start();
+
             AllowDrop = true;
         }
+
+        public async void UpdateCheck()
+        {
+            try
+            {
+                Thread.Sleep(2000);
+                UpdateChecker checker = new UpdateChecker("toniebox-reverse-engineering", "teddy", ThisAssembly.Git.BaseTag);
+
+                UpdateType type = await checker.CheckUpdate();
+
+                if (type == UpdateType.None)
+                {
+                    return;
+                }
+                BeginInvoke(new Action(() =>
+                {
+                    UpdateNotifyDialog dlg = new UpdateNotifyDialog(checker);
+                    if (dlg.ShowDialog() == DialogResult.Yes)
+                    {
+                        checker.DownloadAsset("TeddyBench.zip");
+                    }
+                }));
+            }
+            catch(Exception ex)
+            {
+            }
+        }
+
 
         protected override void OnDragEnter(DragEventArgs e)
         {
@@ -279,6 +315,12 @@ namespace TeddyBench
                 ScanCardThread = null;
             }
             StopAnalyzeThread();
+            if (UpdateCheckThread != null)
+            {
+                UpdateCheckThread.Join(100);
+                UpdateCheckThread.Abort();
+                UpdateCheckThread = null;
+            }
             if (EncodeThread != null)
             {
                 EncodeThread.Join(100);
@@ -853,13 +895,24 @@ namespace TeddyBench
                     string newDir = Path.Combine(CurrentDirectory, ReverseUid(uid).Substring(0, 8));
                     string newFile = Path.Combine(newDir, ReverseUid(uid).Substring(8, 8));
 
+                    if(new FileInfo(newFile).FullName == fi.FullName)
+                    {
+                        return;
+                    }
+
+                    if (new FileInfo(newFile).Exists)
+                    {
+                        MessageBox.Show("Failed to assign UID '" + uid + "' as this file already exists", "Re-assigning UID failed");
+                        return;
+                    }
+
                     try
                     {
                         Directory.CreateDirectory(newDir);
                     }
                     catch (Exception ex)
                     {
-                        MessageBox.Show("Failed to create directory '" + newDir + "'");
+                        MessageBox.Show("Failed to create directory '" + newDir + "'", "Re-assigning UID failed");
                         return;
                     }
 
@@ -867,11 +920,18 @@ namespace TeddyBench
                     {
                         DirectoryInfo oldDir = fi.Directory;
                         fi.MoveTo(newFile);
-                        oldDir.Delete();
+                        if (oldDir.EnumerateFiles().Count() != 0 || (oldDir.EnumerateDirectories().Count() != 0))
+                        {
+                            MessageBox.Show("Success. Will not delete directory '" + oldDir.FullName + "' as it is not empty.", "Successfully re-assigned UID");
+                        }
+                        else
+                        {
+                            oldDir.Delete();
+                        }
                     }
                     catch (Exception ex)
                     {
-                        MessageBox.Show("Failed to write file '" + newFile + "'");
+                        MessageBox.Show("Failed to write file '" + newFile + "'", "Re-assigning UID failed");
                         return;
                     }
 
@@ -991,7 +1051,7 @@ namespace TeddyBench
                 string outputLocation = dlg.SelectedPath;
 
                 MessageBox.Show("You are about to export audio content of the tonie files on your SD card. " + 
-                    "Please *do not* share these files as they can contain information which can be used to identify you. " +  
+                    "Please *do not* share these files as they could contain information which can be used to identify your tonie ID. " +  
                     "Also be aware that sharing these files is most likely illegal in your country.", "Legal information", MessageBoxButtons.OK);
 
                 foreach (ListViewItem item in lstTonies.SelectedItems)
@@ -1041,7 +1101,7 @@ namespace TeddyBench
 
                         try
                         {
-                            dump.DumpAudioFiles(outDirectory, inFile, false, tags.ToArray(), titles);
+                            dump.DumpAudioFiles(outDirectory, inFile + "-" + dump.Header.AudioId.ToString("X8"), false, tags.ToArray(), titles);
                         }
                         catch (Exception ex)
                         {
