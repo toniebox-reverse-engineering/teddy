@@ -1029,21 +1029,20 @@ namespace TeddyBench
 
         private void btnSave_Click(object sender, EventArgs e)
         {
-            bool saveAll = false;
+            bool saveAll = true;
+            bool createDirs = false;
 
-            if (lstTonies.SelectedItems.Count > 1)
+            switch (MessageBox.Show("Create directories for selected file(s)?", "Save audio content", MessageBoxButtons.YesNoCancel))
             {
-                switch (MessageBox.Show("Save all selected files?", "Save audio content?", MessageBoxButtons.YesNoCancel))
-                {
-                    case DialogResult.Cancel:
-                        return;
-                    case DialogResult.Yes:
-                        saveAll = true;
-                        break;
-                    case DialogResult.No:
-                        break;
-                }
+                case DialogResult.Cancel:
+                    return;
+                case DialogResult.Yes:
+                    createDirs = true;
+                    break;
+                case DialogResult.No:
+                    break;
             }
+             
             FolderBrowserDialog dlg = new FolderBrowserDialog();
 
             if (dlg.ShowDialog() == DialogResult.OK)
@@ -1079,9 +1078,10 @@ namespace TeddyBench
 
                         string hashString = BitConverter.ToString(dump.Header.Hash).Replace("-", "");
                         var found = TonieInfos.Where(t => t.Hash.Contains(hashString));
+                        TonieData info = null;
                         if (found.Count() > 0)
                         {
-                            TonieData info = found.First();
+                            info = found.First();
                             titles = info.Tracks;
                             tags.Add("ALBUM=" + info.Title);
                             tags.Add("ARTIST=" + info.Series);
@@ -1092,6 +1092,15 @@ namespace TeddyBench
                         string inFile = new FileInfo(file).Name;
                         string inDir = new FileInfo(file).DirectoryName;
                         string outDirectory = !string.IsNullOrEmpty(outputLocation) ? outputLocation : inDir;
+
+                        if(createDirs)
+                        {
+                            outDirectory = Path.Combine(outDirectory, info.Model + " - " + dump.Header.AudioId.ToString("X8") + " - " + RemoveInvalidChars(info.Title).Trim());
+                            if(!Directory.Exists(outDirectory))
+                            {
+                                Directory.CreateDirectory(outDirectory);
+                            }
+                        }
 
                         if (!Directory.Exists(outDirectory))
                         {
@@ -1116,6 +1125,11 @@ namespace TeddyBench
                     }
                 }
             }
+        }
+
+        public static string RemoveInvalidChars(string filename)
+        {
+            return string.Concat(filename.Split(Path.GetInvalidFileNameChars()));
         }
 
         private string GetVersion()
