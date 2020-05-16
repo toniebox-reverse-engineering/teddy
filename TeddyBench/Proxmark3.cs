@@ -424,6 +424,7 @@ namespace TeddyBench
                 }
             }
 
+            /* remove failed ports when they disappear */
             foreach (string del in PortsFailed.Keys.Where(p => !reallyAvailablePorts.Contains(p)).ToArray())
             {
                 PortsFailed.Remove(del);
@@ -432,7 +433,8 @@ namespace TeddyBench
 
             /* only try to connect to ports that have been seen more than a second ago. Ensure PM3 has boted properly. */
             foreach(string port in reallyAvailablePorts.Where(p=> (DateTime.Now - PortsAppeared[p]).TotalMilliseconds > 1000))
-            { 
+            {
+                /* retry failed ports only every 60 seconds */
                 if(PortsFailed.ContainsKey(port) && (DateTime.Now - PortsFailed[port]).TotalSeconds < 60)
                 {
                     continue;
