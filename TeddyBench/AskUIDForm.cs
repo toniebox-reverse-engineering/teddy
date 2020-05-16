@@ -2,6 +2,7 @@
 using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
+using System.Media;
 using System.Windows.Forms;
 
 namespace TeddyBench
@@ -9,13 +10,34 @@ namespace TeddyBench
     public partial class AskUIDForm : Form
     {
         internal string Uid;
+        private Proxmark3 Proxmark3;
 
-        public AskUIDForm()
+        public AskUIDForm(Proxmark3 pm3)
         {
+            Proxmark3 = pm3;
             InitializeComponent();
             txtUid.Select();
             txtUid.Select(6, 10);
             txtUid_TextChanged(null, null);
+
+            Proxmark3.UidFound += Proxmark3_UidFound;
+        }
+
+        private void Proxmark3_UidFound(object sender, string e)
+        {
+            if (InvokeRequired)
+            {
+                BeginInvoke(new Action(() => Proxmark3_UidFound(sender, e)));
+                return;
+            }
+
+            if (e != null && txtUid.Text != e)
+            {
+                txtUid.Text = e;
+                txtUid.Select();
+                txtUid.Select(6, 10);
+                SystemSounds.Beep.Play();
+            }
         }
 
         protected override void OnShown(EventArgs e)
@@ -28,6 +50,7 @@ namespace TeddyBench
 
         protected override void OnClosing(CancelEventArgs e)
         {
+            Proxmark3.UidFound -= Proxmark3_UidFound;
             Uid = txtUid.Text;
             base.OnClosing(e);
         }

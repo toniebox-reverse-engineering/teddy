@@ -42,6 +42,7 @@ namespace TeddyBench
         private static TonieData[] TonieInfos;
         private static Dictionary<string, string> CustomTonies = new Dictionary<string, string>();
         private ListViewItem LastSelectediItem = null;
+        private Proxmark3 Proxmark3;
 
         private string TitleString => "TeddyBench (beta) - " + GetVersion();
 
@@ -250,7 +251,54 @@ namespace TeddyBench
             UpdateCheckThread = new Thread(UpdateCheck);
             UpdateCheckThread.Start();
 
+            Proxmark3 = new Proxmark3();
+            Proxmark3.StartThreads();
+            Proxmark3.UidFound += Proxmark3_UidFound;
+
             AllowDrop = true;
+        }
+
+        private void Proxmark3_UidFound(object sender, string e)
+        {
+            if (InvokeRequired)
+            {
+                BeginInvoke(new Action(() => Proxmark3_UidFound(sender, e)));
+                return;
+            }
+
+            bool found = false;
+
+            if (e != null)
+            {
+                foreach (ListViewItem item in lstTonies.Items)
+                {
+                    ListViewTag tag = item.Tag as ListViewTag;
+
+                    if (tag.Uid == e)
+                    {
+                        if (lstTonies.SelectedItems.Count == 1 && lstTonies.SelectedItems[0] == item)
+                        {
+                            return;
+                        }
+                        foreach (ListViewItem sel in lstTonies.SelectedItems)
+                        {
+                            sel.Selected = false;
+                        }
+                        item.Selected = true;
+                        item.EnsureVisible();
+                        ActiveControl = lstTonies;
+                        found = true;
+                    }
+                }
+            }
+
+            if(!found)
+            {
+                foreach (ListViewItem sel in lstTonies.SelectedItems)
+                {
+                    sel.Selected = false;
+                }
+            }
         }
 
         public async void UpdateCheck()
@@ -334,6 +382,7 @@ namespace TeddyBench
                 LogThread.Abort();
                 LogThread = null;
             }
+            Proxmark3.StopThreads();
         }
 
         private void StartThreads()
@@ -357,7 +406,7 @@ namespace TeddyBench
                         {
                             try
                             {
-                                if (drive.RootDirectory.GetDirectories().Where(d => d.Name == "CONTENT").Count() == 1)
+                                if (drive.IsReady && drive.RootDirectory.GetDirectories().Where(d => d.Name == "CONTENT").Count() == 1)
                                 {
                                     NotifyDrive(drive);
                                 }
@@ -650,7 +699,7 @@ namespace TeddyBench
 
         private void AddFiles(string[] fileNames)
         {
-            AskUIDForm ask = new AskUIDForm();
+            AskUIDForm ask = new AskUIDForm(Proxmark3);
 
             if (ask.ShowDialog() == DialogResult.OK)
             {
@@ -886,7 +935,7 @@ namespace TeddyBench
                 var fi = new FileInfo(tag.FileName);
                 string oldUid = ReverseUid(fi.DirectoryName + fi.Name);
 
-                AskUIDForm dlg = new AskUIDForm();
+                AskUIDForm dlg = new AskUIDForm(Proxmark3);
                 dlg.Uid = oldUid;
 
                 if (dlg.ShowDialog() == DialogResult.OK)
