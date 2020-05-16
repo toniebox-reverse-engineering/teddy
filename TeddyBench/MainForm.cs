@@ -252,10 +252,36 @@ namespace TeddyBench
             UpdateCheckThread.Start();
 
             Proxmark3 = new Proxmark3();
-            Proxmark3.StartThreads();
             Proxmark3.UidFound += Proxmark3_UidFound;
+            Proxmark3.DeviceFound += Proxmark3_DeviceFound;
+            Proxmark3.StartThreads();
 
             AllowDrop = true;
+        }
+
+        private void Proxmark3_DeviceFound(object sender, string e)
+        {
+            if (InvokeRequired)
+            {
+                BeginInvoke(new Action(() => Proxmark3_DeviceFound(sender, e)));
+                return;
+            }
+
+            if (e == null)
+            {
+                if (statusStrip1.Visible)
+                {
+                    statusStrip1.Hide();
+                }
+            }
+            else
+            {
+                if (!statusStrip1.Visible)
+                {
+                    statusLabel.Text = "Proxmark3 found at " + e + ". The UID of the tag will be automatically used where applicable.";
+                    statusStrip1.Show();
+                }
+            }
         }
 
         private void Proxmark3_UidFound(object sender, string e)

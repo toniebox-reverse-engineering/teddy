@@ -104,11 +104,6 @@ namespace TeddyBench
                     data.cmd = 0x7FFF;
                     return;
                 }
-                catch (Exception ex)
-                {
-                    data.cmd = 0x7FFF;
-                    return;
-                }
             }
         }
 
@@ -154,6 +149,7 @@ namespace TeddyBench
         public string CurrentPort { get; private set; }
         public SerialPort Port { get; private set; }
         public event EventHandler<string> UidFound;
+        public event EventHandler<string> DeviceFound;
         public string CurrentUid = null;
         private Thread Pm3Thread = null;
         private bool ExitThread = false;
@@ -232,6 +228,7 @@ namespace TeddyBench
                     }
                     catch (Exception ex2)
                     {
+                        Console.WriteLine("Device failed. Closing");
                         Close();
                     }
 
@@ -259,9 +256,11 @@ namespace TeddyBench
                 catch (Exception ex)
                 {
                 }
+                Port.Dispose();
                 Port = null;
                 CurrentPort = null;
             }
+            DeviceFound?.Invoke(this, CurrentPort);
         }
 
         private bool UnlockTag(uint pass)
@@ -335,7 +334,6 @@ namespace TeddyBench
             cmd.data.arg[2] = 1;
             cmd.SetData(cmdIdentify);
 
-
             Console.WriteLine("GetUID: sending");
 
             Flush(Port);
@@ -393,16 +391,63 @@ namespace TeddyBench
             }
         }
 
+        private Dictionary<string, DateTime> PortsFailed = new Dictionary<string, DateTime>();
+        private Dictionary<string, DateTime> PortsAppeared = new Dictionary<string, DateTime>();
+
         public bool Detect()
         {
             string[] ports = SerialPort.GetPortNames();
+            List<string> reallyAvailablePorts = new List<string>();
 
-            foreach(string port in ports)
+            /* SerialPort.GetPortNames() also returns stale ports from registry. do a check if they are really available. */
+            foreach (string listedPort in ports)
+            {
+                try
+                {
+                    SerialPort p = new SerialPort(listedPort, 115200);
+
+                    p.Open();
+                    p.Close();
+                    reallyAvailablePorts.Add(listedPort);
+                }
+                catch(Exception e0)
+                {
+                }
+            }
+
+            /* update seen list */
+            foreach(string newPort in reallyAvailablePorts)
+            {
+                if(!PortsAppeared.ContainsKey(newPort))
+                {
+                    PortsAppeared.Add(newPort, DateTime.Now);
+                }
+            }
+
+            foreach (string del in PortsFailed.Keys.Where(p => !reallyAvailablePorts.Contains(p)).ToArray())
+            {
+                PortsFailed.Remove(del);
+                PortsAppeared.Remove(del);
+            }
+
+            /* only try to connect to ports that have been seen more than a second ago. Ensure PM3 has boted properly. */
+            foreach(string port in reallyAvailablePorts.Where(p=> (DateTime.Now - PortsAppeared[p]).TotalMilliseconds > 1000))
             { 
+                if(PortsFailed.ContainsKey(port) && (DateTime.Now - PortsFailed[port]).TotalSeconds < 60)
+                {
+                    continue;
+                }
+
                 if(TryOpen(port))
                 {
                     return true;
                 }
+
+                if (!PortsFailed.ContainsKey(port))
+                {
+                    PortsFailed.Add(port, DateTime.Now);
+                }
+                PortsFailed[port] = DateTime.Now;
             }
 
             return false;
@@ -435,6 +480,7 @@ namespace TeddyBench
                 {
                     CurrentPort = port;
                     Port = p;
+                    DeviceFound?.Invoke(this, CurrentPort);
                     return true;
                 }
 
