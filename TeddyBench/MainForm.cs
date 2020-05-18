@@ -43,6 +43,8 @@ namespace TeddyBench
         private static Dictionary<string, string> CustomTonies = new Dictionary<string, string>();
         private ListViewItem LastSelectediItem = null;
         private Proxmark3 Proxmark3;
+        private bool AutoSelected;
+        internal LogWindow Log;
 
         private string TitleString => "TeddyBench (beta) - " + GetVersion();
 
@@ -257,6 +259,9 @@ namespace TeddyBench
             Proxmark3.StartThreads();
 
             AllowDrop = true;
+
+            Log = new LogWindow();
+            Log.Show();
         }
 
         private void Proxmark3_DeviceFound(object sender, string e)
@@ -314,11 +319,12 @@ namespace TeddyBench
                         item.EnsureVisible();
                         ActiveControl = lstTonies;
                         found = true;
+                        AutoSelected = true;
                     }
                 }
             }
 
-            if(!found)
+            if(!found && AutoSelected)
             {
                 foreach (ListViewItem sel in lstTonies.SelectedItems)
                 {
@@ -1047,6 +1053,7 @@ namespace TeddyBench
             {
                 LastSelectediItem = null;
             }
+            AutoSelected = false;
         }
 
         private void listView1_AfterLabelEdit(object sender, LabelEditEventArgs e)
