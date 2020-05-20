@@ -51,8 +51,11 @@ namespace TeddyBench
                 lock (Instance.LogString)
                 {
                     txtLog.Text = LogString.ToString();
-                    txtLog.SelectionStart = txtLog.Text.Length - 1;
-                    txtLog.ScrollToCaret();
+                    if (txtLog.Text.Length > 0)
+                    {
+                        txtLog.SelectionStart = txtLog.Text.Length - 1;
+                        txtLog.ScrollToCaret();
+                    }
                     LastWindowUpdate = DateTime.Now;
                 }
             }
