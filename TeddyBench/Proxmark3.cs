@@ -62,16 +62,18 @@ namespace TeddyBench
                 DebugString = 0x100,
                 DebugInteger = 0x101,
                 DebugBytes = 0x102,
+                Partial = 0x7FFD,
                 NoData = 0x7FFE,
                 Timeout = 0x7FFF
             }
 
             public Pm3UsbResponseStruct data;
-            private SerialPort p;
-
             public bool VarSize => (data.cmd & 0x8000) != 0;
             public eResponseType Cmd => (eResponseType)(data.cmd & ~0x8000);
-            public int Length => (int)(2 + 2 + 3 * 4 + data.dataLen);
+            public int Length => (ReceivedHeaderLength + ReceivedPayloadLength);
+            public int ReceivedPayloadLength = 0;
+            public int ReceivedHeaderLength = 0;
+            private int ExpectedPayloadLength = 0;
 
             public Pm3UsbResponse(byte[] buf, int offset, int length)
             {
@@ -89,7 +91,7 @@ namespace TeddyBench
                     }
                     if (p.BytesToRead < 16)
                     {
-                        data.cmd = 0x7FFE;
+                        data.cmd = (int)eResponseType.NoData;
                         return;
                     }
 
@@ -99,23 +101,26 @@ namespace TeddyBench
                     {
                         return;
                     }
-                    ushort dataLen = 0;
+                    ReceivedHeaderLength = 16;
+                    ExpectedPayloadLength = 0;
 
                     ByteArrayToStructure(buf, 0, ref data);
 
                     if (VarSize)
                     {
-                        dataLen = data.dataLen;
+                        ExpectedPayloadLength = data.dataLen;
                     }
                     else
                     {
-                        dataLen = 512;
+                        ExpectedPayloadLength = 512;
                     }
 
-                    if (dataLen > 0)
+                    if (ExpectedPayloadLength > 0)
                     {
-                        if (p.Read(buf, 16, dataLen) != dataLen)
+                        ReceivedPayloadLength = p.Read(buf, 16, ExpectedPayloadLength);
+                        if (ExpectedPayloadLength != ReceivedPayloadLength)
                         {
+                            data.cmd = (int)eResponseType.Partial;
                             return;
                         }
                     }
@@ -123,7 +128,7 @@ namespace TeddyBench
                 }
                 catch (TimeoutException ex)
                 {
-                    data.cmd = 0x7FFF;
+                    data.cmd = (int)eResponseType.Timeout;
                     return;
                 }
             }
@@ -228,6 +233,7 @@ namespace TeddyBench
                     {
                         string uid = GetUID();
 
+                        /* exit as quickly as possible if requested */
                         if (ExitThread)
                         {
                             LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] MainFunc: Exiting");
@@ -235,9 +241,12 @@ namespace TeddyBench
                             return;
                         }
 
+                        /* no UID detected? might be locked */
                         if (uid == null)
                         {
                             LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] MainFunc: No tag detected, try to unlock");
+
+                            /* try to unlock using the common passwords */
                             if (UnlockTag(0x0F0F0F0F) || UnlockTag(0x7FFD6E5B))
                             {
                                 LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] MainFunc: Unlocked tag");
@@ -245,6 +254,7 @@ namespace TeddyBench
                             }
                         }
 
+                        /* exit as quickly as possible if requested */
                         if (ExitThread)
                         {
                             LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] MainFunc: Exiting");
@@ -252,8 +262,10 @@ namespace TeddyBench
                             return;
                         }
 
+                        /* notify listeners about currently detected UID */
                         UidFound?.Invoke(this, uid);
 
+                        /* found a new one? print a log message */
                         if (uid != null && CurrentUid != uid)
                         {
                             LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] Detected tag UID: " + uid);
@@ -261,9 +273,21 @@ namespace TeddyBench
 
                         CurrentUid = uid;
                     }
-                    catch (Exception ex2)
+                    catch (InvalidOperationException ex2)
                     {
-                        LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] MainFunc: Device failed. Closing");
+                        if (ex2.TargetSite.DeclaringType.Name == "SerialPort")
+                        {
+                            LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] MainFunc: Serial port lost. Closing device.");
+                        }
+                        else
+                        {
+                            LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] MainFunc: Device failed. Closing. (" + ex2.ToString() + ")");
+                        }
+                        Close();
+                    }
+                    catch (Exception ex3)
+                    {
+                        LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] MainFunc: Device failed. Closing. (" + ex3.ToString() + ")");
                         Close();
                     }
 
@@ -312,8 +336,8 @@ namespace TeddyBench
             }
             Pm3UsbCommand cmd = new Pm3UsbCommand(0x319, pass);
 
-            LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] UnlockTag: Send " + BitConverter.ToString(cmd.ToByteArray()).Replace("-", ""));
-            Flush(Port);
+            //LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] UnlockTag: Send " + BitConverter.ToString(cmd.ToByteArray()).Replace("-", ""));
+            LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] UnlockTag: Send request for pass 0x" + pass.ToString("X8"));
             cmd.Write(Port);
 
             while (true)
@@ -357,8 +381,8 @@ namespace TeddyBench
             byte[] cmdIdentify = new byte[] { 0x26, 0x01, 0x00, 0xF6, 0x0A };
             Pm3UsbCommand cmd = new Pm3UsbCommand(0x313, (byte)cmdIdentify.Length, 1, 1, cmdIdentify);
 
-            LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] GetUID: Send " + BitConverter.ToString(cmd.ToByteArray()).Replace("-", ""));
-            Flush(Port);
+            //LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] GetUID: Send " + BitConverter.ToString(cmd.ToByteArray()).Replace("-", ""));
+            LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] GetUID: Send " + BitConverter.ToString(cmdIdentify).Replace("-", ""));
             cmd.Write(Port);
 
             while (true)
@@ -404,6 +428,10 @@ namespace TeddyBench
 
         private void Flush(SerialPort p)
         {
+            if (p.BytesToRead > 0)
+            {
+                LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] Flush: " + p.BytesToRead + " bytes to flush");
+            }
             while (p.BytesToRead > 0)
             {
                 p.ReadByte();
@@ -501,10 +529,10 @@ namespace TeddyBench
                 /* read version */
                 Pm3UsbCommand cmdVers = new Pm3UsbCommand(0x107);
                 cmdVers.Write(p);
-                Pm3UsbResponse resVers = new Pm3UsbResponse(p, 300);
+                Pm3UsbResponse resVers = new Pm3UsbResponse(p, 1000);
                 if (resVers.Cmd != Pm3UsbResponse.eResponseType.ACK)
                 {
-                    LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] TryOpen: " + port + " did not reply to a version query");
+                    LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] TryOpen: " + port + " did not reply to a version query. (got " + resVers.Cmd.ToString() + " instead, " + resVers.Length + " bytes)");
                     p.Close();
                     return false;
                 }
