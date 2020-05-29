@@ -58,6 +58,7 @@
             // txtUser
             // 
             this.txtUser.Location = new System.Drawing.Point(77, 12);
+            this.txtUser.MaxLength = 128;
             this.txtUser.Name = "txtUser";
             this.txtUser.Size = new System.Drawing.Size(202, 20);
             this.txtUser.TabIndex = 1;
@@ -107,7 +108,7 @@
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedToolWindow;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "ReportForm";
-            this.Text = "ReportForm";
+            this.Text = "Report to RevvoX";
             this.ResumeLayout(false);
             this.PerformLayout();
 
