@@ -108,6 +108,11 @@ namespace Concentus.Oggfile
             WriteOpusTagsPage(fileTags);
         }
 
+        public void WriteSamples(short[] data)
+        {
+            WriteSamples(data, 0, data.Length);
+        }
+
         /// <summary>
         /// Writes a buffer of PCM audio samples to the encoder and packetizer. Runs Opus encoding and potentially outputs one or more pages to the underlying Ogg stream.
         /// You can write any non-zero number of samples that you want here; there are no restrictions on length or packet boundaries
@@ -182,16 +187,27 @@ namespace Concentus.Oggfile
                     maxOpusData -= packetSize;
 
                     /* pad to full remaining size if we would leave just a few bytes behind. picked a random number that seemed enough for opus */
-                    if (maxOpusData > 0 && maxOpusData < 43)
+                    if (_currentHeader[PAGE_FLAGS_POS] != (byte)PageFlags.EndOfStream)
                     {
-                        if (OpusRepacketizer.PadPacket(_currentPayload, _payloadIndex, packetSize, packetSize + maxOpusData) != Enums.OpusError.OPUS_OK)
+                        if (maxOpusData > 0 && maxOpusData < 43)
                         {
-                            Console.WriteLine("[ERROR] Padding failed at offset 0x" + _outputStream.Position.ToString("X8"));
-                            throw new PaddingException("Failed to pad packet");
+                            if (OpusRepacketizer.PadPacket(_currentPayload, _payloadIndex, packetSize, packetSize + maxOpusData) != Enums.OpusError.OPUS_OK)
+                            {
+                                Console.WriteLine("[ERROR] Padding failed at offset 0x" + _outputStream.Position.ToString("X8"));
+                                throw new PaddingException("Failed to pad packet");
+                            }
+                            else
+                            {
+                                packetSize += maxOpusData;
+                            }
                         }
-                        else
+                    }
+                    else
+                    {
+                        if(maxOpusData == 0)
                         {
-                            packetSize += maxOpusData;
+                            Console.WriteLine("[WARNING] Hit block boundary with last frame. Writing another one.");
+                            _currentHeader[PAGE_FLAGS_POS] = (byte)PageFlags.None;
                         }
                     }
 
@@ -264,22 +280,19 @@ namespace Concentus.Oggfile
         /// </summary>
         public void Finish()
         {
-            // Write a new page that just contains the EndOfStream flag
+            // Just check how many samples we need to fill in the opus buffer, and write silence.
             WriteStreamFinishedPage();
-
-            // Just see how many samples we need to fill in the opus buffer, and write silence.
             int samplesToWrite = _opusFrame.Length - _opusFrameIndex;
-            //Console.WriteLine("Padding with " + samplesToWrite + " samples");
-            short[] paddingSamples = new short[samplesToWrite];
-            for (int pos = 0; pos < samplesToWrite / 2; pos++)
-            {
-                paddingSamples[2 * pos + 0] = 1;
-                paddingSamples[2 * pos + 1] = -1;
-            }
-            WriteSamples(paddingSamples, 0, samplesToWrite);
-
-            // Finalize the page if it was not just finalized right then
+            WriteSamples(new short[samplesToWrite]);
             FinalizePage();
+
+            /* but the *file* must not end at 0x1000 boundary. this needs some quirk here. write another page. */
+            if((_outputStream.Position % 0x1000) == 0)
+            {
+                WriteStreamFinishedPage();
+                WriteSamples(new short[_opusFrame.Length]);
+                FinalizePage();
+            }
 
             // Now close our output
             _outputStream.Flush();
