@@ -87,14 +87,22 @@ namespace TonieFile
             List<string> groups = (from Match m in Regex.Matches(uidrev, @"[A-F0-9]{2}") select m.Value).ToList();
             groups.Reverse();
             string uid = string.Join("", groups.ToArray());
-            var date = DateTimeOffset.FromUnixTimeSeconds(dumpFile.Header.AudioId);
+
+            string dateExtra = "";
+            int id = dumpFile.Header.AudioId;
+
+            if (id < 0x50000000)
+            {
+                dateExtra = "custom file, real date ";
+                id += 0x50000000;
+            }
+            var date = DateTimeOffset.FromUnixTimeSeconds(id);
             bool first = false;
 
             switch (dumpFormat)
             {
                 case eDumpFormat.FormatCSV:
                     {
-
                         message.Append(uid + ";");
                         message.Append(dumpFile.Header.AudioId.ToString("X8") + ";");
                         message.Append(date.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss") + ";");
@@ -128,8 +136,7 @@ namespace TonieFile
                 case eDumpFormat.FormatText:
                     {
                         message.AppendLine("Dump of " + dumpFile.Filename + " (UID " + uid + "):");
-
-                        message.AppendLine("  Header: AudioID     0x" + dumpFile.Header.AudioId.ToString("X8") + " (" + date.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss") + ")");
+                        message.AppendLine("  Header: AudioID     0x" + dumpFile.Header.AudioId.ToString("X8") + " (" + dateExtra + date.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss") + ")");
 
                         string[] titles = null;
                         string hashString = BitConverter.ToString(dumpFile.Header.Hash).Replace("-", "");

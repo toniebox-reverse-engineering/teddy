@@ -559,7 +559,7 @@ namespace Teddy
                         return;
                     }*/
 
-                    uint id = (uint)DateTimeOffset.Now.ToUnixTimeSeconds();
+                    uint id = (uint)DateTimeOffset.Now.ToUnixTimeSeconds() - 0x50000000;
                     if (audioId != "")
                     {
                         if (audioId.Trim().StartsWith("0x"))

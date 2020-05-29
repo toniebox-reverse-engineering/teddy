@@ -622,7 +622,7 @@ namespace TeddyBench
                                     "File:     " + tag.FileName + Environment.NewLine +
                                     "UID:      " + tag.Uid + Environment.NewLine +
                                     "Date:     " + tag.FileInfo.CreationTime + Environment.NewLine +
-                                    "AudioID:  " + tag.AudioId + Environment.NewLine +
+                                    "AudioID:  0x" + tag.AudioId.ToString("X8") + Environment.NewLine +
                                     "Chapters: " + dumpFile.Header.AudioChapters.Length + Environment.NewLine
                                     ;
                                 }));
@@ -774,7 +774,7 @@ namespace TeddyBench
 
                 try
                 {
-                    uint id = (uint)DateTimeOffset.Now.ToUnixTimeSeconds();
+                    uint id = (uint)DateTimeOffset.Now.ToUnixTimeSeconds() - 0x50000000;
                     audio = new TonieAudio(v, id);
                 }
                 catch (Exception ex)
@@ -1208,11 +1208,11 @@ namespace TeddyBench
 
             str.AppendLine("Dumping " + lstTonies.Items.Count + " files");
 
-            foreach(ListViewItem t in lstTonies.Items)
+            foreach (ListViewItem t in lstTonies.Items)
             {
                 ListViewTag tag = t.Tag as ListViewTag;
 
-                if (tag.Info == null || tag.Info.Model == null)
+                if ((tag.Info == null || tag.Info.Model == null) && tag.AudioId > 0x50000000)
                 {
                     AddInfo(str, tag);
                 }
