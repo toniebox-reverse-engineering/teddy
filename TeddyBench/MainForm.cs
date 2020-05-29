@@ -1,6 +1,5 @@
 ﻿using GitHubUpdate;
 using Newtonsoft.Json;
-using Octokit;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -12,11 +11,11 @@ using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Net.Http.Headers;
-using System.Reflection;
+using System.Net.Http;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using TeddyBench.Properties;
 using TonieFile;
@@ -39,7 +38,7 @@ namespace TeddyBench
         private bool AutoOpenDrive = true;
         private Dictionary<ListViewTag, ListViewItem> RegisteredItems = new Dictionary<ListViewTag, ListViewItem>();
         private TextWriter ConsoleWriter = null;
-        private static TonieData[] TonieInfos;
+        private static TonieTools.TonieData[] TonieInfos;
         private static Dictionary<string, string> CustomTonies = new Dictionary<string, string>();
         private ListViewItem LastSelectediItem = null;
         private Proxmark3 Proxmark3;
@@ -49,74 +48,14 @@ namespace TeddyBench
         private string TitleString => "TeddyBench (beta) - " + GetVersion();
 
 
-        public class TonieData
-        {
-            [JsonProperty("no")]
-            public string SortNumber_;
-            public string SortString
-            {
-                get
-                {
-                    string ret = "";
-
-                    if (!string.IsNullOrEmpty(Language))
-                    {
-                        ret += Language;
-                    }
-                    if (!string.IsNullOrEmpty(SortNumber_) && SortNumber_ != "na")
-                    {
-                        ret += int.Parse(SortNumber_).ToString("0000");
-                    }
-                    return ret;
-                }
-            }
-            [JsonProperty("model")]
-            public string Model;
-            [JsonProperty("audio_id")]
-            public string[] AudioId_;
-            [JsonIgnore]
-            public long[] AudioIds
-            {
-                get
-                {
-                    List<long> ids = new List<long>();
-                    foreach (var id in AudioId_)
-                    {
-                        if (id != "" && id != "na")
-                        {
-                            ids.Add(long.Parse(id));
-                        }
-                    }
-                    return ids.ToArray();
-                }
-            }
-            [JsonProperty("hash")]
-            public string[] Hash;
-            [JsonProperty("title")]
-            public string Title;
-            [JsonProperty("series")]
-            public string Series;
-            [JsonProperty("episodes")]
-            public string Episodes;
-            [JsonProperty("tracks")]
-            public string[] Tracks;
-            [JsonProperty("release")]
-            public string Release;
-            [JsonProperty("language")]
-            public string Language;
-            [JsonProperty("category")]
-            public string Category;
-            [JsonProperty("pic")]
-            public string Pic;
-        }
-
         public class ListViewTag
         {
             public string FileName;
             public FileInfo FileInfo;
             public string Hash;
-            public TonieData Info;
+            public TonieTools.TonieData Info;
             public string Uid;
+            public int AudioId;
 
             public ListViewTag(string filename)
             {
@@ -200,11 +139,11 @@ namespace TeddyBench
 
                 try
                 {
-                    TonieInfos = JsonConvert.DeserializeObject<TonieData[]>(File.ReadAllText("tonies.json"));
+                    TonieInfos = JsonConvert.DeserializeObject<TonieTools.TonieData[]>(File.ReadAllText("tonies.json"));
                 }
                 catch (Exception e)
                 {
-                    TonieInfos = new TonieData[0];
+                    TonieInfos = new TonieTools.TonieData[0];
                 }
 
                 try
@@ -324,7 +263,7 @@ namespace TeddyBench
                 }
             }
 
-            if(!found && AutoSelected)
+            if (!found && AutoSelected)
             {
                 foreach (ListViewItem sel in lstTonies.SelectedItems)
                 {
@@ -355,7 +294,7 @@ namespace TeddyBench
                     }
                 }));
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
             }
         }
@@ -487,6 +426,7 @@ namespace TeddyBench
                 return;
             }
             grpCardContent.Visible = false;
+            lblMessage.Visible = true;
             CurrentDirectory = null;
             AutoOpenDrive = true;
             Text = TitleString;
@@ -561,6 +501,7 @@ namespace TeddyBench
                 Enabled = true;
                 txtLog.Visible = false;
                 grpCardContent.Visible = true;
+                lblMessage.Visible = false;
                 lstTonies.Items.Clear();
                 RegisteredItems.Clear();
 
@@ -660,16 +601,18 @@ namespace TeddyBench
                                 }
                                 else
                                 {
-                                    tag.Info = new TonieData();
+                                    tag.Info = new TonieTools.TonieData();
 
                                     if (CustomTonies.ContainsKey(hash))
                                     {
                                         tonieName = CustomTonies[hash];
+                                        tag.Info.Title = tonieName;
                                     }
                                     image = "custom";
                                 }
 
                                 tag.Hash = hash;
+                                tag.AudioId = dumpFile.Header.AudioId;
 
                                 this.BeginInvoke(new Action(() =>
                                 {
@@ -679,7 +622,7 @@ namespace TeddyBench
                                     "File:     " + tag.FileName + Environment.NewLine +
                                     "UID:      " + tag.Uid + Environment.NewLine +
                                     "Date:     " + tag.FileInfo.CreationTime + Environment.NewLine +
-                                    "AudioID:  " + dumpFile.Header.AudioId + Environment.NewLine +
+                                    "AudioID:  " + tag.AudioId + Environment.NewLine +
                                     "Chapters: " + dumpFile.Header.AudioChapters.Length + Environment.NewLine
                                     ;
                                 }));
@@ -976,7 +919,7 @@ namespace TeddyBench
                     string newDir = Path.Combine(CurrentDirectory, ReverseUid(uid).Substring(0, 8));
                     string newFile = Path.Combine(newDir, ReverseUid(uid).Substring(8, 8));
 
-                    if(new FileInfo(newFile).FullName == fi.FullName)
+                    if (new FileInfo(newFile).FullName == fi.FullName)
                     {
                         return;
                     }
@@ -1124,15 +1067,15 @@ namespace TeddyBench
                 case DialogResult.No:
                     break;
             }
-             
+
             FolderBrowserDialog dlg = new FolderBrowserDialog();
 
             if (dlg.ShowDialog() == DialogResult.OK)
             {
                 string outputLocation = dlg.SelectedPath;
 
-                MessageBox.Show("You are about to export audio content of the tonie files on your SD card. " + 
-                    "Please *do not* share these files as they could contain information which can be used to identify your tonie ID. " +  
+                MessageBox.Show("You are about to export audio content of the tonie files on your SD card. " +
+                    "Please *do not* share these files as they could contain information which can be used to identify your tonie ID. " +
                     "Also be aware that sharing these files is most likely illegal in your country.", "Legal information", MessageBoxButtons.OK);
 
                 foreach (ListViewItem item in lstTonies.SelectedItems)
@@ -1160,7 +1103,8 @@ namespace TeddyBench
 
                         string hashString = BitConverter.ToString(dump.Header.Hash).Replace("-", "");
                         var found = TonieInfos.Where(t => t.Hash.Contains(hashString));
-                        TonieData info = null;
+                        TonieTools.TonieData info = null;
+
                         if (found.Count() > 0)
                         {
                             info = found.First();
@@ -1175,10 +1119,10 @@ namespace TeddyBench
                         string inDir = new FileInfo(file).DirectoryName;
                         string outDirectory = !string.IsNullOrEmpty(outputLocation) ? outputLocation : inDir;
 
-                        if(createDirs)
+                        if (createDirs)
                         {
                             outDirectory = Path.Combine(outDirectory, info.Model + " - " + dump.Header.AudioId.ToString("X8") + " - " + RemoveInvalidChars(info.Title).Trim());
-                            if(!Directory.Exists(outDirectory))
+                            if (!Directory.Exists(outDirectory))
                             {
                                 Directory.CreateDirectory(outDirectory);
                             }
@@ -1217,6 +1161,128 @@ namespace TeddyBench
         private string GetVersion()
         {
             return Application.ProductVersion + (ThisAssembly.Git.IsDirty ? ",dirty" : "");
+        }
+
+        private async void reportselectedFilesToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (lstTonies.SelectedItems.Count == 0)
+            {
+                return;
+            }
+
+            StringBuilder str = new StringBuilder();
+
+            str.AppendLine("Dumping " + lstTonies.SelectedItems.Count + " files");
+
+            foreach (ListViewItem t in lstTonies.SelectedItems)
+            {
+                ListViewTag tag = t.Tag as ListViewTag;
+
+                AddInfo(str, tag);
+            }
+
+            ReportForm form = new ReportForm();
+
+            if (form.ShowDialog() == DialogResult.OK)
+            {
+                bool success = await DiagnosticsSendInfo(str.ToString(), form.Username, form.Message);
+                if (success)
+                {
+                    MessageBox.Show("Success", "Report sent");
+                }
+                else
+                {
+                    MessageBox.Show("Error sending the report", "Report failure");
+                }
+            }
+        }
+
+        private async void reportallFilesToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if(lstTonies.Items.Count == 0)
+            {
+                return;
+            }
+
+            StringBuilder str = new StringBuilder();
+
+            str.AppendLine("Dumping " + lstTonies.Items.Count + " files");
+
+            foreach(ListViewItem t in lstTonies.Items)
+            {
+                ListViewTag tag = t.Tag as ListViewTag;
+
+                if (tag.Info == null || tag.Info.Model == null)
+                {
+                    AddInfo(str, tag);
+                }
+            }
+
+            ReportForm form = new ReportForm();
+
+            if (form.ShowDialog() == DialogResult.OK)
+            {
+                bool success = await DiagnosticsSendInfo(str.ToString(), form.Username, form.Message);
+                if (success)
+                {
+                    MessageBox.Show("Success", "Report sent");
+                }
+                else
+                {
+                    MessageBox.Show("Error sending the report", "Report failure");
+                }
+            }
+        }
+
+        private async Task<bool> DiagnosticsSendInfo(string payload, string sender, string message)
+        {
+            try
+            {
+                HttpClient httpClient = new HttpClient();
+                MultipartFormDataContent form = new MultipartFormDataContent();
+
+                form.Add(new StringContent(sender), "sender");
+                form.Add(new StringContent(payload), "payload");
+                form.Add(new StringContent(message), "message");
+                form.Add(new StringContent(GetVersion()), "version");
+
+                HttpResponseMessage response = await httpClient.PostAsync("https://g3gg0.magiclantern.fm/diag.php", form);
+                response.EnsureSuccessStatusCode();
+                httpClient.Dispose();
+                string sd = response.Content.ReadAsStringAsync().Result;
+
+                LogWindow.Log(LogWindow.eLogLevel.Debug, sd);
+
+                if(sd != "")
+                {
+                    return true;
+                }
+                return false;
+            }
+            catch (Exception ee)
+            {
+            }
+            return false;
+        }
+
+        private void AddInfo(StringBuilder str, ListViewTag tag)
+        {
+            TonieTools.DumpInfo(str, TonieTools.eDumpFormat.FormatText, tag.FileName, TonieInfos);
+        }
+
+        private void setPasswordToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void readContentToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void emulateTagToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+
         }
     }
 }

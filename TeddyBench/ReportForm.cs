@@ -1,0 +1,38 @@
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+
+namespace TeddyBench
+{
+    public partial class ReportForm : Form
+    {
+        public static string DefaultUsername = "";
+        public static string DefaultMessage = "";
+        public string Username = "";
+        public string Message = "";
+
+        public ReportForm()
+        {
+            InitializeComponent();
+            txtUser.Text = DefaultUsername;
+            txtMessage.Text = DefaultMessage;
+        }
+
+        private void btnOk_Click(object sender, EventArgs e)
+        {
+            Username = txtUser.Text;
+            Message = txtMessage.Text;
+            DefaultUsername = Username;
+            DefaultMessage = Message;
+
+            DialogResult = DialogResult.OK;
+            Close();
+        }
+    }
+}

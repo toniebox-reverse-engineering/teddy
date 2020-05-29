@@ -37,8 +37,18 @@
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.openDirectoryToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.nFCReaderToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.autodetectionEnabledToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.advancedActionsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.setPasswordToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.readContentToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.emulateTagToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripSeparator();
+            this.diagnosticsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.reportallFilesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.reportselectedFilesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.grpCardContent = new System.Windows.Forms.GroupBox();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.splitContainer2 = new System.Windows.Forms.SplitContainer();
@@ -49,9 +59,10 @@
             this.btnSave = new System.Windows.Forms.Button();
             this.btnDelete = new System.Windows.Forms.Button();
             this.btnAdd = new System.Windows.Forms.Button();
-            this.txtLog = new System.Windows.Forms.TextBox();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.statusLabel = new System.Windows.Forms.ToolStripStatusLabel();
+            this.txtLog = new System.Windows.Forms.TextBox();
+            this.lblMessage = new System.Windows.Forms.Label();
             this.menuStrip1.SuspendLayout();
             this.grpCardContent.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
@@ -69,6 +80,7 @@
             // 
             this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.fileToolStripMenuItem,
+            this.nFCReaderToolStripMenuItem,
             this.helpToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
@@ -99,10 +111,66 @@
             this.exitToolStripMenuItem.Text = "E&xit";
             this.exitToolStripMenuItem.Click += new System.EventHandler(this.exitToolStripMenuItem_Click);
             // 
+            // nFCReaderToolStripMenuItem
+            // 
+            this.nFCReaderToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.autodetectionEnabledToolStripMenuItem,
+            this.advancedActionsToolStripMenuItem});
+            this.nFCReaderToolStripMenuItem.Name = "nFCReaderToolStripMenuItem";
+            this.nFCReaderToolStripMenuItem.Size = new System.Drawing.Size(81, 20);
+            this.nFCReaderToolStripMenuItem.Text = "NFC Reader";
+            // 
+            // autodetectionEnabledToolStripMenuItem
+            // 
+            this.autodetectionEnabledToolStripMenuItem.Checked = true;
+            this.autodetectionEnabledToolStripMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.autodetectionEnabledToolStripMenuItem.Enabled = false;
+            this.autodetectionEnabledToolStripMenuItem.Name = "autodetectionEnabledToolStripMenuItem";
+            this.autodetectionEnabledToolStripMenuItem.Size = new System.Drawing.Size(195, 22);
+            this.autodetectionEnabledToolStripMenuItem.Text = "Autodetection Enabled";
+            // 
+            // advancedActionsToolStripMenuItem
+            // 
+            this.advancedActionsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.setPasswordToolStripMenuItem,
+            this.readContentToolStripMenuItem,
+            this.emulateTagToolStripMenuItem});
+            this.advancedActionsToolStripMenuItem.Name = "advancedActionsToolStripMenuItem";
+            this.advancedActionsToolStripMenuItem.Size = new System.Drawing.Size(195, 22);
+            this.advancedActionsToolStripMenuItem.Text = "Advanced Actions";
+            // 
+            // setPasswordToolStripMenuItem
+            // 
+            this.setPasswordToolStripMenuItem.Enabled = false;
+            this.setPasswordToolStripMenuItem.Name = "setPasswordToolStripMenuItem";
+            this.setPasswordToolStripMenuItem.Size = new System.Drawing.Size(144, 22);
+            this.setPasswordToolStripMenuItem.Text = "Set password";
+            this.setPasswordToolStripMenuItem.Click += new System.EventHandler(this.setPasswordToolStripMenuItem_Click);
+            // 
+            // readContentToolStripMenuItem
+            // 
+            this.readContentToolStripMenuItem.Enabled = false;
+            this.readContentToolStripMenuItem.Name = "readContentToolStripMenuItem";
+            this.readContentToolStripMenuItem.Size = new System.Drawing.Size(144, 22);
+            this.readContentToolStripMenuItem.Text = "Read content";
+            this.readContentToolStripMenuItem.Click += new System.EventHandler(this.readContentToolStripMenuItem_Click);
+            // 
+            // emulateTagToolStripMenuItem
+            // 
+            this.emulateTagToolStripMenuItem.Enabled = false;
+            this.emulateTagToolStripMenuItem.Name = "emulateTagToolStripMenuItem";
+            this.emulateTagToolStripMenuItem.Size = new System.Drawing.Size(144, 22);
+            this.emulateTagToolStripMenuItem.Text = "Emulate Tag";
+            this.emulateTagToolStripMenuItem.Click += new System.EventHandler(this.emulateTagToolStripMenuItem_Click);
+            // 
             // helpToolStripMenuItem
             // 
             this.helpToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.aboutToolStripMenuItem});
+            this.aboutToolStripMenuItem,
+            this.toolStripMenuItem1,
+            this.diagnosticsToolStripMenuItem,
+            this.reportallFilesToolStripMenuItem,
+            this.reportselectedFilesToolStripMenuItem});
             this.helpToolStripMenuItem.Name = "helpToolStripMenuItem";
             this.helpToolStripMenuItem.Size = new System.Drawing.Size(44, 20);
             this.helpToolStripMenuItem.Text = "&Help";
@@ -110,13 +178,38 @@
             // aboutToolStripMenuItem
             // 
             this.aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
-            this.aboutToolStripMenuItem.Size = new System.Drawing.Size(107, 22);
+            this.aboutToolStripMenuItem.Size = new System.Drawing.Size(211, 22);
             this.aboutToolStripMenuItem.Text = "&About";
             this.aboutToolStripMenuItem.Click += new System.EventHandler(this.aboutToolStripMenuItem_Click);
             // 
+            // toolStripMenuItem1
+            // 
+            this.toolStripMenuItem1.Name = "toolStripMenuItem1";
+            this.toolStripMenuItem1.Size = new System.Drawing.Size(208, 6);
+            // 
+            // diagnosticsToolStripMenuItem
+            // 
+            this.diagnosticsToolStripMenuItem.Enabled = false;
+            this.diagnosticsToolStripMenuItem.Name = "diagnosticsToolStripMenuItem";
+            this.diagnosticsToolStripMenuItem.Size = new System.Drawing.Size(211, 22);
+            this.diagnosticsToolStripMenuItem.Text = "Diagnostics";
+            // 
+            // reportallFilesToolStripMenuItem
+            // 
+            this.reportallFilesToolStripMenuItem.Name = "reportallFilesToolStripMenuItem";
+            this.reportallFilesToolStripMenuItem.Size = new System.Drawing.Size(211, 22);
+            this.reportallFilesToolStripMenuItem.Text = "Report *all unknown* files";
+            this.reportallFilesToolStripMenuItem.Click += new System.EventHandler(this.reportallFilesToolStripMenuItem_Click);
+            // 
+            // reportselectedFilesToolStripMenuItem
+            // 
+            this.reportselectedFilesToolStripMenuItem.Name = "reportselectedFilesToolStripMenuItem";
+            this.reportselectedFilesToolStripMenuItem.Size = new System.Drawing.Size(211, 22);
+            this.reportselectedFilesToolStripMenuItem.Text = "Report *selected* files";
+            this.reportselectedFilesToolStripMenuItem.Click += new System.EventHandler(this.reportselectedFilesToolStripMenuItem_Click);
+            // 
             // grpCardContent
             // 
-            this.grpCardContent.Controls.Add(this.statusStrip1);
             this.grpCardContent.Controls.Add(this.splitContainer1);
             this.grpCardContent.Dock = System.Windows.Forms.DockStyle.Fill;
             this.grpCardContent.Location = new System.Drawing.Point(0, 24);
@@ -263,6 +356,23 @@
             this.btnAdd.UseVisualStyleBackColor = true;
             this.btnAdd.Click += new System.EventHandler(this.btnAdd_Click);
             // 
+            // statusStrip1
+            // 
+            this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.statusLabel});
+            this.statusStrip1.Location = new System.Drawing.Point(0, 428);
+            this.statusStrip1.Name = "statusStrip1";
+            this.statusStrip1.Size = new System.Drawing.Size(800, 22);
+            this.statusStrip1.TabIndex = 2;
+            this.statusStrip1.Text = "statusStrip1";
+            this.statusStrip1.Visible = false;
+            // 
+            // statusLabel
+            // 
+            this.statusLabel.Name = "statusLabel";
+            this.statusLabel.Size = new System.Drawing.Size(23, 17);
+            this.statusLabel.Text = "<>";
+            // 
             // txtLog
             // 
             this.txtLog.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -276,28 +386,22 @@
             this.txtLog.TabIndex = 1;
             this.txtLog.Visible = false;
             // 
-            // statusStrip1
+            // lblMessage
             // 
-            this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.statusLabel});
-            this.statusStrip1.Location = new System.Drawing.Point(6, 398);
-            this.statusStrip1.Name = "statusStrip1";
-            this.statusStrip1.Size = new System.Drawing.Size(788, 22);
-            this.statusStrip1.TabIndex = 2;
-            this.statusStrip1.Text = "statusStrip1";
-            this.statusStrip1.Visible = false;
-            // 
-            // statusLabel
-            // 
-            this.statusLabel.Name = "statusLabel";
-            this.statusLabel.Size = new System.Drawing.Size(23, 17);
-            this.statusLabel.Text = "<>";
+            this.lblMessage.AutoSize = true;
+            this.lblMessage.Location = new System.Drawing.Point(59, 58);
+            this.lblMessage.Name = "lblMessage";
+            this.lblMessage.Size = new System.Drawing.Size(154, 13);
+            this.lblMessage.TabIndex = 2;
+            this.lblMessage.Text = "Please insert your box\' SD card";
             // 
             // TeddyMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(800, 450);
+            this.Controls.Add(this.statusStrip1);
+            this.Controls.Add(this.lblMessage);
             this.Controls.Add(this.grpCardContent);
             this.Controls.Add(this.txtLog);
             this.Controls.Add(this.menuStrip1);
@@ -308,7 +412,6 @@
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();
             this.grpCardContent.ResumeLayout(false);
-            this.grpCardContent.PerformLayout();
             this.splitContainer1.Panel1.ResumeLayout(false);
             this.splitContainer1.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
@@ -346,6 +449,17 @@
         private System.Windows.Forms.Button btnSave;
         private System.Windows.Forms.StatusStrip statusStrip1;
         private System.Windows.Forms.ToolStripStatusLabel statusLabel;
+        private System.Windows.Forms.Label lblMessage;
+        private System.Windows.Forms.ToolStripMenuItem nFCReaderToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem autodetectionEnabledToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem advancedActionsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem setPasswordToolStripMenuItem;
+        private System.Windows.Forms.ToolStripSeparator toolStripMenuItem1;
+        private System.Windows.Forms.ToolStripMenuItem reportallFilesToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem reportselectedFilesToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem diagnosticsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem readContentToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem emulateTagToolStripMenuItem;
     }
 }
 

@@ -49,57 +49,8 @@ namespace Teddy
     {
         public static int Verbosity = 0;
 
-        private static TonieData[] TonieInfos = new TonieData[0];
-        private enum eDumpFormat
-        {
-            FormatText,
-            FormatCSV,
-            FormatJSON
-        };
+        private static TonieTools.TonieData[] TonieInfos = new TonieTools.TonieData[0];
 
-        private class TonieData
-        {
-            [JsonProperty("no")]
-            public int SortNumber;
-            [JsonProperty("model")]
-            public string Model;
-            [JsonProperty("audio_id")]
-            public string[] AudioId_;
-            [JsonIgnore]
-            public long[] AudioIds
-            {
-                get
-                {
-                    List<long> ids = new List<long>();
-                    foreach (var id in AudioId_)
-                    {
-                        if (id != "" && id != "na")
-                        {
-                            ids.Add(long.Parse(id));
-                        }
-                    }
-                    return ids.ToArray();
-                }
-            }
-            [JsonProperty("hash")]
-            public string[] Hash;
-            [JsonProperty("title")]
-            public string Title;
-            [JsonProperty("series")]
-            public string Series;
-            [JsonProperty("episodes")]
-            public string Episodes;
-            [JsonProperty("tracks")]
-            public string[] Tracks;
-            [JsonProperty("release")]
-            public string Release;
-            [JsonProperty("language")]
-            public string Language;
-            [JsonProperty("category")]
-            public string Category;
-            [JsonProperty("pic")]
-            public string Pic;
-        }
 
         public static void LoadJson(string path)
         {
@@ -111,11 +62,11 @@ namespace Teddy
                     HttpWebResponse response = (HttpWebResponse)request.GetResponse();
                     TextReader reader = new StreamReader(response.GetResponseStream());
 
-                    TonieInfos = JsonConvert.DeserializeObject<TonieData[]>(reader.ReadToEnd());
+                    TonieInfos = JsonConvert.DeserializeObject<TonieTools.TonieData[]>(reader.ReadToEnd());
                 }
                 else if (File.Exists(path))
                 {
-                    TonieInfos = JsonConvert.DeserializeObject<TonieData[]>(File.ReadAllText(path));
+                    TonieInfos = JsonConvert.DeserializeObject<TonieTools.TonieData[]>(File.ReadAllText(path));
                 }
             }
             catch (Exception e)
@@ -211,7 +162,7 @@ namespace Teddy
         {
             bool showLicense = false;
             bool showHelp = false;
-            eDumpFormat dumpFormat = eDumpFormat.FormatText;
+            TonieTools.eDumpFormat dumpFormat = TonieTools.eDumpFormat.FormatText;
             bool useVbr = false;
             bool reallyRename = false;
             bool deleteDuplicates = false;
@@ -237,7 +188,7 @@ namespace Teddy
                 { "d",          "rename: delete duplicates",                                v => { deleteDuplicates = true; } },
                 { "w|write=",   "info: write updated json to local file",                   (string v) => { writeJson = v; } },
                 { "j|json=",    "Set JSON file/URL with details about tonies",              (string r) => jsonFile = r },
-                { "f|format=",  "Output details as: csv, json or text",                     v => { switch(v) { case "csv":  dumpFormat = eDumpFormat.FormatCSV; break; case "json":  dumpFormat = eDumpFormat.FormatJSON; break; case "text":  dumpFormat = eDumpFormat.FormatText; break; } } },
+                { "f|format=",  "Output details as: csv, json or text",                     v => { switch(v) { case "csv":  dumpFormat = TonieTools.eDumpFormat.FormatCSV; break; case "json":  dumpFormat = TonieTools.eDumpFormat.FormatJSON; break; case "text":  dumpFormat = TonieTools.eDumpFormat.FormatText; break; } } },
                 { "v",          "increase debug message verbosity",                         v => { if (v != null) ++Verbosity; } },
                 { "h|help",     "show this message and exit",                               h => showHelp = true },
                 { "license",    "show licenses and disclaimer",                             h => showLicense = true },
@@ -414,16 +365,16 @@ namespace Teddy
 
                         switch (dumpFormat)
                         {
-                            case eDumpFormat.FormatCSV:
+                            case TonieTools.eDumpFormat.FormatCSV:
                                 if (extra.Count > 1 || Directory.Exists(extra[0]))
                                 {
                                     Console.WriteLine("UID;AudioID;AudioDate;HeaderLength;HeaderOK;Padding;AudioLength;AudioLengthCheck;AudioHash;AudioHashCheck;Chapters;Segments;MinSegmentsPerPage;MaxSegmentsPerPage;SegLengthSum;HighestGranule;Time;MinGranules;MaxGranules;MinTime;MaxTime;");
                                 }
                                 break;
-                            case eDumpFormat.FormatJSON:
+                            case TonieTools.eDumpFormat.FormatJSON:
                                 Console.WriteLine("[");
                                 break;
-                            case eDumpFormat.FormatText:
+                            case TonieTools.eDumpFormat.FormatText:
                                 Console.WriteLine("[Mode: dump information]");
                                 break;
                         }
@@ -452,158 +403,11 @@ namespace Teddy
                         {
                             try
                             {
-                                TonieAudio dumpFile = TonieAudio.FromFile(file);
+                                StringBuilder message = new StringBuilder();
 
-                                dumpFile.CalculateStatistics(out long segCount, out long segLength, out int minSegs, out int maxSegs, out ulong minGranule, out ulong maxGranule, out ulong highestGranule);
-                                string uidrev = new FileInfo(file).Directory.Name + new FileInfo(file).Name;
-                                List<string> groups = (from Match m in Regex.Matches(uidrev, @"[A-F0-9]{2}") select m.Value).ToList();
-                                groups.Reverse();
-                                string uid = string.Join("", groups.ToArray());
-                                var date = DateTimeOffset.FromUnixTimeSeconds(dumpFile.Header.AudioId);
+                                TonieTools.DumpInfo(message, dumpFormat, file, TonieInfos);
 
-                                switch (dumpFormat)
-                                {
-                                    case eDumpFormat.FormatCSV:
-                                        {
-
-                                            Console.Write(uid + ";");
-                                            Console.Write(dumpFile.Header.AudioId.ToString("X8") + ";");
-                                            Console.Write(date.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss") + ";");
-                                            Console.Write(dumpFile.HeaderLength + ";");
-                                            Console.Write(((dumpFile.HeaderLength != 0xFFC) ? "[WARNING: EXTRA DATA]" : "[OK]") + ";");
-                                            Console.Write(dumpFile.Header.Padding.Length + ";");
-                                            Console.Write(dumpFile.Header.AudioLength + ";");
-                                            Console.Write((dumpFile.Header.AudioLength == dumpFile.Audio.Length ? "[OK]" : "[INCORRECT]") + ";");
-                                            Console.Write(BitConverter.ToString(dumpFile.Header.Hash).Replace("-", "") + ";");
-                                            Console.Write((dumpFile.HashCorrect ? "[OK]" : "[INCORRECT]") + ";");
-                                            foreach (var offset in dumpFile.Header.AudioChapters)
-                                            {
-                                                Console.Write(offset + " ");
-                                            }
-                                            Console.Write(";");
-
-                                            Console.Write(segCount + ";");
-                                            Console.Write(minSegs + ";");
-                                            Console.Write(maxSegs + ";");
-                                            Console.Write(segLength + ";");
-                                            Console.Write(highestGranule + ";");
-                                            Console.Write(TonieAudio.FormatGranule(highestGranule) + ";");
-                                            Console.Write(minGranule + ";");
-                                            Console.Write(maxGranule + ";");
-                                            Console.Write((1000 * minGranule / 48000.0f) + ";");
-                                            Console.Write((1000 * maxGranule / 48000.0f) + ";");
-                                            Console.WriteLine();
-                                            break;
-                                        }
-
-                                    case eDumpFormat.FormatText:
-                                        {
-                                            Console.WriteLine("Dump of " + dumpFile.Filename + " (UID " + uid + "):");
-
-                                            Console.WriteLine("  Header: AudioID     0x" + dumpFile.Header.AudioId.ToString("X8") + " (" + date.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss") + ")");
-
-                                            string[] titles = null;
-                                            string hashString = BitConverter.ToString(dumpFile.Header.Hash).Replace("-", "");
-                                            var found = TonieInfos.Where(t => t.Hash.Contains(hashString));
-                                            TonieData info = null;
-                                            string infoHashString = null;
-                                            int infoIndex = 0;
-                                            if (found.Count() > 0)
-                                            {
-                                                info = found.First();
-                                                titles = info.Tracks;
-                                                infoIndex = Array.IndexOf(info.AudioIds, dumpFile.Header.AudioId);
-                                                Array.Resize(ref info.Hash, info.AudioIds.Length);
-                                                infoHashString = info.Hash[infoIndex];
-
-                                                Console.WriteLine("  Header: JSON Name   '" + info.Title + "'");
-                                            }
-
-                                            Console.WriteLine("  Header: Length      0x" + dumpFile.HeaderLength.ToString("X8") + " " + ((dumpFile.HeaderLength != 0xFFC) ? " [WARNING: EXTRA DATA]" : "[OK]"));
-                                            Console.WriteLine("  Header: Padding     0x" + dumpFile.Header.Padding.Length.ToString("X8"));
-                                            Console.WriteLine("  Header: AudioLen    0x" + dumpFile.Header.AudioLength.ToString("X8") + " " + (dumpFile.Header.AudioLength == dumpFile.Audio.Length ? "[OK]" : "[INCORRECT]"));
-                                            Console.WriteLine("  Header: Checksum    " + hashString + " " + (dumpFile.HashCorrect ? "[OK]" : "[INCORRECT]") + " " + (infoHashString != null ? (infoHashString == hashString ? "[JSON MATCH]" : "[JSON MISMATCH]") : "[NO JSON INFO]"));
-                                            Console.WriteLine("  Header: Chapters    ");
-
-                                            if (info != null && infoHashString == null)
-                                            {
-                                                info.Hash[infoIndex] = hashString;
-                                            }
-
-                                            TimeSpan prevTime = new TimeSpan();
-                                            for (int track = 1; track <= dumpFile.Header.AudioChapters.Length; track++)
-                                            {
-                                                uint off = dumpFile.GetHighestPage();
-
-                                                if (track < dumpFile.Header.AudioChapters.Length)
-                                                {
-                                                    off = dumpFile.Header.AudioChapters[track];
-                                                }
-                                                ulong granule = dumpFile.GetGranuleByPage(off);
-                                                string lengthString = "@" + off;
-
-                                                if (granule != ulong.MaxValue)
-                                                {
-                                                    TimeSpan trackOffset = TimeSpan.FromSeconds(granule / 48000.0f);
-                                                    lengthString = (trackOffset - prevTime).ToString(@"mm\:ss\.ff");
-                                                    prevTime = trackOffset;
-                                                }
-
-                                                string title = "";
-
-                                                if (titles != null && track - 1 < titles.Length)
-                                                {
-                                                    title = titles[track - 1];
-                                                }
-                                                Console.WriteLine("    Track #" + track.ToString("00") + "  " + lengthString + "  " + title);
-                                            }
-
-                                            Console.WriteLine("  Ogg: Segments       " + segCount + " (min: " + minSegs + " max: " + maxSegs + " per OggPage)");
-                                            Console.WriteLine("  Ogg: net payload    " + segLength + " byte");
-                                            Console.WriteLine("  Ogg: granules       total: " + highestGranule + " (" + TonieAudio.FormatGranule(highestGranule) + " hh:mm:ss.ff)");
-                                            Console.WriteLine("  Ogg: granules/page  min: " + minGranule + " max: " + maxGranule + " (" + (1000 * minGranule / 48000.0f) + "ms - " + (1000 * maxGranule / 48000.0f) + "ms)");
-                                            Console.WriteLine();
-                                            break;
-                                        }
-
-                                    case eDumpFormat.FormatJSON:
-                                        {
-                                            if (!first)
-                                            {
-                                                Console.WriteLine(",");
-                                            }
-                                            Console.WriteLine("  {");
-                                            Console.WriteLine("    \"uid\": \"" + uid + "\",");
-                                            Console.WriteLine("    \"audio_id\": \"" + dumpFile.Header.AudioId.ToString("X8") + "\",");
-                                            Console.WriteLine("    \"audio_date\": \"" + date.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss") + "\",");
-                                            Console.WriteLine("    \"header_length\": " + dumpFile.HeaderLength + ",");
-                                            Console.WriteLine("    \"header_ok\": \"" + ((dumpFile.HeaderLength != 0xFFC) ? "FALSE" : "TRUE") + "\",");
-                                            Console.WriteLine("    \"padding\": " + dumpFile.Header.Padding.Length + ",");
-                                            Console.WriteLine("    \"audio_length\": " + dumpFile.Header.AudioLength + ",");
-                                            Console.WriteLine("    \"audio_length_check\": \"" + (dumpFile.Header.AudioLength == dumpFile.Audio.Length ? "TRUE" : "FALSE") + "\",");
-                                            Console.WriteLine("    \"audio_hash\": \"" + BitConverter.ToString(dumpFile.Header.Hash).Replace("-", "") + "\",");
-                                            Console.WriteLine("    \"audio_hash_check\": \"" + (dumpFile.HashCorrect ? "TRUE" : "FALSE") + "\",");
-                                            Console.Write("    \"chapters\": [ 0");
-                                            foreach (var offset in dumpFile.Header.AudioChapters)
-                                            {
-                                                Console.Write(", " + offset);
-                                            }
-                                            Console.WriteLine(" ],");
-                                            Console.WriteLine("    \"segments\": " + segCount + ",");
-                                            Console.WriteLine("    \"min_segments_per_page\": " + minSegs + ",");
-                                            Console.WriteLine("    \"max_segments_per_page\": " + maxSegs + ",");
-                                            Console.WriteLine("    \"segment_length_sum\": " + segLength + ",");
-                                            Console.WriteLine("    \"highest_granule\": " + highestGranule + ",");
-                                            Console.WriteLine("    \"time\": \"" + TonieAudio.FormatGranule(highestGranule) + "\",");
-                                            Console.WriteLine("    \"min_granules\": " + minGranule + ",");
-                                            Console.WriteLine("    \"max_granules\": " + maxGranule + ",");
-                                            Console.WriteLine("    \"min_time\": " + (1000 * minGranule / 48000.0f) + ",");
-                                            Console.WriteLine("    \"max_time\": " + (1000 * maxGranule / 48000.0f) + "");
-                                            Console.WriteLine("  }");
-
-                                            break;
-                                        }
-                                }
+                                Console.Write(message.ToString());
                             }
                             catch (FileNotFoundException ex)
                             {
@@ -630,12 +434,12 @@ namespace Teddy
 
                         switch (dumpFormat)
                         {
-                            case eDumpFormat.FormatCSV:
+                            case TonieTools.eDumpFormat.FormatCSV:
                                 break;
-                            case eDumpFormat.FormatJSON:
+                            case TonieTools.eDumpFormat.FormatJSON:
                                 Console.WriteLine("]");
                                 break;
-                            case eDumpFormat.FormatText:
+                            case TonieTools.eDumpFormat.FormatText:
                                 break;
                         }
 
@@ -688,7 +492,8 @@ namespace Teddy
 
                                 string hashString = BitConverter.ToString(dump2.Header.Hash).Replace("-", "");
                                 var found = TonieInfos.Where(t => t.Hash.Contains(hashString));
-                                TonieData info = null;
+                                TonieTools.TonieData info = null;
+
                                 if (found.Count() > 0)
                                 {
                                     info = found.First();
