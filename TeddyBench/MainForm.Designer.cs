@@ -100,14 +100,14 @@
             // openDirectoryToolStripMenuItem
             // 
             this.openDirectoryToolStripMenuItem.Name = "openDirectoryToolStripMenuItem";
-            this.openDirectoryToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.openDirectoryToolStripMenuItem.Size = new System.Drawing.Size(154, 22);
             this.openDirectoryToolStripMenuItem.Text = "&Open Directory";
             this.openDirectoryToolStripMenuItem.Click += new System.EventHandler(this.openDirectoryToolStripMenuItem_Click);
             // 
             // exitToolStripMenuItem
             // 
             this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
-            this.exitToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.exitToolStripMenuItem.Size = new System.Drawing.Size(154, 22);
             this.exitToolStripMenuItem.Text = "E&xit";
             this.exitToolStripMenuItem.Click += new System.EventHandler(this.exitToolStripMenuItem_Click);
             // 
@@ -143,7 +143,7 @@
             // 
             this.setPasswordToolStripMenuItem.Enabled = false;
             this.setPasswordToolStripMenuItem.Name = "setPasswordToolStripMenuItem";
-            this.setPasswordToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.setPasswordToolStripMenuItem.Size = new System.Drawing.Size(164, 22);
             this.setPasswordToolStripMenuItem.Text = "Set password";
             this.setPasswordToolStripMenuItem.Click += new System.EventHandler(this.setPasswordToolStripMenuItem_Click);
             // 
@@ -151,7 +151,7 @@
             // 
             this.readContentToolStripMenuItem.Enabled = false;
             this.readContentToolStripMenuItem.Name = "readContentToolStripMenuItem";
-            this.readContentToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.readContentToolStripMenuItem.Size = new System.Drawing.Size(164, 22);
             this.readContentToolStripMenuItem.Text = "Read tag content";
             this.readContentToolStripMenuItem.Click += new System.EventHandler(this.readContentToolStripMenuItem_Click);
             // 
@@ -159,7 +159,7 @@
             // 
             this.emulateTagToolStripMenuItem.Enabled = false;
             this.emulateTagToolStripMenuItem.Name = "emulateTagToolStripMenuItem";
-            this.emulateTagToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.emulateTagToolStripMenuItem.Size = new System.Drawing.Size(164, 22);
             this.emulateTagToolStripMenuItem.Text = "Emulate tag";
             this.emulateTagToolStripMenuItem.Click += new System.EventHandler(this.emulateTagToolStripMenuItem_Click);
             // 
@@ -382,6 +382,7 @@
             this.txtLog.Multiline = true;
             this.txtLog.Name = "txtLog";
             this.txtLog.ReadOnly = true;
+            this.txtLog.ScrollBars = System.Windows.Forms.ScrollBars.Both;
             this.txtLog.Size = new System.Drawing.Size(800, 426);
             this.txtLog.TabIndex = 1;
             this.txtLog.Visible = false;
