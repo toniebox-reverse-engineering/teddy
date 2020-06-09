@@ -8,6 +8,7 @@ using System.Data;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -43,10 +44,10 @@ namespace TeddyBench
         private ListViewItem LastSelectediItem = null;
         private Proxmark3 Proxmark3;
         private bool AutoSelected;
+        private Settings Settings = null;
         internal LogWindow Log;
 
         private string TitleString => "TeddyBench (beta) - " + GetVersion();
-
 
         public class ListViewTag
         {
@@ -177,6 +178,8 @@ namespace TeddyBench
         {
             InitializeComponent();
 
+            Settings = Settings.FromFile("teddyBench.cfg");
+
             lstTonies.LargeImageList = new ImageList();
             lstTonies.LargeImageList.ImageSize = new Size(128, 128);
             lstTonies.LargeImageList.ColorDepth = ColorDepth.Depth32Bit;
@@ -192,15 +195,21 @@ namespace TeddyBench
             UpdateCheckThread = new Thread(UpdateCheck);
             UpdateCheckThread.Start();
 
-            Proxmark3 = new Proxmark3();
-            Proxmark3.UidFound += Proxmark3_UidFound;
-            Proxmark3.DeviceFound += Proxmark3_DeviceFound;
-            Proxmark3.StartThreads();
+            autodetectionEnabledToolStripMenuItem.Checked = Settings.NfcEnabled;
+            UpdateNfcReader();
 
             AllowDrop = true;
 
             Log = new LogWindow();
-            Log.Show();
+            if (Settings.DebugWindow)
+            {
+                Log.Show();
+            }
+        }
+
+        void SaveSettings()
+        {
+            Settings.Save("teddyBench.cfg");
         }
 
         private void Proxmark3_DeviceFound(object sender, string e)
@@ -222,7 +231,7 @@ namespace TeddyBench
             {
                 if (!statusStrip1.Visible)
                 {
-                    statusLabel.Text = "Proxmark3 found at " + e + ". The UID of the tag will be automatically used where applicable.";
+                    statusLabel.Text = "Proxmark3 (FW: " + (Proxmark3.UnlockSupported ? "SLIX-L enabled" : "stock") + ") found at " + e + ". The UID of the tag will be automatically used where applicable.";
                     statusStrip1.Show();
                 }
             }
@@ -353,7 +362,11 @@ namespace TeddyBench
                 LogThread.Abort();
                 LogThread = null;
             }
-            Proxmark3.StopThreads();
+            if (Proxmark3 != null)
+            {
+                Proxmark3.StopThreads();
+                Proxmark3 = null;
+            }
         }
 
         private void StartThreads()
@@ -1269,20 +1282,81 @@ namespace TeddyBench
         {
             TonieTools.DumpInfo(str, TonieTools.eDumpFormat.FormatText, tag.FileName, TonieInfos);
         }
+        public static byte[] ConvertHexStringToByteArray(string hexString)
+        {
+            if (hexString.Length % 2 != 0)
+            {
+                throw new ArgumentException(String.Format(CultureInfo.InvariantCulture, "The binary key cannot have an odd number of digits: {0}", hexString));
+            }
 
+            byte[] data = new byte[hexString.Length / 2];
+            for (int index = 0; index < data.Length; index++)
+            {
+                string byteValue = hexString.Substring(index * 2, 2);
+                data[index] = byte.Parse(byteValue, NumberStyles.HexNumber, CultureInfo.InvariantCulture);
+            }
+
+            return data;
+        }
         private void setPasswordToolStripMenuItem_Click(object sender, EventArgs e)
         {
-
         }
 
         private void readContentToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            byte[] data = Proxmark3.ReadMemory();
 
+            if(data != null)
+            {
+                TagDumpDialog dlg = new TagDumpDialog(true, BitConverter.ToString(data).Replace("-", ""));
+                dlg.ShowDialog();
+            }
         }
 
         private void emulateTagToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            TagDumpDialog dlg = new TagDumpDialog(false);
+            if (dlg.ShowDialog() == DialogResult.OK)
+            {
+                byte[] data = ConvertHexStringToByteArray(dlg.String);
 
+                Thread EmulateThread = new Thread(() => { Proxmark3.EmulateTag(data); });
+                EmulateThread.Start();
+            }
+        }
+
+        private void autodetectionEnabledToolStripMenuItem_CheckedChanged(object sender, EventArgs e)
+        {
+            Settings.NfcEnabled = autodetectionEnabledToolStripMenuItem.Checked;
+            SaveSettings();
+            UpdateNfcReader();
+        }
+
+        private void UpdateNfcReader()
+        {
+            if(Settings.NfcEnabled)
+            {
+                if (Proxmark3 == null)
+                {
+                    Proxmark3 = new Proxmark3();
+                    Proxmark3.UidFound += Proxmark3_UidFound;
+                    Proxmark3.DeviceFound += Proxmark3_DeviceFound;
+                    Proxmark3.StartThreads();
+                }
+            }
+            else
+            {
+                if(Proxmark3 != null)
+                {
+                    Proxmark3.StopThreads();
+                    Proxmark3 = null;
+                }
+            }
+        }
+
+        private void autodetectionEnabledToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            autodetectionEnabledToolStripMenuItem.Checked ^= true;
         }
     }
 }

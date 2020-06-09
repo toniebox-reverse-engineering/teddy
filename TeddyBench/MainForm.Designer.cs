@@ -122,12 +122,11 @@
             // 
             // autodetectionEnabledToolStripMenuItem
             // 
-            this.autodetectionEnabledToolStripMenuItem.Checked = true;
-            this.autodetectionEnabledToolStripMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.autodetectionEnabledToolStripMenuItem.Enabled = false;
             this.autodetectionEnabledToolStripMenuItem.Name = "autodetectionEnabledToolStripMenuItem";
             this.autodetectionEnabledToolStripMenuItem.Size = new System.Drawing.Size(195, 22);
             this.autodetectionEnabledToolStripMenuItem.Text = "Autodetection Enabled";
+            this.autodetectionEnabledToolStripMenuItem.CheckedChanged += new System.EventHandler(this.autodetectionEnabledToolStripMenuItem_CheckedChanged);
+            this.autodetectionEnabledToolStripMenuItem.Click += new System.EventHandler(this.autodetectionEnabledToolStripMenuItem_Click);
             // 
             // advancedActionsToolStripMenuItem
             // 
@@ -143,23 +142,21 @@
             // 
             this.setPasswordToolStripMenuItem.Enabled = false;
             this.setPasswordToolStripMenuItem.Name = "setPasswordToolStripMenuItem";
-            this.setPasswordToolStripMenuItem.Size = new System.Drawing.Size(164, 22);
+            this.setPasswordToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.setPasswordToolStripMenuItem.Text = "Set password";
             this.setPasswordToolStripMenuItem.Click += new System.EventHandler(this.setPasswordToolStripMenuItem_Click);
             // 
             // readContentToolStripMenuItem
             // 
-            this.readContentToolStripMenuItem.Enabled = false;
             this.readContentToolStripMenuItem.Name = "readContentToolStripMenuItem";
-            this.readContentToolStripMenuItem.Size = new System.Drawing.Size(164, 22);
+            this.readContentToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.readContentToolStripMenuItem.Text = "Read tag content";
             this.readContentToolStripMenuItem.Click += new System.EventHandler(this.readContentToolStripMenuItem_Click);
             // 
             // emulateTagToolStripMenuItem
             // 
-            this.emulateTagToolStripMenuItem.Enabled = false;
             this.emulateTagToolStripMenuItem.Name = "emulateTagToolStripMenuItem";
-            this.emulateTagToolStripMenuItem.Size = new System.Drawing.Size(164, 22);
+            this.emulateTagToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.emulateTagToolStripMenuItem.Text = "Emulate tag";
             this.emulateTagToolStripMenuItem.Click += new System.EventHandler(this.emulateTagToolStripMenuItem_Click);
             // 
