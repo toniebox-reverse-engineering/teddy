@@ -21,7 +21,7 @@ namespace TeddyBench
             if(display)
             {
                 label1.Text = "This is the UID and memory content of your tag";
-                BtnCancel.Visible = false;
+                btnCancel.Visible = false;
             }
             else
             {
@@ -35,18 +35,6 @@ namespace TeddyBench
         {
             String = textBox1.Text.Trim();
             base.OnClosing(e);
-        }
-
-        private void btnOk_Click(object sender, EventArgs e)
-        {
-            DialogResult = DialogResult.OK;
-            Close();
-        }
-
-        private void BtnCancel_Click(object sender, EventArgs e)
-        {
-            DialogResult = DialogResult.Cancel;
-            Close();
         }
     }
 }

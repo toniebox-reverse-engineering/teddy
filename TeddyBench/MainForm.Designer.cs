@@ -40,7 +40,6 @@
             this.nFCReaderToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.autodetectionEnabledToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.advancedActionsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.setPasswordToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.readContentToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.emulateTagToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -131,20 +130,11 @@
             // advancedActionsToolStripMenuItem
             // 
             this.advancedActionsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.setPasswordToolStripMenuItem,
             this.readContentToolStripMenuItem,
             this.emulateTagToolStripMenuItem});
             this.advancedActionsToolStripMenuItem.Name = "advancedActionsToolStripMenuItem";
             this.advancedActionsToolStripMenuItem.Size = new System.Drawing.Size(195, 22);
             this.advancedActionsToolStripMenuItem.Text = "Advanced Actions";
-            // 
-            // setPasswordToolStripMenuItem
-            // 
-            this.setPasswordToolStripMenuItem.Enabled = false;
-            this.setPasswordToolStripMenuItem.Name = "setPasswordToolStripMenuItem";
-            this.setPasswordToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
-            this.setPasswordToolStripMenuItem.Text = "Set password";
-            this.setPasswordToolStripMenuItem.Click += new System.EventHandler(this.setPasswordToolStripMenuItem_Click);
             // 
             // readContentToolStripMenuItem
             // 
@@ -451,7 +441,6 @@
         private System.Windows.Forms.ToolStripMenuItem nFCReaderToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem autodetectionEnabledToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem advancedActionsToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem setPasswordToolStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripMenuItem1;
         private System.Windows.Forms.ToolStripMenuItem reportallFilesToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem reportselectedFilesToolStripMenuItem;

@@ -450,8 +450,7 @@ namespace TeddyBench
             }
         }
 
-
-        private void Emulate(byte[] data)
+        private void EmulateTagInternal(byte[] data)
         {
             if(Port == null)
             {
@@ -776,7 +775,7 @@ namespace TeddyBench
         {
             lock (ReaderLock)
             {
-                Emulate(data);
+                EmulateTagInternal(data);
             }
         }
     }

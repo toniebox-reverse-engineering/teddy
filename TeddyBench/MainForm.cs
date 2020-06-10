@@ -46,6 +46,7 @@ namespace TeddyBench
         private bool AutoSelected;
         private Settings Settings = null;
         internal LogWindow Log;
+        private string LastFoundUid = null;
 
         private string TitleString => "TeddyBench (beta) - " + GetVersion();
 
@@ -249,6 +250,12 @@ namespace TeddyBench
 
             if (e != null)
             {
+                /* already handled this UID? then return */
+                if(e == LastFoundUid)
+                {
+                    return;
+                }
+
                 foreach (ListViewItem item in lstTonies.Items)
                 {
                     ListViewTag tag = item.Tag as ListViewTag;
@@ -272,6 +279,9 @@ namespace TeddyBench
                 }
             }
 
+            LastFoundUid = e;
+
+            /* tag was removed and the selected item was auto selected because tag was found, deselect again */
             if (!found && AutoSelected)
             {
                 foreach (ListViewItem sel in lstTonies.SelectedItems)
@@ -1282,25 +1292,6 @@ namespace TeddyBench
         {
             TonieTools.DumpInfo(str, TonieTools.eDumpFormat.FormatText, tag.FileName, TonieInfos);
         }
-        public static byte[] ConvertHexStringToByteArray(string hexString)
-        {
-            if (hexString.Length % 2 != 0)
-            {
-                throw new ArgumentException(String.Format(CultureInfo.InvariantCulture, "The binary key cannot have an odd number of digits: {0}", hexString));
-            }
-
-            byte[] data = new byte[hexString.Length / 2];
-            for (int index = 0; index < data.Length; index++)
-            {
-                string byteValue = hexString.Substring(index * 2, 2);
-                data[index] = byte.Parse(byteValue, NumberStyles.HexNumber, CultureInfo.InvariantCulture);
-            }
-
-            return data;
-        }
-        private void setPasswordToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-        }
 
         private void readContentToolStripMenuItem_Click(object sender, EventArgs e)
         {
@@ -1318,7 +1309,7 @@ namespace TeddyBench
             TagDumpDialog dlg = new TagDumpDialog(false);
             if (dlg.ShowDialog() == DialogResult.OK)
             {
-                byte[] data = ConvertHexStringToByteArray(dlg.String);
+                byte[] data = Helpers.ConvertHexStringToByteArray(dlg.String);
 
                 Thread EmulateThread = new Thread(() => { Proxmark3.EmulateTag(data); });
                 EmulateThread.Start();

@@ -82,5 +82,15 @@ namespace TeddyBench
                 btnOk.PerformClick();
             }
         }
+
+        private void btnOk_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void Cancel_Click(object sender, EventArgs e)
+        {
+
+        }
     }
 }
