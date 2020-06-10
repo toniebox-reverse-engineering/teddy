@@ -226,6 +226,7 @@ namespace TeddyBench
                 if (statusStrip1.Visible)
                 {
                     statusStrip1.Hide();
+                    advancedActionsToolStripMenuItem.Enabled = false;
                 }
             }
             else
@@ -234,6 +235,7 @@ namespace TeddyBench
                 {
                     statusLabel.Text = "Proxmark3 (FW: " + (Proxmark3.UnlockSupported ? "SLIX-L enabled" : "stock") + ") found at " + e + ". The UID of the tag will be automatically used where applicable.";
                     statusStrip1.Show();
+                    advancedActionsToolStripMenuItem.Enabled = Proxmark3.UnlockSupported;
                 }
             }
         }

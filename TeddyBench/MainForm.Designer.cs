@@ -122,8 +122,8 @@
             // autodetectionEnabledToolStripMenuItem
             // 
             this.autodetectionEnabledToolStripMenuItem.Name = "autodetectionEnabledToolStripMenuItem";
-            this.autodetectionEnabledToolStripMenuItem.Size = new System.Drawing.Size(195, 22);
-            this.autodetectionEnabledToolStripMenuItem.Text = "Autodetection Enabled";
+            this.autodetectionEnabledToolStripMenuItem.Size = new System.Drawing.Size(193, 22);
+            this.autodetectionEnabledToolStripMenuItem.Text = "Autodetect Proxmark3";
             this.autodetectionEnabledToolStripMenuItem.CheckedChanged += new System.EventHandler(this.autodetectionEnabledToolStripMenuItem_CheckedChanged);
             this.autodetectionEnabledToolStripMenuItem.Click += new System.EventHandler(this.autodetectionEnabledToolStripMenuItem_Click);
             // 
@@ -132,8 +132,9 @@
             this.advancedActionsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.readContentToolStripMenuItem,
             this.emulateTagToolStripMenuItem});
+            this.advancedActionsToolStripMenuItem.Enabled = false;
             this.advancedActionsToolStripMenuItem.Name = "advancedActionsToolStripMenuItem";
-            this.advancedActionsToolStripMenuItem.Size = new System.Drawing.Size(195, 22);
+            this.advancedActionsToolStripMenuItem.Size = new System.Drawing.Size(193, 22);
             this.advancedActionsToolStripMenuItem.Text = "Advanced Actions";
             // 
             // readContentToolStripMenuItem

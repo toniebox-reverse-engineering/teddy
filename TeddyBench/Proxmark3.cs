@@ -203,6 +203,8 @@ namespace TeddyBench
             Pm3Thread = null;
 
             Close();
+
+            DeviceFound?.Invoke(this, null);
         }
 
         private void MainFunc()
