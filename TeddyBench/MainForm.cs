@@ -185,7 +185,7 @@ namespace TeddyBench
             lstTonies.LargeImageList.ImageSize = new Size(128, 128);
             lstTonies.LargeImageList.ColorDepth = ColorDepth.Depth32Bit;
             lstTonies.LargeImageList.Images.Add("unknown", ResizeImage(Resources.unknown, 128, 128));
-            lstTonies.LargeImageList.Images.Add("custom", ResizeImage(Resources.unknown, 128, 128));
+            lstTonies.LargeImageList.Images.Add("custom", ResizeImage(Resources.custom, 128, 128));
             lstTonies.ListViewItemSorter = new ListViewItemComparer(2);
             cmbSorting.SelectedIndex = 2;
             Text = TitleString;
@@ -625,13 +625,20 @@ namespace TeddyBench
                                 else
                                 {
                                     tag.Info = new TonieTools.TonieData();
+                                    image = "unknown";
 
                                     if (CustomTonies.ContainsKey(hash))
                                     {
                                         tonieName = CustomTonies[hash];
                                         tag.Info.Title = tonieName;
+                                        image = "custom";
                                     }
-                                    image = "custom";
+                                    else if (dumpFile.Header.AudioId < 0x50000000)
+                                    {
+                                        tonieName = "Unnamed Teddy - " + tonieName;
+                                        tag.Info.Title = "Unnamed Teddy";
+                                        image = "custom";
+                                    }
                                 }
 
                                 tag.Hash = hash;

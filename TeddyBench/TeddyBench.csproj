@@ -180,6 +180,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="dog.ico" />
+    <Content Include="fragen.png" />
     <Content Include="ILMergeOrder.txt" />
     <None Include="dog.png" />
     <None Include="Resources\Unknown.png" />

@@ -15,6 +15,8 @@ namespace TeddyBench
         private void linkLabel1_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
             Process.Start("https://www.flaticon.com/de/kostenloses-icon/hund_2829818");
+            Process.Start("https://www.flaticon.com/de/kostenloses-icon/fragen_1923795");
+
         }
 
         private void linkLabel2_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
