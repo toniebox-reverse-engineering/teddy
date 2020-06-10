@@ -1144,7 +1144,14 @@ namespace TeddyBench
 
                         if (createDirs)
                         {
-                            outDirectory = Path.Combine(outDirectory, info.Model + " - " + dump.Header.AudioId.ToString("X8") + " - " + RemoveInvalidChars(info.Title).Trim());
+                            if (info == null)
+                            {
+                                outDirectory = Path.Combine(outDirectory, dump.Header.AudioId.ToString("X8") + " - " + tag.Uid);
+                            }
+                            else
+                            {
+                                outDirectory = Path.Combine(outDirectory, info.Model + " - " + dump.Header.AudioId.ToString("X8") + " - " + RemoveInvalidChars(info.Title).Trim());
+                            }
                             if (!Directory.Exists(outDirectory))
                             {
                                 Directory.CreateDirectory(outDirectory);
