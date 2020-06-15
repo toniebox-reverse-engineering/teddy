@@ -28,10 +28,11 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.Windows.Forms.ListViewGroup listViewGroup1 = new System.Windows.Forms.ListViewGroup("Unknown", System.Windows.Forms.HorizontalAlignment.Left);
-            System.Windows.Forms.ListViewGroup listViewGroup2 = new System.Windows.Forms.ListViewGroup("Custom", System.Windows.Forms.HorizontalAlignment.Left);
-            System.Windows.Forms.ListViewGroup listViewGroup3 = new System.Windows.Forms.ListViewGroup("Retail", System.Windows.Forms.HorizontalAlignment.Left);
-            System.Windows.Forms.ListViewGroup listViewGroup4 = new System.Windows.Forms.ListViewGroup("", System.Windows.Forms.HorizontalAlignment.Left);
+            this.components = new System.ComponentModel.Container();
+            System.Windows.Forms.ListViewGroup listViewGroup21 = new System.Windows.Forms.ListViewGroup("Unknown", System.Windows.Forms.HorizontalAlignment.Left);
+            System.Windows.Forms.ListViewGroup listViewGroup22 = new System.Windows.Forms.ListViewGroup("Custom", System.Windows.Forms.HorizontalAlignment.Left);
+            System.Windows.Forms.ListViewGroup listViewGroup23 = new System.Windows.Forms.ListViewGroup("Retail", System.Windows.Forms.HorizontalAlignment.Left);
+            System.Windows.Forms.ListViewGroup listViewGroup24 = new System.Windows.Forms.ListViewGroup("", System.Windows.Forms.HorizontalAlignment.Left);
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(TeddyMain));
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -62,6 +63,14 @@
             this.statusLabel = new System.Windows.Forms.ToolStripStatusLabel();
             this.txtLog = new System.Windows.Forms.TextBox();
             this.lblMessage = new System.Windows.Forms.Label();
+            this.TonieContextMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.renameToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.deleteToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.assignNewUIDToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItem2 = new System.Windows.Forms.ToolStripSeparator();
+            this.showInExplorerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.exportTooggToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.sendDiagnosticsReportToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.grpCardContent.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
@@ -73,6 +82,7 @@
             this.splitContainer2.Panel2.SuspendLayout();
             this.splitContainer2.SuspendLayout();
             this.statusStrip1.SuspendLayout();
+            this.TonieContextMenu.SuspendLayout();
             this.SuspendLayout();
             // 
             // menuStrip1
@@ -140,14 +150,14 @@
             // readContentToolStripMenuItem
             // 
             this.readContentToolStripMenuItem.Name = "readContentToolStripMenuItem";
-            this.readContentToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.readContentToolStripMenuItem.Size = new System.Drawing.Size(164, 22);
             this.readContentToolStripMenuItem.Text = "Read tag content";
             this.readContentToolStripMenuItem.Click += new System.EventHandler(this.readContentToolStripMenuItem_Click);
             // 
             // emulateTagToolStripMenuItem
             // 
             this.emulateTagToolStripMenuItem.Name = "emulateTagToolStripMenuItem";
-            this.emulateTagToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.emulateTagToolStripMenuItem.Size = new System.Drawing.Size(164, 22);
             this.emulateTagToolStripMenuItem.Text = "Emulate tag";
             this.emulateTagToolStripMenuItem.Click += new System.EventHandler(this.emulateTagToolStripMenuItem_Click);
             // 
@@ -281,19 +291,19 @@
             this.lstTonies.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
             this.columnHeader1});
             this.lstTonies.Dock = System.Windows.Forms.DockStyle.Fill;
-            listViewGroup1.Header = "Unknown";
-            listViewGroup1.Name = "Unknown";
-            listViewGroup2.Header = "Custom";
-            listViewGroup2.Name = "Custom";
-            listViewGroup3.Header = "Retail";
-            listViewGroup3.Name = "Retail";
-            listViewGroup4.Header = "";
-            listViewGroup4.Name = "listViewGroup1";
+            listViewGroup21.Header = "Unknown";
+            listViewGroup21.Name = "Unknown";
+            listViewGroup22.Header = "Custom";
+            listViewGroup22.Name = "Custom";
+            listViewGroup23.Header = "Retail";
+            listViewGroup23.Name = "Retail";
+            listViewGroup24.Header = "";
+            listViewGroup24.Name = "listViewGroup1";
             this.lstTonies.Groups.AddRange(new System.Windows.Forms.ListViewGroup[] {
-            listViewGroup1,
-            listViewGroup2,
-            listViewGroup3,
-            listViewGroup4});
+            listViewGroup21,
+            listViewGroup22,
+            listViewGroup23,
+            listViewGroup24});
             this.lstTonies.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.None;
             this.lstTonies.HideSelection = false;
             this.lstTonies.LabelEdit = true;
@@ -304,11 +314,11 @@
             this.lstTonies.TabIndex = 0;
             this.lstTonies.TileSize = new System.Drawing.Size(64, 64);
             this.lstTonies.UseCompatibleStateImageBehavior = false;
-            this.lstTonies.AfterLabelEdit += new System.Windows.Forms.LabelEditEventHandler(this.listView1_AfterLabelEdit);
-            this.lstTonies.ItemSelectionChanged += new System.Windows.Forms.ListViewItemSelectionChangedEventHandler(this.listView1_ItemSelectionChanged);
-            this.lstTonies.Click += new System.EventHandler(this.listView1_Click);
-            this.lstTonies.DoubleClick += new System.EventHandler(this.listView1_DoubleClick);
-            this.lstTonies.KeyDown += new System.Windows.Forms.KeyEventHandler(this.listView1_KeyDown);
+            this.lstTonies.AfterLabelEdit += new System.Windows.Forms.LabelEditEventHandler(this.lstTonies_AfterLabelEdit);
+            this.lstTonies.ItemSelectionChanged += new System.Windows.Forms.ListViewItemSelectionChangedEventHandler(this.lstTonies_ItemSelectionChanged);
+            this.lstTonies.DoubleClick += new System.EventHandler(this.lstTonies_DoubleClick);
+            this.lstTonies.KeyDown += new System.Windows.Forms.KeyEventHandler(this.lstTonies_KeyDown);
+            this.lstTonies.MouseClick += new System.Windows.Forms.MouseEventHandler(this.lstTonies_MouseClick);
             // 
             // columnHeader1
             // 
@@ -384,6 +394,66 @@
             this.lblMessage.TabIndex = 2;
             this.lblMessage.Text = "Please insert your box\' SD card";
             // 
+            // TonieContextMenu
+            // 
+            this.TonieContextMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.renameToolStripMenuItem,
+            this.deleteToolStripMenuItem,
+            this.assignNewUIDToolStripMenuItem,
+            this.toolStripMenuItem2,
+            this.showInExplorerToolStripMenuItem,
+            this.exportTooggToolStripMenuItem,
+            this.sendDiagnosticsReportToolStripMenuItem});
+            this.TonieContextMenu.Name = "contextMenuStrip1";
+            this.TonieContextMenu.Size = new System.Drawing.Size(199, 164);
+            // 
+            // renameToolStripMenuItem
+            // 
+            this.renameToolStripMenuItem.Name = "renameToolStripMenuItem";
+            this.renameToolStripMenuItem.Size = new System.Drawing.Size(198, 22);
+            this.renameToolStripMenuItem.Text = "Rename";
+            this.renameToolStripMenuItem.Click += new System.EventHandler(this.renameToolStripMenuItem_Click);
+            // 
+            // deleteToolStripMenuItem
+            // 
+            this.deleteToolStripMenuItem.Name = "deleteToolStripMenuItem";
+            this.deleteToolStripMenuItem.Size = new System.Drawing.Size(198, 22);
+            this.deleteToolStripMenuItem.Text = "Delete";
+            this.deleteToolStripMenuItem.Click += new System.EventHandler(this.deleteToolStripMenuItem_Click);
+            // 
+            // assignNewUIDToolStripMenuItem
+            // 
+            this.assignNewUIDToolStripMenuItem.Name = "assignNewUIDToolStripMenuItem";
+            this.assignNewUIDToolStripMenuItem.Size = new System.Drawing.Size(198, 22);
+            this.assignNewUIDToolStripMenuItem.Text = "Assign new UID";
+            this.assignNewUIDToolStripMenuItem.Click += new System.EventHandler(this.assignNewUIDToolStripMenuItem_Click);
+            // 
+            // toolStripMenuItem2
+            // 
+            this.toolStripMenuItem2.Name = "toolStripMenuItem2";
+            this.toolStripMenuItem2.Size = new System.Drawing.Size(195, 6);
+            // 
+            // showInExplorerToolStripMenuItem
+            // 
+            this.showInExplorerToolStripMenuItem.Name = "showInExplorerToolStripMenuItem";
+            this.showInExplorerToolStripMenuItem.Size = new System.Drawing.Size(198, 22);
+            this.showInExplorerToolStripMenuItem.Text = "Show in Explorer";
+            this.showInExplorerToolStripMenuItem.Click += new System.EventHandler(this.showInExplorerToolStripMenuItem_Click);
+            // 
+            // exportTooggToolStripMenuItem
+            // 
+            this.exportTooggToolStripMenuItem.Name = "exportTooggToolStripMenuItem";
+            this.exportTooggToolStripMenuItem.Size = new System.Drawing.Size(198, 22);
+            this.exportTooggToolStripMenuItem.Text = "Export to .ogg";
+            this.exportTooggToolStripMenuItem.Click += new System.EventHandler(this.exportTooggToolStripMenuItem_Click);
+            // 
+            // sendDiagnosticsReportToolStripMenuItem
+            // 
+            this.sendDiagnosticsReportToolStripMenuItem.Name = "sendDiagnosticsReportToolStripMenuItem";
+            this.sendDiagnosticsReportToolStripMenuItem.Size = new System.Drawing.Size(198, 22);
+            this.sendDiagnosticsReportToolStripMenuItem.Text = "Send diagnostics report";
+            this.sendDiagnosticsReportToolStripMenuItem.Click += new System.EventHandler(this.sendDiagnosticsReportToolStripMenuItem_Click);
+            // 
             // TeddyMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -412,6 +482,7 @@
             this.splitContainer2.ResumeLayout(false);
             this.statusStrip1.ResumeLayout(false);
             this.statusStrip1.PerformLayout();
+            this.TonieContextMenu.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -448,6 +519,14 @@
         private System.Windows.Forms.ToolStripMenuItem diagnosticsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem readContentToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem emulateTagToolStripMenuItem;
+        private System.Windows.Forms.ContextMenuStrip TonieContextMenu;
+        private System.Windows.Forms.ToolStripMenuItem renameToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem deleteToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem assignNewUIDToolStripMenuItem;
+        private System.Windows.Forms.ToolStripSeparator toolStripMenuItem2;
+        private System.Windows.Forms.ToolStripMenuItem showInExplorerToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem exportTooggToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem sendDiagnosticsReportToolStripMenuItem;
     }
 }
 

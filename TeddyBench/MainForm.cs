@@ -5,6 +5,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
@@ -886,53 +887,130 @@ namespace TeddyBench
 
         private void btnDelete_Click(object sender, EventArgs e)
         {
-            bool deleteAll = false;
-
-            StopAnalyzeThread();
-
-            if (lstTonies.SelectedItems.Count > 1)
-            {
-                switch (MessageBox.Show("Delete all selected files?", "Delete files?", MessageBoxButtons.YesNoCancel))
-                {
-                    case DialogResult.Cancel:
-                        return;
-                    case DialogResult.Yes:
-                        deleteAll = true;
-                        break;
-                    case DialogResult.No:
-                        break;
-                }
-            }
-
-            foreach (ListViewItem item in lstTonies.SelectedItems)
-            {
-                ListViewTag tag = item.Tag as ListViewTag;
-                string current = item.Text;
-
-                if (!deleteAll)
-                {
-                    if (MessageBox.Show("Delete '" + current + "'?", "Delete files?", MessageBoxButtons.YesNo) == DialogResult.No)
-                    {
-                        continue;
-                    }
-                }
-                FileInfo info = new FileInfo(tag.FileName);
-                try
-                {
-                    info.Delete();
-                    info.Directory.Delete();
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show("Failed to delete file/directory '" + tag.FileName + "'");
-                    return;
-                }
-            }
-
-            StartAnalyzeThread();
         }
 
-        private void listView1_DoubleClick(object sender, EventArgs e)
+
+
+        #region Context menu for tonie files
+
+
+        private void renameToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (LastSelectediItem != null && LastSelectediItem.ImageKey == "custom")
+            {
+                LastSelectediItem.BeginEdit();
+            }
+        }
+
+        private void deleteToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            DeleteSelected();
+        }
+
+        private void exportTooggToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            SaveSelected();
+        }
+
+        private void assignNewUIDToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ReassignSelected();
+        }
+
+        private void showInExplorerToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (LastSelectediItem != null)
+            {
+                ListViewTag tag = LastSelectediItem.Tag as ListViewTag;
+                System.Diagnostics.Process.Start("explorer.exe", "/select, \"" + tag.FileName + "\"");
+            }
+        }
+
+        private async void sendDiagnosticsReportToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            await ReportSelected();
+        }
+
+        #endregion
+
+        #region ListView callbacks
+
+        private void lstTonies_MouseClick(object sender, MouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Right)
+            {
+                if (lstTonies.FocusedItem.Bounds.Contains(e.Location))
+                {
+                    LastSelectediItem = lstTonies.SelectedItems[0];
+                    TonieContextMenu.Show(Cursor.Position);
+                }
+            }
+            else
+            {
+                if (lstTonies.SelectedItems.Count == 1)
+                {
+                    if (lstTonies.SelectedItems[0] == LastSelectediItem)
+                    {
+                        if (lstTonies.SelectedItems[0].ImageKey == "custom")
+                        {
+                            LastSelectediItem.BeginEdit();
+                        }
+                    }
+                    LastSelectediItem = lstTonies.SelectedItems[0];
+                }
+            }
+        }
+
+        private void lstTonies_DoubleClick(object sender, EventArgs e)
+        {
+            ReassignSelected();
+        }
+
+        private void lstTonies_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyData == Keys.F2 && lstTonies.SelectedItems.Count > 0)
+            {
+                if (lstTonies.SelectedItems[0].ImageKey == "custom")
+                {
+                    lstTonies.SelectedItems[0].BeginEdit();
+                }
+            }
+        }
+
+        private void lstTonies_ItemSelectionChanged(object sender, ListViewItemSelectionChangedEventArgs e)
+        {
+            if (!e.IsSelected)
+            {
+                LastSelectediItem = null;
+            }
+            AutoSelected = false;
+        }
+
+        private void lstTonies_AfterLabelEdit(object sender, LabelEditEventArgs e)
+        {
+            ListViewItem item = lstTonies.Items[e.Item];
+            ListViewTag tag = item.Tag as ListViewTag;
+
+            if (e.Label == null)
+            {
+                return;
+            }
+
+            if (!CustomTonies.ContainsKey(tag.Hash))
+            {
+                CustomTonies.Add(tag.Hash, "");
+            }
+            CustomTonies[tag.Hash] = e.Label;
+
+            SaveJson();
+        }
+
+        #endregion
+
+
+        #region Selected item commands
+
+        private void ReassignSelected()
         {
             if (lstTonies.SelectedItems.Count == 1)
             {
@@ -996,95 +1074,55 @@ namespace TeddyBench
             }
         }
 
-        private void listView1_KeyDown(object sender, KeyEventArgs e)
+        private void DeleteSelected()
         {
-            if (e.KeyData == Keys.F2 && lstTonies.SelectedItems.Count > 0)
+            bool deleteAll = false;
+
+            StopAnalyzeThread();
+
+            if (lstTonies.SelectedItems.Count > 1)
             {
-                if (lstTonies.SelectedItems[0].ImageKey == "custom")
+                switch (MessageBox.Show("Delete all selected files?", "Delete files?", MessageBoxButtons.YesNoCancel))
                 {
-                    lstTonies.SelectedItems[0].BeginEdit();
+                    case DialogResult.Cancel:
+                        return;
+                    case DialogResult.Yes:
+                        deleteAll = true;
+                        break;
+                    case DialogResult.No:
+                        break;
                 }
             }
-        }
 
-        private void listView1_Click(object sender, EventArgs e)
-        {
-            if (lstTonies.SelectedItems.Count == 1)
+            foreach (ListViewItem item in lstTonies.SelectedItems)
             {
-                if (lstTonies.SelectedItems[0] == LastSelectediItem)
+                ListViewTag tag = item.Tag as ListViewTag;
+                string current = item.Text;
+
+                if (!deleteAll)
                 {
-                    if (lstTonies.SelectedItems[0].ImageKey == "custom")
+                    if (MessageBox.Show("Delete '" + current + "'?", "Delete files?", MessageBoxButtons.YesNo) == DialogResult.No)
                     {
-                        LastSelectediItem.BeginEdit();
+                        continue;
                     }
                 }
-                LastSelectediItem = lstTonies.SelectedItems[0];
-            }
-        }
-
-        private void listView1_ItemSelectionChanged(object sender, ListViewItemSelectionChangedEventArgs e)
-        {
-            if (!e.IsSelected)
-            {
-                LastSelectediItem = null;
-            }
-            AutoSelected = false;
-        }
-
-        private void listView1_AfterLabelEdit(object sender, LabelEditEventArgs e)
-        {
-            ListViewItem item = lstTonies.Items[e.Item];
-            ListViewTag tag = item.Tag as ListViewTag;
-
-            if (e.Label == null)
-            {
-                return;
-            }
-
-            if (!CustomTonies.ContainsKey(tag.Hash))
-            {
-                CustomTonies.Add(tag.Hash, "");
-            }
-            CustomTonies[tag.Hash] = e.Label;
-
-            SaveJson();
-        }
-
-        private void cmbSorting_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            foreach (ListViewItem item in lstTonies.Items)
-            {
-                if (cmbSorting.SelectedIndex == 3)
+                FileInfo info = new FileInfo(tag.FileName);
+                try
                 {
-                    switch (item.ImageKey)
-                    {
-                        case "unknown":
-                            item.Group = lstTonies.Groups[0];
-                            break;
-                        case "custom":
-                            item.Group = lstTonies.Groups[1];
-                            break;
-                        default:
-                            item.Group = lstTonies.Groups[2];
-                            break;
-                    }
+                    info.Delete();
+                    info.Directory.Delete();
                 }
-                else
+                catch (Exception ex)
                 {
-                    item.Group = lstTonies.Groups[3];
+                    MessageBox.Show("Failed to delete file/directory '" + tag.FileName + "'");
+                    return;
                 }
             }
-            (lstTonies.ListViewItemSorter as ListViewItemComparer).Characteristic = cmbSorting.SelectedIndex;
-            lstTonies.Sort();
+
+            StartAnalyzeThread();
         }
 
-        private void exitToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            StopThreads();
-            Application.Exit();
-        }
-
-        private void btnSave_Click(object sender, EventArgs e)
+        private void SaveSelected()
         {
             bool saveAll = true;
             bool createDirs = false;
@@ -1192,6 +1230,47 @@ namespace TeddyBench
             }
         }
 
+        #endregion
+
+        private void cmbSorting_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            foreach (ListViewItem item in lstTonies.Items)
+            {
+                if (cmbSorting.SelectedIndex == 3)
+                {
+                    switch (item.ImageKey)
+                    {
+                        case "unknown":
+                            item.Group = lstTonies.Groups[0];
+                            break;
+                        case "custom":
+                            item.Group = lstTonies.Groups[1];
+                            break;
+                        default:
+                            item.Group = lstTonies.Groups[2];
+                            break;
+                    }
+                }
+                else
+                {
+                    item.Group = lstTonies.Groups[3];
+                }
+            }
+            (lstTonies.ListViewItemSorter as ListViewItemComparer).Characteristic = cmbSorting.SelectedIndex;
+            lstTonies.Sort();
+        }
+
+        private void exitToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            StopThreads();
+            Application.Exit();
+        }
+
+        private void btnSave_Click(object sender, EventArgs e)
+        {
+            SaveSelected();
+        }
+
         public static string RemoveInvalidChars(string filename)
         {
             return string.Concat(filename.Split(Path.GetInvalidFileNameChars()));
@@ -1204,9 +1283,14 @@ namespace TeddyBench
 
         private async void reportselectedFilesToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            await ReportSelected();
+        }
+
+        private async Task<bool> ReportSelected()
+        { 
             if (lstTonies.SelectedItems.Count == 0)
             {
-                return;
+                return false;
             }
 
             StringBuilder str = new StringBuilder();
@@ -1228,12 +1312,15 @@ namespace TeddyBench
                 if (success)
                 {
                     MessageBox.Show("Success", "Report sent");
+                    return true;
                 }
                 else
                 {
                     MessageBox.Show("Error sending the report", "Report failure");
                 }
             }
+
+            return false;
         }
 
         private async void reportallFilesToolStripMenuItem_Click(object sender, EventArgs e)
@@ -1373,5 +1460,6 @@ namespace TeddyBench
         {
             autodetectionEnabledToolStripMenuItem.Checked ^= true;
         }
+
     }
 }
