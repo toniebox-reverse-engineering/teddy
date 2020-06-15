@@ -20,7 +20,10 @@ namespace TeddyBench
             txtUid.Select(6, 10);
             txtUid_TextChanged(null, null);
 
-            Proxmark3.UidFound += Proxmark3_UidFound;
+            if (Proxmark3 != null)
+            {
+                Proxmark3.UidFound += Proxmark3_UidFound;
+            }
         }
 
         private void Proxmark3_UidFound(object sender, string e)
@@ -50,7 +53,10 @@ namespace TeddyBench
 
         protected override void OnClosing(CancelEventArgs e)
         {
-            Proxmark3.UidFound -= Proxmark3_UidFound;
+            if (Proxmark3 != null)
+            {
+                Proxmark3.UidFound -= Proxmark3_UidFound;
+            }
             Uid = txtUid.Text;
             base.OnClosing(e);
         }

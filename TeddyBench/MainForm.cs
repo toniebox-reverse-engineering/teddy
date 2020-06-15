@@ -1311,6 +1311,10 @@ namespace TeddyBench
 
         private void readContentToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            if(Proxmark3 == null)
+            {
+                return;
+            }
             byte[] data = Proxmark3.ReadMemory();
 
             if(data != null)
@@ -1322,6 +1326,10 @@ namespace TeddyBench
 
         private void emulateTagToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            if (Proxmark3 == null)
+            {
+                return;
+            }
             TagDumpDialog dlg = new TagDumpDialog(false);
             if (dlg.ShowDialog() == DialogResult.OK)
             {
