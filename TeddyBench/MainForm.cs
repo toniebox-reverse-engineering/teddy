@@ -205,7 +205,8 @@ namespace TeddyBench
 
             if (Settings.DebugWindow)
             {
-                Log.Show();
+                LogWindow.LogLevel = LogWindow.eLogLevel.Debug;
+                enableDebugModeToolStripMenuItem.Checked = true;
             }
         }
 
@@ -1466,5 +1467,23 @@ namespace TeddyBench
             autodetectionEnabledToolStripMenuItem.Checked ^= true;
         }
 
+        private void enableDebugModeToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            enableDebugModeToolStripMenuItem.Checked ^= true;
+
+            Settings.DebugWindow = enableDebugModeToolStripMenuItem.Checked;
+            SaveSettings();
+
+            if (Settings.DebugWindow)
+            {
+                LogWindow.LogLevel = LogWindow.eLogLevel.Debug;
+                Log.Show();
+            }
+            else
+            {
+                LogWindow.LogLevel = LogWindow.eLogLevel.Warning;
+                Log.Close();
+            }
+        }
     }
 }

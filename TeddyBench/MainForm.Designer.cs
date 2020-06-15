@@ -29,10 +29,10 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.Windows.Forms.ListViewGroup listViewGroup21 = new System.Windows.Forms.ListViewGroup("Unknown", System.Windows.Forms.HorizontalAlignment.Left);
-            System.Windows.Forms.ListViewGroup listViewGroup22 = new System.Windows.Forms.ListViewGroup("Custom", System.Windows.Forms.HorizontalAlignment.Left);
-            System.Windows.Forms.ListViewGroup listViewGroup23 = new System.Windows.Forms.ListViewGroup("Retail", System.Windows.Forms.HorizontalAlignment.Left);
-            System.Windows.Forms.ListViewGroup listViewGroup24 = new System.Windows.Forms.ListViewGroup("", System.Windows.Forms.HorizontalAlignment.Left);
+            System.Windows.Forms.ListViewGroup listViewGroup1 = new System.Windows.Forms.ListViewGroup("Unknown", System.Windows.Forms.HorizontalAlignment.Left);
+            System.Windows.Forms.ListViewGroup listViewGroup2 = new System.Windows.Forms.ListViewGroup("Custom", System.Windows.Forms.HorizontalAlignment.Left);
+            System.Windows.Forms.ListViewGroup listViewGroup3 = new System.Windows.Forms.ListViewGroup("Retail", System.Windows.Forms.HorizontalAlignment.Left);
+            System.Windows.Forms.ListViewGroup listViewGroup4 = new System.Windows.Forms.ListViewGroup("", System.Windows.Forms.HorizontalAlignment.Left);
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(TeddyMain));
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -71,6 +71,7 @@
             this.showInExplorerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.exportTooggToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.sendDiagnosticsReportToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.enableDebugModeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.grpCardContent.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
@@ -168,7 +169,8 @@
             this.toolStripMenuItem1,
             this.diagnosticsToolStripMenuItem,
             this.reportallFilesToolStripMenuItem,
-            this.reportselectedFilesToolStripMenuItem});
+            this.reportselectedFilesToolStripMenuItem,
+            this.enableDebugModeToolStripMenuItem});
             this.helpToolStripMenuItem.Name = "helpToolStripMenuItem";
             this.helpToolStripMenuItem.Size = new System.Drawing.Size(44, 20);
             this.helpToolStripMenuItem.Text = "&Help";
@@ -291,19 +293,19 @@
             this.lstTonies.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
             this.columnHeader1});
             this.lstTonies.Dock = System.Windows.Forms.DockStyle.Fill;
-            listViewGroup21.Header = "Unknown";
-            listViewGroup21.Name = "Unknown";
-            listViewGroup22.Header = "Custom";
-            listViewGroup22.Name = "Custom";
-            listViewGroup23.Header = "Retail";
-            listViewGroup23.Name = "Retail";
-            listViewGroup24.Header = "";
-            listViewGroup24.Name = "listViewGroup1";
+            listViewGroup1.Header = "Unknown";
+            listViewGroup1.Name = "Unknown";
+            listViewGroup2.Header = "Custom";
+            listViewGroup2.Name = "Custom";
+            listViewGroup3.Header = "Retail";
+            listViewGroup3.Name = "Retail";
+            listViewGroup4.Header = "";
+            listViewGroup4.Name = "listViewGroup1";
             this.lstTonies.Groups.AddRange(new System.Windows.Forms.ListViewGroup[] {
-            listViewGroup21,
-            listViewGroup22,
-            listViewGroup23,
-            listViewGroup24});
+            listViewGroup1,
+            listViewGroup2,
+            listViewGroup3,
+            listViewGroup4});
             this.lstTonies.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.None;
             this.lstTonies.HideSelection = false;
             this.lstTonies.LabelEdit = true;
@@ -405,7 +407,7 @@
             this.exportTooggToolStripMenuItem,
             this.sendDiagnosticsReportToolStripMenuItem});
             this.TonieContextMenu.Name = "contextMenuStrip1";
-            this.TonieContextMenu.Size = new System.Drawing.Size(199, 164);
+            this.TonieContextMenu.Size = new System.Drawing.Size(199, 142);
             // 
             // renameToolStripMenuItem
             // 
@@ -453,6 +455,13 @@
             this.sendDiagnosticsReportToolStripMenuItem.Size = new System.Drawing.Size(198, 22);
             this.sendDiagnosticsReportToolStripMenuItem.Text = "Send diagnostics report";
             this.sendDiagnosticsReportToolStripMenuItem.Click += new System.EventHandler(this.sendDiagnosticsReportToolStripMenuItem_Click);
+            // 
+            // enableDebugModeToolStripMenuItem
+            // 
+            this.enableDebugModeToolStripMenuItem.Name = "enableDebugModeToolStripMenuItem";
+            this.enableDebugModeToolStripMenuItem.Size = new System.Drawing.Size(211, 22);
+            this.enableDebugModeToolStripMenuItem.Text = "Debug window";
+            this.enableDebugModeToolStripMenuItem.Click += new System.EventHandler(this.enableDebugModeToolStripMenuItem_Click);
             // 
             // TeddyMain
             // 
@@ -527,6 +536,7 @@
         private System.Windows.Forms.ToolStripMenuItem showInExplorerToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem exportTooggToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem sendDiagnosticsReportToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem enableDebugModeToolStripMenuItem;
     }
 }
 

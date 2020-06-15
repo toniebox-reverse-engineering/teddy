@@ -17,12 +17,14 @@ namespace TeddyBench
         private DateTime LastWindowUpdate;
         private DateTime LastTextUpdate;
 
+        public static eLogLevel LogLevel = eLogLevel.Warning;
+
         public enum eLogLevel
         {
-            Information,
-            Warning,
-            Error,
-            Debug
+            Debug = 0,
+            Information = 1,
+            Warning = 2,
+            Error = 3
         }
 
         public LogWindow()
@@ -48,6 +50,11 @@ namespace TeddyBench
         {
             if (LastWindowUpdate < LastTextUpdate)
             {
+                if(!Visible)
+                {
+                    Show();
+                }
+
                 lock (Instance.LogString)
                 {
                     txtLog.Text = LogString.ToString();
@@ -63,6 +70,11 @@ namespace TeddyBench
 
         public static void Log(eLogLevel level, string message)
         {
+            if(level < LogLevel)
+            {
+                return;
+            }
+
             lock (Instance.LogString)
             {
                 Instance.LogString.AppendLine(message);
