@@ -131,7 +131,7 @@ namespace Teddy
                 ulong granule = file.GetGranuleByPage((offset > 0) ? (offset - 1) : 0);
 
                 cue.Append("  TRACK ").Append(chapter + 1).AppendLine(" AUDIO");
-                if (titles != null)
+                if (titles != null && titles.Length > chapter)
                 {
                     cue.Append("    TITLE \"").Append(titles[chapter]).AppendLine("\"");
                 }
