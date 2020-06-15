@@ -42,6 +42,7 @@ namespace TeddyBench
         private TextWriter ConsoleWriter = null;
         private static TonieTools.TonieData[] TonieInfos;
         private static Dictionary<string, string> CustomTonies = new Dictionary<string, string>();
+        private Dictionary<string, Tuple<TonieAudio, DateTime>> CachedAudios = new Dictionary<string, Tuple<TonieAudio, DateTime>>();
         private ListViewItem LastSelectediItem = null;
         private Proxmark3 Proxmark3;
         private bool AutoSelected;
@@ -597,7 +598,7 @@ namespace TeddyBench
                         {
                             try
                             {
-                                TonieAudio dumpFile = TonieAudio.FromFile(tag.FileName, false);
+                                TonieAudio dumpFile = GetTonieAudio(tag.FileName);
                                 string image = "";
                                 string hash = BitConverter.ToString(dumpFile.Header.Hash).Replace("-", "");
                                 var found = TonieInfos.Where(t => t.Hash.Where(h => h == hash).Count() > 0);
@@ -668,6 +669,25 @@ namespace TeddyBench
                     }
                 }
             }
+        }
+
+        private TonieAudio GetTonieAudio(string fileName)
+        {
+            FileInfo info = new FileInfo(fileName);
+            if (CachedAudios.ContainsKey(fileName))
+            {
+                Tuple<TonieAudio, DateTime> cachedItem = CachedAudios[fileName];
+                if(cachedItem.Item2 == info.LastWriteTime)
+                {
+                    return cachedItem.Item1;
+                }
+                CachedAudios.Remove(fileName);
+            }
+
+            TonieAudio file = TonieAudio.FromFile(fileName, false);
+            CachedAudios.Add(fileName, new Tuple<TonieAudio, DateTime>(file, info.LastWriteTime));
+
+            return file;
         }
 
         public static Bitmap ResizeImage(Image image, int width, int height)
