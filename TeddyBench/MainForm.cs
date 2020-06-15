@@ -656,8 +656,8 @@ namespace TeddyBench
                                     "UID:      " + tag.Uid + Environment.NewLine +
                                     "Date:     " + tag.FileInfo.CreationTime + Environment.NewLine +
                                     "AudioID:  0x" + tag.AudioId.ToString("X8") + Environment.NewLine +
-                                    "Chapters: " + dumpFile.Header.AudioChapters.Length + Environment.NewLine
-                                    ;
+                                    "Chapters: " + dumpFile.Header.AudioChapters.Length + Environment.NewLine;
+                                    UpdateSorting();
                                 }));
                             }
                             catch (Exception ex)
@@ -1233,6 +1233,11 @@ namespace TeddyBench
         #endregion
 
         private void cmbSorting_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            UpdateSorting();
+        }
+
+        private void UpdateSorting()
         {
             foreach (ListViewItem item in lstTonies.Items)
             {
