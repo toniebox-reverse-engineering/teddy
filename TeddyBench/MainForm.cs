@@ -179,6 +179,7 @@ namespace TeddyBench
         public TeddyMain()
         {
             InitializeComponent();
+            Log = new LogWindow();
 
             Settings = Settings.FromFile("teddyBench.cfg");
 
@@ -202,7 +203,6 @@ namespace TeddyBench
 
             AllowDrop = true;
 
-            Log = new LogWindow();
             if (Settings.DebugWindow)
             {
                 Log.Show();
@@ -377,7 +377,7 @@ namespace TeddyBench
             }
             if (Proxmark3 != null)
             {
-                Proxmark3.StopThreads();
+                Proxmark3.Stop();
                 Proxmark3 = null;
             }
         }
@@ -1448,14 +1448,14 @@ namespace TeddyBench
                     Proxmark3 = new Proxmark3();
                     Proxmark3.UidFound += Proxmark3_UidFound;
                     Proxmark3.DeviceFound += Proxmark3_DeviceFound;
-                    Proxmark3.StartThreads();
+                    Proxmark3.Start();
                 }
             }
             else
             {
                 if(Proxmark3 != null)
                 {
-                    Proxmark3.StopThreads();
+                    Proxmark3.Stop();
                     Proxmark3 = null;
                 }
             }

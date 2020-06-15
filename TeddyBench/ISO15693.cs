@@ -121,7 +121,6 @@ namespace TeddyBench
                 if (hasUid)
                 {
                     flags |= Flag.ADDRESS;
-                    flags |= Flag.SELECT;
                 }
             }
 

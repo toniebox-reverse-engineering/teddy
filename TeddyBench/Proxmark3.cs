@@ -178,74 +178,101 @@ namespace TeddyBench
         public SerialPort Port { get; private set; }
         public event EventHandler<string> UidFound;
         public event EventHandler<string> DeviceFound;
-        public string CurrentUid = null;
-        private Thread Pm3Thread = null;
-        private bool ExitThread = false;
+        public string CurrentUidString = null;
+        private Thread ScanThread = null;
+        private bool ExitScanThread = false;
         private object ReaderLock = new object();
 
         private Dictionary<string, DateTime> PortsFailed = new Dictionary<string, DateTime>();
         private Dictionary<string, DateTime> PortsAppeared = new Dictionary<string, DateTime>();
         public bool UnlockSupported = false;
 
-        public void StartThreads()
+        public Proxmark3()
         {
-            Pm3Thread = new Thread(MainFunc);
-            Pm3Thread.Start();
+            LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] new instance");
         }
 
-        public void StopThreads()
+
+        public void Start()
         {
-            ExitThread = true;
-            if (!Pm3Thread.Join(2000))
-            {
-                Pm3Thread.Abort();
-            }
-            Pm3Thread = null;
+            StartThread();
+        }
+
+        private void StartThread()
+        {
+            ExitScanThread = false;
+            ScanThread = new Thread(ScanThreadFunc);
+            ScanThread.Name = "PM3 Scan Thread";
+            ScanThread.Start();
+        }
+
+        public void Stop()
+        {
+            StopThread();
 
             Close();
 
             DeviceFound?.Invoke(this, null);
         }
 
-        private void MainFunc()
+        public void StopThread()
         {
-            while (true)
+
+            LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] Trying to stop thread");
+            ExitScanThread = true;
+            if (!ScanThread.Join(2000))
             {
-                if (Port == null)
+                LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] Trying to abort thread");
+                ScanThread.Abort();
+            }
+            ScanThread = null;
+        }
+
+        private void ScanThreadFunc()
+        {
+            lock (ReaderLock)
+            {
+                while (true)
                 {
-                    if (ExitThread)
+                    if (Port == null)
                     {
-                        LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] MainFunc: Exiting");
-                        return;
-                    }
-                    try
-                    {
-                        if (!Detect())
+                        if (ExitScanThread)
                         {
+                            LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] MainFunc: Exiting");
+                            return;
+                        }
+                        try
+                        {
+                            if (!Detect())
+                            {
+                                Thread.Sleep(250);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Close();
                             Thread.Sleep(250);
                         }
                     }
-                    catch (Exception ex)
+                    else
                     {
-                        Close();
-                        Thread.Sleep(250);
-                    }
-                }
-                else
-                {
-                    try
-                    {
-                        lock (ReaderLock)
+                        try
                         {
-                            string uid = GetUIDString();
+                            byte[] rnd = GetRandom();
 
-                            /* exit as quickly as possible if requested */
-                            if (ExitThread)
+                            /* no SLIX-L found */
+                            if (rnd == null)
                             {
-                                LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] MainFunc: Exiting");
-                                Flush(Port);
-                                return;
+                                if (CurrentUidString != null)
+                                {
+                                    CurrentUidString = null;
+                                    UidFound?.Invoke(this, null);
+                                }
+                                Thread.Sleep(100);
+                                continue;
                             }
+
+                            byte[] uid = GetUID();
 
                             /* no UID detected? might be locked */
                             if (uid == null)
@@ -256,77 +283,93 @@ namespace TeddyBench
                                 if (UnlockTag(0x0F0F0F0F) || UnlockTag(0x7FFD6E5B))
                                 {
                                     LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] MainFunc: Unlocked tag");
-                                    uid = GetUIDString();
+                                    uid = GetUID();
                                 }
                             }
 
                             /* exit as quickly as possible if requested */
-                            if (ExitThread)
+                            if (ExitScanThread)
                             {
                                 LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] MainFunc: Exiting");
                                 Flush(Port);
                                 return;
                             }
 
+                            string uidString = UIDToString(uid);
+
                             /* notify listeners about currently detected UID */
-                            UidFound?.Invoke(this, uid);
+                            UidFound?.Invoke(this, uidString);
 
                             /* found a new one? print a log message */
-                            if (uid != null && CurrentUid != uid)
+                            if (uidString != null && CurrentUidString != uidString)
                             {
-                                LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] Detected tag UID: " + uid);
+                                LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] Detected tag UID: " + uidString);
                             }
 
-                            CurrentUid = uid;
-                        }
-                    }
-                    catch (InvalidOperationException ex2)
-                    {
-                        if (ex2.TargetSite.DeclaringType.Name == "SerialPort")
-                        {
-                            LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] MainFunc: Serial port lost. Closing device.");
-                        }
-                        else
-                        {
-                            LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] MainFunc: Device failed. Closing. (" + ex2.ToString() + ")");
-                        }
-                        Close();
-                    }
-                    catch (Exception ex3)
-                    {
-                        LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] MainFunc: Device failed. Closing. (" + ex3.ToString() + ")");
-                        Close();
-                    }
+                            while (GetRandom(uid) != null)
+                            {
+                                /* exit as quickly as possible if requested */
+                                if (ExitScanThread)
+                                {
+                                    LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] MainFunc: Exiting");
+                                    Flush(Port);
+                                    return;
+                                }
+                                Thread.Sleep(100);
+                            }
 
-                    Thread.Sleep(250);
+                            CurrentUidString = uidString;
+                        }
+                        catch (InvalidOperationException ex2)
+                        {
+                            if (ex2.TargetSite.DeclaringType.Name == "SerialPort")
+                            {
+                                LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] MainFunc: Serial port lost. Closing device.");
+                            }
+                            else
+                            {
+                                LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] MainFunc: Device failed. Closing. (" + ex2.ToString() + ")");
+                            }
+                            Close();
+                        }
+                        catch (Exception ex3)
+                        {
+                            LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] MainFunc: Device failed. Closing. (" + ex3.ToString() + ")");
+                            Close();
+                        }
+                    }
+                    Thread.Sleep(50);
                 }
             }
         }
 
         private void Close()
         {
-            if (Port != null)
+            lock (this)
             {
-                try
+                if (Port != null)
                 {
-                    Flush(Port);
-                }
-                catch (Exception ex)
-                {
-                }
+                    try
+                    {
+                        Flush(Port);
+                    }
+                    catch (Exception ex)
+                    {
+                    }
 
-                try
-                {
-                    Port.Close();
+                    try
+                    {
+                        Port.Close();
+                    }
+                    catch (Exception ex)
+                    {
+                    }
+                    Port.Dispose();
+                    Port = null;
+                    CurrentPort = null;
                 }
-                catch (Exception ex)
-                {
-                }
-                Port.Dispose();
-                Port = null;
-                CurrentPort = null;
+                DeviceFound?.Invoke(this, CurrentPort);
             }
-            DeviceFound?.Invoke(this, CurrentPort);
         }
 
         private bool UnlockTag(uint pass)
@@ -347,7 +390,6 @@ namespace TeddyBench
             }
             Pm3UsbCommand cmd = new Pm3UsbCommand(0x319, pass);
 
-            //LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] UnlockTag: Send " + BitConverter.ToString(cmd.ToByteArray()).Replace("-", ""));
             LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] UnlockTag: Send request for pass 0x" + pass.ToString("X8"));
             cmd.Write(Port);
 
@@ -387,70 +429,121 @@ namespace TeddyBench
             }
         }
 
-        private string GetUIDString()
+        private string UIDToString(byte[] uid)
         {
-            byte[] uid = GetUID();
             if (uid != null)
             {
-                return BitConverter.ToString(uid).Replace("-", "");
+                return BitConverter.ToString(uid.Reverse().ToArray()).Replace("-", "");
             }
             return null;
         }
 
-        private byte[] GetUID()
+        private byte[] SendCommand(byte[] command)
         {
             if (Port == null)
             {
                 return null;
             }
-            byte[] cmdIdentify = ISO15693.BuildCommand(ISO15693.Command.INVENTORY, new byte[1]);
 
-            Pm3UsbCommand cmd = new Pm3UsbCommand(0x313, (byte)cmdIdentify.Length, 1, 1, cmdIdentify);
+            Pm3UsbCommand cmd = new Pm3UsbCommand(0x313, (byte)command.Length, 1, 1, command);
 
-            //LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] GetUID: Send " + BitConverter.ToString(cmd.ToByteArray()).Replace("-", ""));
-            LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] GetUID: Send " + BitConverter.ToString(cmdIdentify).Replace("-", ""));
+            LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] GetResponse: Send " + BitConverter.ToString(command).Replace("-", ""));
             cmd.Write(Port);
 
             while (true)
             {
-                Pm3UsbResponse response = new Pm3UsbResponse(Port, 500);
+                Pm3UsbResponse response = new Pm3UsbResponse(Port, 200);
 
                 switch (response.Cmd)
                 {
                     case Pm3UsbResponse.eResponseType.DebugString:
                         {
                             string debugStr = Encoding.UTF8.GetString(response.data.d, 0, response.data.dataLen);
-                            LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] GetUID: DebugMessage '" + debugStr + "'");
+                            LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] GetResponse: DebugMessage '" + debugStr + "'");
                             break;
                         }
 
                     case Pm3UsbResponse.eResponseType.NoData:
                     case Pm3UsbResponse.eResponseType.Timeout:
-                        LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] GetUID: timeout, returning");
+                        LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] GetResponse: timeout, returning");
                         return null;
 
                     case Pm3UsbResponse.eResponseType.ACK:
-                        if (response.data.arg[0] == 12)
+                        if (response.data.arg[0] > 0 && response.data.arg[0] < response.data.d.Length)
                         {
-                            byte[] uidBytes = new byte[8];
-                            Array.Copy(response.data.d, 2, uidBytes, 0, 8);
-
-                            string uid = BitConverter.ToString(uidBytes.Reverse().ToArray()).Replace("-", "");
-                            LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] GetUID: ACK, returning " + uid + "");
-                            return uidBytes.Reverse().ToArray();
+                            LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] GetResponse: ACK, returning data");
+                            byte[] ret = new byte[response.data.arg[0]];
+                            Array.Copy(response.data.d, ret, response.data.arg[0]);
+                            return ret;
                         }
                         else
                         {
-                            LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] GetUID: no tag found, returning");
+                            LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] GetResponse: no tag answered, returning");
                             return null;
                         }
 
                     default:
-                        LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] GetUID: Unhandled: " + response.Cmd);
+                        LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] GetResponse: Unhandled: " + response.Cmd);
                         break;
                 }
             }
         }
+
+        #region Send ISO15693 commands
+
+        private byte[] GetRandom(byte[] uid = null)
+        {
+            byte[] cmdIdentify = ISO15693.BuildCommand(ISO15693.Command.NXP_GET_RANDOM_NUMBER, uid, null);
+            byte[] data = SendCommand(cmdIdentify);
+
+            if (data == null || data.Length != 5)
+            {
+                return null;
+            }
+
+            byte[] rnd = new byte[2];
+            Array.Copy(data, 1, rnd, 0, 2);
+
+            return rnd;
+        }
+
+        private byte[] GetUID()
+        {
+            byte[] cmdIdentify = ISO15693.BuildCommand(ISO15693.Command.INVENTORY, new byte[1]);
+            byte[] data = SendCommand(cmdIdentify);
+
+            if (data == null || data.Length != 12)
+            {
+                return null;
+            }
+
+            byte[] uidBytes = new byte[8];
+            Array.Copy(data, 2, uidBytes, 0, 8);
+
+            string uid = BitConverter.ToString(uidBytes.Reverse().ToArray()).Replace("-", "");
+            LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] GetUID: ACK, returning " + uid.Length + " byte");
+            return uidBytes;
+        }
+
+        private byte[] ReadMemory(int bank)
+        {
+            byte[] cmdReadMem = ISO15693.BuildCommand(ISO15693.Command.READBLOCK, new[] { (byte)bank });
+            byte[] data = SendCommand(cmdReadMem);
+
+            if (data == null || data.Length != 7)
+            {
+                return null;
+            }
+
+            byte[] mem = new byte[4];
+            Array.Copy(data, 1, mem, 0, 4);
+
+            string str = BitConverter.ToString(mem.ToArray()).Replace("-", "");
+            LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] ReadMemory: ACK, returning " + str + "");
+            return mem;
+        }
+
+        #endregion
 
         private void EmulateTagInternal(byte[] data)
         {
@@ -488,56 +581,6 @@ namespace TeddyBench
 
                     default:
                         LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] Emulate: Unhandled: " + response.Cmd);
-                        break;
-                }
-            }
-        }
-
-        private byte[] ReadMemory(int bank)
-        {
-            byte[] cmdReadMem = ISO15693.BuildCommand(ISO15693.Command.READBLOCK, new[] { (byte)bank });
-
-            Pm3UsbCommand cmd = new Pm3UsbCommand(0x313, (byte)cmdReadMem.Length, 1, 1, cmdReadMem);
-
-            LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] ReadMemory: Send " + BitConverter.ToString(cmdReadMem).Replace("-", ""));
-            cmd.Write(Port);
-
-            while (true)
-            {
-                Pm3UsbResponse response = new Pm3UsbResponse(Port, 500);
-
-                switch (response.Cmd)
-                {
-                    case Pm3UsbResponse.eResponseType.DebugString:
-                        {
-                            string debugStr = Encoding.UTF8.GetString(response.data.d, 0, response.data.dataLen);
-                            LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] ReadMemory: DebugMessage '" + debugStr + "'");
-                            break;
-                        }
-
-                    case Pm3UsbResponse.eResponseType.NoData:
-                    case Pm3UsbResponse.eResponseType.Timeout:
-                        LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] ReadMemory: timeout, returning");
-                        return null;
-
-                    case Pm3UsbResponse.eResponseType.ACK:
-                        if (response.data.arg[0] == 7)
-                        {
-                            byte[] mem = new byte[4];
-                            Array.Copy(response.data.d, 1, mem, 0, 4);
-
-                            string str = BitConverter.ToString(mem.ToArray()).Replace("-", "");
-                            LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] ReadMemory: ACK, returning " + str + "");
-                            return mem;
-                        }
-                        else
-                        {
-                            LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] ReadMemory: no tag found, returning");
-                            return null;
-                        }
-
-                    default:
-                        LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] ReadMemory: Unhandled: " + response.Cmd);
                         break;
                 }
             }
@@ -702,6 +745,13 @@ namespace TeddyBench
             byte[] mem = new byte[8 * 4];
             byte[] uid = null;
 
+            if (Port == null)
+            {
+                return null;
+            }
+
+            StopThread();
+
             lock (ReaderLock)
             {
                 uid = GetUID();
@@ -724,6 +774,8 @@ namespace TeddyBench
                 }
             }
 
+            StartThread();
+
             for (int bank = 0; bank < 8; bank++)
             {
                 byte[] buf = new byte[4];
@@ -735,7 +787,7 @@ namespace TeddyBench
 
             byte[] data = new byte[8 + 8 * 4];
 
-            Array.Copy(uid, data, 8);
+            Array.Copy(uid.Reverse().ToArray(), data, 8);
             Array.Copy(mem, 0, data, 8, 8 * 4);
 
             return data;
@@ -743,10 +795,17 @@ namespace TeddyBench
 
         internal void EmulateTag(byte[] data)
         {
+            if (Port == null)
+            {
+                return;
+            }
+
+            StopThread();
             lock (ReaderLock)
             {
                 EmulateTagInternal(data);
             }
+            StartThread();
         }
     }
 }
