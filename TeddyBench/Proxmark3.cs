@@ -220,7 +220,7 @@ namespace TeddyBench
 
             LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] Trying to stop thread");
             ExitScanThread = true;
-            if (!ScanThread.Join(2000))
+            if (!ScanThread.Join(1000))
             {
                 LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] Trying to abort thread");
                 ScanThread.Abort();
@@ -258,6 +258,12 @@ namespace TeddyBench
                     {
                         try
                         {
+                            if (ExitScanThread)
+                            {
+                                LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] MainFunc: Exiting");
+                                return;
+                            }
+
                             byte[] rnd = GetRandom();
 
                             /* no SLIX-L found */
@@ -272,18 +278,43 @@ namespace TeddyBench
                                 continue;
                             }
 
+                            LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] MainFunc: Tag detected, identifying");
+
                             byte[] uid = GetUID();
 
                             /* no UID detected? might be locked */
                             if (uid == null)
                             {
-                                LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] MainFunc: No tag detected, try to unlock");
-
-                                /* try to unlock using the common passwords */
-                                if (UnlockTag(0x0F0F0F0F) || UnlockTag(0x7FFD6E5B))
+                                if (UnlockSupported)
                                 {
-                                    LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] MainFunc: Unlocked tag");
-                                    uid = GetUID();
+                                    LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] MainFunc: Tag in privacy mode, try to unlock");
+
+                                    /* try to unlock using the common passwords */
+                                    if (UnlockTag(0x0F0F0F0F) || UnlockTag(0x7FFD6E5B))
+                                    {
+                                        LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] MainFunc: Unlocked tag");
+                                        uid = GetUID();
+                                    }
+                                }
+                                else
+                                {
+                                    LogWindow.Log(LogWindow.eLogLevel.Warning, "[PM3] MainFunc: Tag in privacy mode, unlock not supported by your firmware");
+                                    LogWindow.Log(LogWindow.eLogLevel.Warning, "[PM3] MainFunc: Either use our custom firmware from");
+                                    LogWindow.Log(LogWindow.eLogLevel.Warning, "[PM3] MainFunc: -> https://github.com/g3gg0/proxmark3/tree/iso15693_slix_l_features");
+                                    LogWindow.Log(LogWindow.eLogLevel.Warning, "[PM3] MainFunc: or use the \"knock method\" to get it out of privacy mode ");
+                                    LogWindow.Log(LogWindow.eLogLevel.Warning, "[PM3] MainFunc: -> https://youtu.be/IiZYM5k90pY");
+
+                                    while (GetRandom() != null)
+                                    {
+                                        /* exit as quickly as possible if requested */
+                                        if (ExitScanThread)
+                                        {
+                                            LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] MainFunc: Exiting");
+                                            Flush(Port);
+                                            return;
+                                        }
+                                        Thread.Sleep(100);
+                                    }
                                 }
                             }
 
