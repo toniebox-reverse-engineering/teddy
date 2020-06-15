@@ -403,8 +403,8 @@ namespace TeddyBench
             {
                 return null;
             }
-            byte[] cmdIdentify = new byte[] { 0x26, 0x01, 0x00, 0x00, 0x00 };
-            CalcChecksum(cmdIdentify);
+            byte[] cmdIdentify = ISO15693.BuildCommand(ISO15693.Command.INVENTORY, new byte[1]);
+
             Pm3UsbCommand cmd = new Pm3UsbCommand(0x313, (byte)cmdIdentify.Length, 1, 1, cmdIdentify);
 
             //LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] GetUID: Send " + BitConverter.ToString(cmd.ToByteArray()).Replace("-", ""));
@@ -495,10 +495,8 @@ namespace TeddyBench
 
         private byte[] ReadMemory(int bank)
         {
-            byte[] cmdReadMem = new byte[] { 0x02, 0x20, 0x00, 0x00, 0x00 };
+            byte[] cmdReadMem = ISO15693.BuildCommand(ISO15693.Command.READBLOCK, new[] { (byte)bank });
 
-            cmdReadMem[2] = (byte)bank;
-            CalcChecksum(cmdReadMem);
             Pm3UsbCommand cmd = new Pm3UsbCommand(0x313, (byte)cmdReadMem.Length, 1, 1, cmdReadMem);
 
             LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] ReadMemory: Send " + BitConverter.ToString(cmdReadMem).Replace("-", ""));
@@ -543,36 +541,6 @@ namespace TeddyBench
                         break;
                 }
             }
-        }
-
-
-
-        private void CalcChecksum(byte[] buf)
-        {
-            int crcPos = buf.Length - 2;
-            uint crc = 0xFFFF;
-
-            for (int i = 0; i < crcPos; i++)
-            {
-                crc ^= buf[i];
-
-                for (int j = 0; j < 8; j++)
-                {
-                    if ((crc & 1) != 0)
-                    {
-                        crc = (crc >> 1) ^ 0x8408;
-                    }
-                    else
-                    {
-                        crc >>= 1;
-                    }
-                }
-            }
-
-            crc = (crc & 0xffff) ^ 0xFFFF;
-
-            buf[crcPos + 0] = (byte)(crc & 0xff);
-            buf[crcPos + 1] = (byte)(crc >> 8);
         }
 
         private void Flush(SerialPort p)

@@ -98,6 +98,7 @@
       <DependentUpon>AskUIDForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Helpers.cs" />
+    <Compile Include="ISO15693.cs" />
     <Compile Include="LogWindow.cs">
       <SubType>Form</SubType>
     </Compile>
