@@ -81,7 +81,7 @@ namespace TeddyBench
                 ByteArrayToStructure(buf, offset, ref data);
             }
 
-            public Pm3UsbResponse(SerialPort p, int waitTime = 0)
+            public Pm3UsbResponse(SerialPort p, int waitTime = 1000)
             {
                 try
                 {
@@ -263,6 +263,7 @@ namespace TeddyBench
                                 LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] MainFunc: Exiting");
                                 return;
                             }
+                            Flush(Port);
 
                             byte[] rnd = GetRandom();
 
@@ -277,6 +278,7 @@ namespace TeddyBench
                                 Thread.Sleep(100);
                                 continue;
                             }
+
 
                             LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] MainFunc: Tag detected, identifying");
 
@@ -440,7 +442,7 @@ namespace TeddyBench
 
             while (true)
             {
-                Pm3UsbResponse response = new Pm3UsbResponse(Port, 1000);
+                Pm3UsbResponse response = new Pm3UsbResponse(Port);
 
                 switch (response.Cmd)
                 {
@@ -497,7 +499,7 @@ namespace TeddyBench
 
             while (true)
             {
-                Pm3UsbResponse response = new Pm3UsbResponse(Port, 200);
+                Pm3UsbResponse response = new Pm3UsbResponse(Port);
 
                 switch (response.Cmd)
                 {
@@ -606,7 +608,7 @@ namespace TeddyBench
 
             while (true)
             {
-                Pm3UsbResponse response = new Pm3UsbResponse(Port, 500);
+                Pm3UsbResponse response = new Pm3UsbResponse(Port);
 
                 switch (response.Cmd)
                 {
@@ -725,7 +727,7 @@ namespace TeddyBench
 
                 Pm3UsbCommand cmdPing = new Pm3UsbCommand(0x109);
                 cmdPing.Write(p);
-                Pm3UsbResponse resPing = new Pm3UsbResponse(p, 100);
+                Pm3UsbResponse resPing = new Pm3UsbResponse(p);
 
                 if (resPing.Cmd != Pm3UsbResponse.eResponseType.ACK)
                 {
@@ -737,7 +739,7 @@ namespace TeddyBench
                 /* read version */
                 Pm3UsbCommand cmdVers = new Pm3UsbCommand(0x107);
                 cmdVers.Write(p);
-                Pm3UsbResponse resVers = new Pm3UsbResponse(p, 1000);
+                Pm3UsbResponse resVers = new Pm3UsbResponse(p);
                 if (resVers.Cmd != Pm3UsbResponse.eResponseType.ACK)
                 {
                     LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] TryOpen: " + port + " did not reply to a version query. (got " + resVers.Cmd.ToString() + " instead, " + resVers.Length + " bytes)");
