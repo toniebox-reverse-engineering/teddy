@@ -294,6 +294,12 @@ namespace TeddyBench
                                     {
                                         LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] MainFunc: Unlocked tag");
                                         uid = GetUID();
+                                        if(uid == null)
+                                        {
+                                            LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] MainFunc: But it did still not respond to an INVENTORY command?!");
+                                            Thread.Sleep(100);
+                                            continue;
+                                        }
                                     }
                                 }
                                 else
@@ -303,6 +309,7 @@ namespace TeddyBench
                                     LogWindow.Log(LogWindow.eLogLevel.Warning, "[PM3] MainFunc: -> https://github.com/g3gg0/proxmark3/tree/iso15693_slix_l_features");
                                     LogWindow.Log(LogWindow.eLogLevel.Warning, "[PM3] MainFunc: or use the \"knock method\" to get it out of privacy mode ");
                                     LogWindow.Log(LogWindow.eLogLevel.Warning, "[PM3] MainFunc: -> https://youtu.be/IiZYM5k90pY");
+                                    LogWindow.Log(LogWindow.eLogLevel.Warning, "[PM3] MainFunc: Please remove the tag");
 
                                     while (GetRandom() != null)
                                     {
@@ -315,6 +322,7 @@ namespace TeddyBench
                                         }
                                         Thread.Sleep(100);
                                     }
+                                    LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] MainFunc: Tag disappeared");
                                 }
                             }
 
@@ -328,14 +336,20 @@ namespace TeddyBench
 
                             string uidString = UIDToString(uid);
 
+                            /* found a new one? print a log message */
+                            if (uidString != null)
+                            {
+                                LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] Report tag UID: " + uidString);
+                            }
+                            else
+                            {
+                                LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] Report removed tag");
+                            }
+                            CurrentUidString = uidString;
+
                             /* notify listeners about currently detected UID */
                             UidFound?.Invoke(this, uidString);
 
-                            /* found a new one? print a log message */
-                            if (uidString != null && CurrentUidString != uidString)
-                            {
-                                LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] Detected tag UID: " + uidString);
-                            }
 
                             while (GetRandom(uid) != null)
                             {
@@ -348,8 +362,8 @@ namespace TeddyBench
                                 }
                                 Thread.Sleep(100);
                             }
+                            LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] MainFunc: Tag disappeared");
 
-                            CurrentUidString = uidString;
                         }
                         catch (InvalidOperationException ex2)
                         {
@@ -529,6 +543,7 @@ namespace TeddyBench
 
             if (data == null || data.Length != 5)
             {
+                LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] GetRandom: Failed (" + ((data == null) ? "no resp" : (data.Length + " bytes")) + ")");
                 return null;
             }
 
@@ -545,6 +560,7 @@ namespace TeddyBench
 
             if (data == null || data.Length != 12)
             {
+                LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] GetUID: Failed (" + ((data == null) ? "no resp" : (data.Length + " bytes")) + ")");
                 return null;
             }
 
@@ -563,6 +579,7 @@ namespace TeddyBench
 
             if (data == null || data.Length != 7)
             {
+                LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] ReadMemory: Failed (" + ((data == null) ? "no resp" : (data.Length + " bytes")) + ")");
                 return null;
             }
 
