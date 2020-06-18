@@ -24,10 +24,14 @@ namespace TeddyBench
             }
             catch(Exception ex)
             {
-                return new Settings();
             }
 
-            return s;
+            if(s != null)
+            {
+                return s;
+            }
+
+            return new Settings();
         }
 
         public bool Save(string file)
