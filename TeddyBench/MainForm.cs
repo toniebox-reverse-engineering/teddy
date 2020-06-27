@@ -200,6 +200,7 @@ namespace TeddyBench
             UpdateCheckThread.Start();
 
             autodetectionEnabledToolStripMenuItem.Checked = Settings.NfcEnabled;
+            ReportForm.DefaultUsername = Settings.Username;
             UpdateNfcReader();
 
             AllowDrop = true;
@@ -214,6 +215,12 @@ namespace TeddyBench
         void SaveSettings()
         {
             Settings.Save("teddyBench.cfg");
+        }
+
+        protected override void OnFormClosing(FormClosingEventArgs e)
+        {
+            SaveSettings();
+            base.OnFormClosing(e);
         }
 
         private void Proxmark3_DeviceFound(object sender, string e)
@@ -1334,6 +1341,8 @@ namespace TeddyBench
 
             if (form.ShowDialog() == DialogResult.OK)
             {
+                Settings.Username = form.Username;
+
                 bool success = await DiagnosticsSendInfo(str.ToString(), form.Username, form.Message);
                 if (success)
                 {
@@ -1434,6 +1443,10 @@ namespace TeddyBench
             {
                 TagDumpDialog dlg = new TagDumpDialog(true, BitConverter.ToString(data).Replace("-", ""));
                 dlg.ShowDialog();
+            }
+            else
+            {
+                MessageBox.Show("No tag found. Please make sure you position it correctly.", "Failed");
             }
         }
 
