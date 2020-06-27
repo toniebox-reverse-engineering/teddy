@@ -217,7 +217,6 @@ namespace TeddyBench
 
         public void StopThread()
         {
-
             LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] Trying to stop thread");
             ExitScanThread = true;
             if (!ScanThread.Join(1000))
@@ -790,17 +789,10 @@ namespace TeddyBench
             return false;
         }
 
-        internal byte[] ReadMemory()
+        private byte[] ReadMemoryInternal()
         {
             byte[] mem = new byte[8 * 4];
             byte[] uid = null;
-
-            if (Port == null)
-            {
-                return null;
-            }
-
-            StopThread();
 
             lock (ReaderLock)
             {
@@ -824,8 +816,6 @@ namespace TeddyBench
                 }
             }
 
-            StartThread();
-
             for (int bank = 0; bank < 8; bank++)
             {
                 byte[] buf = new byte[4];
@@ -841,6 +831,24 @@ namespace TeddyBench
             Array.Copy(mem, 0, data, 8, 8 * 4);
 
             return data;
+        }
+
+        internal byte[] ReadMemory()
+        {
+            if (Port == null)
+            {
+                return null;
+            }
+            byte[] ret = null;
+
+            StopThread();
+            lock (ReaderLock)
+            {
+                ret = ReadMemoryInternal();
+            }
+            StartThread();
+
+            return ret;
         }
 
         internal void EmulateTag(byte[] data)
