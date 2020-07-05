@@ -1,5 +1,6 @@
 ﻿using GitHubUpdate;
 using Newtonsoft.Json;
+using ScottPlot;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -1619,6 +1620,20 @@ namespace TeddyBench
                 LogWindow.LogLevel = LogWindow.eLogLevel.Warning;
                 Log.Close();
             }
+        }
+
+        private void measureAnteannaToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Proxmark3.MeasurementResult result = Proxmark3.MeasureAntenna();
+
+            if(result == null)
+            {
+                MessageBox.Show("Measurement failed.", "Failed");
+            }
+
+            PlotAntennaForm form = new PlotAntennaForm(result);
+
+            form.ShowDialog();
         }
     }
 }

@@ -62,6 +62,7 @@ namespace TeddyBench
                 DebugString = 0x100,
                 DebugInteger = 0x101,
                 DebugBytes = 0x102,
+                MeasuredAntennaTuning = 0x410,
                 Partial = 0x7FFD,
                 NoData = 0x7FFE,
                 Timeout = 0x7FFF
@@ -657,6 +658,81 @@ namespace TeddyBench
             }
         }
 
+        public class MeasurementResult
+        {
+            public float vLF125;
+            public float vLF134;
+            public uint peakF;
+            public float peakV;
+            public byte[] amplitudes = new byte[256];
+
+            internal double[] GetFrequencieskHz()
+            {
+                double[] freq = new double[256];
+
+                for(int pos = 0; pos < freq.Length; pos++)
+                {
+                    freq[pos] = (12000000.0f / (pos + 1)) / 1000.0f;
+                }
+                return freq;
+            }
+
+            internal double GetPeakFrequency()
+            {
+                return 12000000 / (peakF + 1);
+            }
+
+            internal double[] GetVoltages()
+            {
+                return amplitudes.Select(b => (double)(b * 512.0f / 1000.0f)).ToArray();
+            }
+        }
+
+        private bool MeasureAntennaInternal(MeasurementResult result)
+        {
+            if (Port == null)
+            {
+                return;
+            }
+            Pm3UsbCommand cmd = new Pm3UsbCommand(0x400, 1);
+
+            LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] MeasureAntenna: Start");
+            cmd.Write(Port);
+
+            while (true)
+            {
+                Pm3UsbResponse response = new Pm3UsbResponse(Port);
+
+                switch (response.Cmd)
+                {
+                    case Pm3UsbResponse.eResponseType.DebugString:
+                        {
+                            string debugStr = Encoding.UTF8.GetString(response.data.d, 0, response.data.dataLen);
+                            LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] MeasureAntenna: DebugMessage '" + debugStr + "'");
+                            break;
+                        }
+
+                    case Pm3UsbResponse.eResponseType.NoData:
+                    case Pm3UsbResponse.eResponseType.Timeout:
+                        LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] MeasureAntenna: timeout");
+                        continue;
+
+                    case Pm3UsbResponse.eResponseType.MeasuredAntennaTuning:
+                        result.vLF125 = (response.data.arg[0] & 0xFFFF) * 0.002f;
+                        result.vLF134 = ((response.data.arg[0] >> 16) & 0xFFFF) * 0.002f;
+                        result.peakF = (response.data.arg[2] & 0xFFFF);
+                        result.peakV = ((response.data.arg[0] >> 16) & 0xFFFF) * 0.002f;
+                        Array.Copy(response.data.d, result.amplitudes, 256);
+
+                        return true;
+
+                    default:
+                        LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] MeasureAntenna: Unhandled: " + response.Cmd);
+                        break;
+                }
+            }
+        }
+
         private void Flush(SerialPort p)
         {
             if (p.BytesToRead > 0)
@@ -895,6 +971,24 @@ namespace TeddyBench
                 EmulateTagInternal(data);
             }
             StartThread();
+        }
+
+        internal MeasurementResult MeasureAntenna()
+        {
+            MeasurementResult result = new MeasurementResult();
+            if (Port == null)
+            {
+                return null;
+            }
+
+            StopThread();
+            lock (ReaderLock)
+            {
+                MeasureAntennaInternal(result);
+            }
+            StartThread();
+
+            return result;
         }
     }
 }

@@ -49,6 +49,7 @@
             this.diagnosticsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.reportallFilesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.reportselectedFilesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.enableDebugModeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.grpCardContent = new System.Windows.Forms.GroupBox();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.splitContainer2 = new System.Windows.Forms.SplitContainer();
@@ -71,7 +72,7 @@
             this.showInExplorerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.exportTooggToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.sendDiagnosticsReportToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.enableDebugModeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.measureAnteannaToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.grpCardContent.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
@@ -142,7 +143,8 @@
             // 
             this.advancedActionsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.readContentToolStripMenuItem,
-            this.emulateTagToolStripMenuItem});
+            this.emulateTagToolStripMenuItem,
+            this.measureAnteannaToolStripMenuItem});
             this.advancedActionsToolStripMenuItem.Enabled = false;
             this.advancedActionsToolStripMenuItem.Name = "advancedActionsToolStripMenuItem";
             this.advancedActionsToolStripMenuItem.Size = new System.Drawing.Size(193, 22);
@@ -151,14 +153,14 @@
             // readContentToolStripMenuItem
             // 
             this.readContentToolStripMenuItem.Name = "readContentToolStripMenuItem";
-            this.readContentToolStripMenuItem.Size = new System.Drawing.Size(164, 22);
+            this.readContentToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.readContentToolStripMenuItem.Text = "Read tag content";
             this.readContentToolStripMenuItem.Click += new System.EventHandler(this.readContentToolStripMenuItem_Click);
             // 
             // emulateTagToolStripMenuItem
             // 
             this.emulateTagToolStripMenuItem.Name = "emulateTagToolStripMenuItem";
-            this.emulateTagToolStripMenuItem.Size = new System.Drawing.Size(164, 22);
+            this.emulateTagToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.emulateTagToolStripMenuItem.Text = "Emulate tag";
             this.emulateTagToolStripMenuItem.Click += new System.EventHandler(this.emulateTagToolStripMenuItem_Click);
             // 
@@ -207,6 +209,13 @@
             this.reportselectedFilesToolStripMenuItem.Size = new System.Drawing.Size(211, 22);
             this.reportselectedFilesToolStripMenuItem.Text = "Report *selected* files";
             this.reportselectedFilesToolStripMenuItem.Click += new System.EventHandler(this.reportselectedFilesToolStripMenuItem_Click);
+            // 
+            // enableDebugModeToolStripMenuItem
+            // 
+            this.enableDebugModeToolStripMenuItem.Name = "enableDebugModeToolStripMenuItem";
+            this.enableDebugModeToolStripMenuItem.Size = new System.Drawing.Size(211, 22);
+            this.enableDebugModeToolStripMenuItem.Text = "Debug window";
+            this.enableDebugModeToolStripMenuItem.Click += new System.EventHandler(this.enableDebugModeToolStripMenuItem_Click);
             // 
             // grpCardContent
             // 
@@ -456,12 +465,12 @@
             this.sendDiagnosticsReportToolStripMenuItem.Text = "Send diagnostics report";
             this.sendDiagnosticsReportToolStripMenuItem.Click += new System.EventHandler(this.sendDiagnosticsReportToolStripMenuItem_Click);
             // 
-            // enableDebugModeToolStripMenuItem
+            // measureAnteannaToolStripMenuItem
             // 
-            this.enableDebugModeToolStripMenuItem.Name = "enableDebugModeToolStripMenuItem";
-            this.enableDebugModeToolStripMenuItem.Size = new System.Drawing.Size(211, 22);
-            this.enableDebugModeToolStripMenuItem.Text = "Debug window";
-            this.enableDebugModeToolStripMenuItem.Click += new System.EventHandler(this.enableDebugModeToolStripMenuItem_Click);
+            this.measureAnteannaToolStripMenuItem.Name = "measureAnteannaToolStripMenuItem";
+            this.measureAnteannaToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.measureAnteannaToolStripMenuItem.Text = "Measure anteanna";
+            this.measureAnteannaToolStripMenuItem.Click += new System.EventHandler(this.measureAnteannaToolStripMenuItem_Click);
             // 
             // TeddyMain
             // 
@@ -537,6 +546,7 @@
         private System.Windows.Forms.ToolStripMenuItem exportTooggToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem sendDiagnosticsReportToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem enableDebugModeToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem measureAnteannaToolStripMenuItem;
     }
 }
 
