@@ -127,6 +127,12 @@
     <Compile Include="TagDumpDialog.Designer.cs">
       <DependentUpon>TagDumpDialog.cs</DependentUpon>
     </Compile>
+    <Compile Include="TagOperationDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="TagOperationDialog.Designer.cs">
+      <DependentUpon>TagOperationDialog.cs</DependentUpon>
+    </Compile>
     <EmbeddedResource Include="AboutDialog.resx">
       <DependentUpon>AboutDialog.cs</DependentUpon>
     </EmbeddedResource>
@@ -157,6 +163,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="TagDumpDialog.resx">
       <DependentUpon>TagDumpDialog.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="TagOperationDialog.resx">
+      <DependentUpon>TagOperationDialog.cs</DependentUpon>
     </EmbeddedResource>
     <None Include="ILMerge.props" />
     <None Include="packages.config" />

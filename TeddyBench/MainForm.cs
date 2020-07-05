@@ -50,6 +50,7 @@ namespace TeddyBench
         private Settings Settings = null;
         internal LogWindow Log;
         private string LastFoundUid = null;
+        private Thread AsyncTagActionThread = null;
 
         private string TitleString => "TeddyBench (beta) - " + GetVersion();
 
@@ -1469,39 +1470,102 @@ namespace TeddyBench
             TonieTools.DumpInfo(str, TonieTools.eDumpFormat.FormatText, tag.FileName, TonieInfos);
         }
 
-        private void readContentToolStripMenuItem_Click(object sender, EventArgs e)
+        private async void readContentToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if(Proxmark3 == null)
+            if(Proxmark3 == null || AsyncTagActionThread != null)
             {
                 return;
             }
-            byte[] data = Proxmark3.ReadMemory();
 
-            if(data != null)
+            AsyncTagActionThread = new Thread(() =>
             {
-                TagDumpDialog dlg = new TagDumpDialog(true, BitConverter.ToString(data).Replace("-", ""));
-                dlg.ShowDialog();
-            }
-            else
+                try
+                {
+                    byte[] data = Proxmark3.ReadMemory();
+
+                    Invoke(new Action(() =>
+                    {
+                        if (data != null)
+                        {
+                            TagDumpDialog dlg = new TagDumpDialog(true, BitConverter.ToString(data).Replace("-", ""));
+                            dlg.ShowDialog();
+                        }
+                        else
+                        {
+                            MessageBox.Show("No tag found. Please make sure you position it correctly.", "Failed");
+                        }
+                    }));
+                }
+                catch(Exception ex)
+                {
+                }
+                AsyncTagActionThread = null;
+            });
+            AsyncTagActionThread.Start();
+
+            TagOperationDialog opDlg = new TagOperationDialog();
+
+            opDlg.Show();        
+
+            await Task.Run(() =>
             {
-                MessageBox.Show("No tag found. Please make sure you position it correctly.", "Failed");
-            }
+                while (AsyncTagActionThread != null)
+                {
+                    Thread.Sleep(100);
+                    if (opDlg.DialogResult == DialogResult.Cancel)
+                    {
+                        AsyncTagActionThread.Abort();
+                        AsyncTagActionThread = null;
+                    }
+                }
+                Invoke(new Action(() => opDlg.Close()));
+            });
         }
 
-        private void emulateTagToolStripMenuItem_Click(object sender, EventArgs e)
+        private async void emulateTagToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (Proxmark3 == null)
+            if (Proxmark3 == null || AsyncTagActionThread != null)
             {
                 return;
             }
+
             TagDumpDialog dlg = new TagDumpDialog(false);
+
             if (dlg.ShowDialog() == DialogResult.OK)
             {
                 byte[] data = Helpers.ConvertHexStringToByteArray(dlg.String);
 
-                Thread EmulateThread = new Thread(() => { Proxmark3.EmulateTag(data); });
-                EmulateThread.Start();
+                AsyncTagActionThread = new Thread(() => 
+                {
+                    try
+                    {
+                        Proxmark3.EmulateTag(data);
+                    }
+                    catch (Exception ex)
+                    {
+                    }
+                    AsyncTagActionThread = null;
+                });
+                AsyncTagActionThread.Start();
             }
+
+            TagOperationDialog opDlg = new TagOperationDialog();
+
+            opDlg.Show();
+
+            await Task.Run(() =>
+            {
+                while (AsyncTagActionThread != null)
+                {
+                    Thread.Sleep(100);
+                    if(opDlg.DialogResult == DialogResult.Cancel)
+                    {
+                        AsyncTagActionThread.Abort();
+                        AsyncTagActionThread = null;
+                    }
+                }
+                Invoke(new Action(() => opDlg.Close()));
+            });
         }
 
         private void autodetectionEnabledToolStripMenuItem_CheckedChanged(object sender, EventArgs e)

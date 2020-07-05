@@ -200,10 +200,13 @@ namespace TeddyBench
 
         private void StartThread()
         {
-            ExitScanThread = false;
-            ScanThread = new Thread(ScanThreadFunc);
-            ScanThread.Name = "PM3 Scan Thread";
-            ScanThread.Start();
+            if (ScanThread == null)
+            {
+                ExitScanThread = false;
+                ScanThread = new Thread(ScanThreadFunc);
+                ScanThread.Name = "PM3 Scan Thread";
+                ScanThread.Start();
+            }
         }
 
         public void Stop()
@@ -217,14 +220,18 @@ namespace TeddyBench
 
         public void StopThread()
         {
-            LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] Trying to stop thread");
-            ExitScanThread = true;
-            if (!ScanThread.Join(1000))
+            if (ScanThread != null)
             {
-                LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] Trying to abort thread");
-                ScanThread.Abort();
+                LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] Trying to stop thread");
+                ExitScanThread = true;
+
+                if (!ScanThread.Join(1000))
+                {
+                    LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] Trying to abort thread");
+                    ScanThread.Abort();
+                }
+                ScanThread = null;
             }
-            ScanThread = null;
         }
 
         private void ScanThreadFunc()
@@ -517,9 +524,16 @@ namespace TeddyBench
                     case Pm3UsbResponse.eResponseType.ACK:
                         if (response.data.arg[0] > 0 && response.data.arg[0] < response.data.d.Length)
                         {
-                            LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] GetResponse: ACK, returning data");
                             byte[] ret = new byte[response.data.arg[0]];
                             Array.Copy(response.data.d, ret, response.data.arg[0]);
+
+                            if (!ISO15693.CheckChecksum(ret))
+                            {
+                                LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] GetResponse: ACK, but Checksum failed");
+                                return null;
+                            }
+
+                            LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] GetResponse: ACK, returning data");
                             return ret;
                         }
                         else
@@ -554,42 +568,50 @@ namespace TeddyBench
             return rnd;
         }
 
-        private byte[] GetUID()
+        private byte[] GetUID(int tries = 1)
         {
-            byte[] cmdIdentify = ISO15693.BuildCommand(ISO15693.Command.INVENTORY, new byte[1]);
-            byte[] data = SendCommand(cmdIdentify);
-
-            if (data == null || data.Length != 12)
+            for (int tried = 0; tried < tries; tried++)
             {
-                LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] GetUID: Failed (" + ((data == null) ? "no resp" : (data.Length + " bytes")) + ")");
-                return null;
+                byte[] cmdIdentify = ISO15693.BuildCommand(ISO15693.Command.INVENTORY, new byte[1]);
+                byte[] data = SendCommand(cmdIdentify);
+
+                if (data == null || data.Length != 12)
+                {
+                    LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] GetUID: Failed (" + ((data == null) ? "no resp" : (data.Length + " bytes")) + ")");
+                    continue;
+                }
+
+                byte[] uidBytes = new byte[8];
+                Array.Copy(data, 2, uidBytes, 0, 8);
+
+                string uid = BitConverter.ToString(uidBytes.Reverse().ToArray()).Replace("-", "");
+                LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] GetUID: ACK, returning " + uid.Length + " byte");
+                return uidBytes;
             }
-
-            byte[] uidBytes = new byte[8];
-            Array.Copy(data, 2, uidBytes, 0, 8);
-
-            string uid = BitConverter.ToString(uidBytes.Reverse().ToArray()).Replace("-", "");
-            LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] GetUID: ACK, returning " + uid.Length + " byte");
-            return uidBytes;
+            return null;
         }
 
-        private byte[] ReadMemory(int bank)
+        private byte[] ReadMemory(int bank, int tries = 1)
         {
-            byte[] cmdReadMem = ISO15693.BuildCommand(ISO15693.Command.READBLOCK, new[] { (byte)bank });
-            byte[] data = SendCommand(cmdReadMem);
-
-            if (data == null || data.Length != 7)
+            for (int tried = 0; tried < tries; tried++)
             {
-                LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] ReadMemory: Failed (" + ((data == null) ? "no resp" : (data.Length + " bytes")) + ")");
-                return null;
+                byte[] cmdReadMem = ISO15693.BuildCommand(ISO15693.Command.READBLOCK, new[] { (byte)bank });
+                byte[] data = SendCommand(cmdReadMem);
+
+                if (data == null || data.Length != 7)
+                {
+                    LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] ReadMemory: Failed (" + ((data == null) ? "no resp" : (data.Length + " bytes")) + ")");
+                    continue;
+                }
+
+                byte[] mem = new byte[4];
+                Array.Copy(data, 1, mem, 0, 4);
+
+                string str = BitConverter.ToString(mem.ToArray()).Replace("-", "");
+                LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] ReadMemory: ACK, returning " + str + "");
+                return mem;
             }
-
-            byte[] mem = new byte[4];
-            Array.Copy(data, 1, mem, 0, 4);
-
-            string str = BitConverter.ToString(mem.ToArray()).Replace("-", "");
-            LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] ReadMemory: ACK, returning " + str + "");
-            return mem;
+            return null;
         }
 
         #endregion
@@ -796,7 +818,7 @@ namespace TeddyBench
 
             lock (ReaderLock)
             {
-                uid = GetUID();
+                uid = GetUID(100);
 
                 if (uid == null)
                 {
@@ -805,7 +827,7 @@ namespace TeddyBench
 
                 for (int bank = 0; bank < 8; bank++)
                 {
-                    byte[] buf = ReadMemory(bank);
+                    byte[] buf = ReadMemory(bank, 100);
 
                     if (buf == null)
                     {
@@ -842,10 +864,19 @@ namespace TeddyBench
             byte[] ret = null;
 
             StopThread();
-            lock (ReaderLock)
+            try
             {
-                ret = ReadMemoryInternal();
+                lock (ReaderLock)
+                {
+                    ret = ReadMemoryInternal();
+                }
             }
+            catch (ThreadAbortException ex)
+            {
+                StartThread();
+                throw ex;
+            }
+
             StartThread();
 
             return ret;

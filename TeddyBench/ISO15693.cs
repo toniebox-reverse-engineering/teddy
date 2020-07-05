@@ -74,12 +74,11 @@ namespace TeddyBench
             }
         }
 
-        private static void CalcChecksum(byte[] buf)
+        private static ushort CalcChecksum(byte[] buf, int start, int length)
         {
-            int crcPos = buf.Length - 2;
             uint crc = 0xFFFF;
 
-            for (int i = 0; i < crcPos; i++)
+            for (int i = start; i < start+length; i++)
             {
                 crc ^= buf[i];
 
@@ -98,8 +97,29 @@ namespace TeddyBench
 
             crc = (crc & 0xffff) ^ 0xFFFF;
 
+            return (ushort)crc;
+        }
+
+        private static void SetChecksum(byte[] buf)
+        {
+            int crcPos = buf.Length - 2;
+            ushort crc = CalcChecksum(buf, 0, crcPos);
+
             buf[crcPos + 0] = (byte)(crc & 0xff);
             buf[crcPos + 1] = (byte)(crc >> 8);
+        }
+
+        public static bool CheckChecksum(byte[] buf, int start = 0)
+        {
+            int crcPos = buf.Length - 2 - start;
+            ushort crc = CalcChecksum(buf, start, crcPos);
+
+            if(buf[crcPos + 0] != (byte)(crc & 0xff) ||  buf[crcPos + 1] != (byte)(crc >> 8))
+            {
+                return false;
+            }
+
+            return true;
         }
 
         public static byte[] BuildCommand(Command command, byte[] uid = null, byte[] payload = null)
@@ -145,7 +165,7 @@ namespace TeddyBench
                 Array.Copy(payload, 0, buf, pos, payload.Length);
             }
 
-            CalcChecksum(buf);
+            SetChecksum(buf);
 
             return buf;
         }
