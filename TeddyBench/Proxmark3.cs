@@ -692,7 +692,7 @@ namespace TeddyBench
         {
             if (Port == null)
             {
-                return;
+                return false;
             }
             Pm3UsbCommand cmd = new Pm3UsbCommand(0x400, 1);
 
