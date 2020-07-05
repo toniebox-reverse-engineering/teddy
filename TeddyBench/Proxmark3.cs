@@ -662,6 +662,7 @@ namespace TeddyBench
         {
             public float vLF125;
             public float vLF134;
+            public float vHF;
             public uint peakF;
             public float peakV;
             public byte[] amplitudes = new byte[256];
@@ -694,7 +695,7 @@ namespace TeddyBench
             {
                 return false;
             }
-            Pm3UsbCommand cmd = new Pm3UsbCommand(0x400, 1);
+            Pm3UsbCommand cmd = new Pm3UsbCommand(0x400, 3);
 
             LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] MeasureAntenna: Start");
             cmd.Write(Port);
@@ -720,6 +721,7 @@ namespace TeddyBench
                     case Pm3UsbResponse.eResponseType.MeasuredAntennaTuning:
                         result.vLF125 = (response.data.arg[0] & 0xFFFF) * 0.002f;
                         result.vLF134 = ((response.data.arg[0] >> 16) & 0xFFFF) * 0.002f;
+                        result.vHF = (response.data.arg[1] & 0xFFFF) / 1000.0f;
                         result.peakF = (response.data.arg[2] & 0xFFFF);
                         result.peakV = ((response.data.arg[0] >> 16) & 0xFFFF) * 0.002f;
                         Array.Copy(response.data.d, result.amplitudes, 256);
