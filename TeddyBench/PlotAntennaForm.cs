@@ -32,7 +32,17 @@ namespace TeddyBench
             lblOptimalFreq.Text = (result.GetPeakFrequency() / 1000.0f).ToString("0.00") + " kHz";
             lblVopt.Text = result.peakV.ToString("0.00") + " V";
 
-            if(result.vHF > 33)
+            if (result.vHF > 45)
+            {
+                lblVHF.BackColor = Color.Red;
+                lblVHF.Text += " (critical)";
+            }
+            else if (result.vHF > 40)
+            {
+                lblVHF.BackColor = Color.Yellow;
+                lblVHF.Text += " (danger)";
+            }
+            else if (result.vHF > 33)
             {
                 lblVHF.BackColor = Color.Green;
                 lblVHF.Text += " (wow)";

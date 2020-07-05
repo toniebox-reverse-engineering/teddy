@@ -52,6 +52,7 @@ namespace TeddyBench
         internal LogWindow Log;
         private string LastFoundUid = null;
         private Thread AsyncTagActionThread = null;
+        private System.Windows.Forms.Timer StatusBarTimer = null;
 
         private string TitleString => "TeddyBench (beta) - " + GetVersion();
 
@@ -213,6 +214,11 @@ namespace TeddyBench
                 LogWindow.LogLevel = LogWindow.eLogLevel.Debug;
                 enableDebugModeToolStripMenuItem.Checked = true;
             }
+
+            StatusBarTimer = new System.Windows.Forms.Timer();
+            StatusBarTimer.Tick += (object sender, EventArgs e) => { UpdateStatusBar(); };
+            StatusBarTimer.Interval = 500;
+            StatusBarTimer.Start();
         }
 
         void SaveSettings()
@@ -230,19 +236,32 @@ namespace TeddyBench
 
             if (e == null)
             {
-                if (statusStrip1.Visible)
-                {
-                    statusStrip1.Hide();
-                    advancedActionsToolStripMenuItem.Enabled = false;
-                }
+                UpdateStatusBar();
+                advancedActionsToolStripMenuItem.Enabled = false;
             }
             else
             {
+                UpdateStatusBar();
+                advancedActionsToolStripMenuItem.Enabled = Proxmark3.UnlockSupported;
+            }
+        }
+
+        private void UpdateStatusBar()
+        {
+            if (Proxmark3 != null && Proxmark3.Connected)
+            {
                 if (!statusStrip1.Visible)
                 {
-                    statusLabel.Text = "Proxmark3 (FW: " + (Proxmark3.UnlockSupported ? "SLIX-L enabled" : "stock") + ") found at " + e + ". The UID of the tag will be automatically used where applicable.";
                     statusStrip1.Show();
-                    advancedActionsToolStripMenuItem.Enabled = Proxmark3.UnlockSupported;
+                }
+                string voltageString = Settings.DebugWindow ? ", " + Proxmark3.AntennaVoltage.ToString("0.00") + " V" : "";
+                statusLabel.Text = "Proxmark3 (FW: " + (Proxmark3.UnlockSupported ? "SLIX-L enabled" : "stock") + voltageString + ") found at " + Proxmark3.CurrentPort + ". The UID of the tag will be automatically used where applicable.";
+            }
+            else
+            {
+                if (statusStrip1.Visible)
+                {
+                    statusStrip1.Hide();
                 }
             }
         }

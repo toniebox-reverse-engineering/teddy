@@ -56,7 +56,7 @@
             this.formsPlot1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.formsPlot1.Location = new System.Drawing.Point(0, 0);
             this.formsPlot1.Name = "formsPlot1";
-            this.formsPlot1.Size = new System.Drawing.Size(800, 367);
+            this.formsPlot1.Size = new System.Drawing.Size(606, 367);
             this.formsPlot1.TabIndex = 0;
             // 
             // splitContainer1
@@ -87,7 +87,7 @@
             // splitContainer1.Panel2
             // 
             this.splitContainer1.Panel2.Controls.Add(this.formsPlot1);
-            this.splitContainer1.Size = new System.Drawing.Size(800, 450);
+            this.splitContainer1.Size = new System.Drawing.Size(606, 450);
             this.splitContainer1.SplitterDistance = 79;
             this.splitContainer1.TabIndex = 1;
             // 
@@ -104,7 +104,7 @@
             // label4
             // 
             this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(263, 58);
+            this.label4.Location = new System.Drawing.Point(269, 58);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(88, 13);
             this.label4.TabIndex = 2;
@@ -113,16 +113,16 @@
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(263, 42);
+            this.label3.Location = new System.Drawing.Point(269, 42);
             this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(98, 13);
+            this.label3.Size = new System.Drawing.Size(113, 13);
             this.label3.TabIndex = 2;
-            this.label3.Text = "Optimal Frequency:";
+            this.label3.Text = "Optimal LF Frequency:";
             // 
             // lblVopt
             // 
             this.lblVopt.AutoSize = true;
-            this.lblVopt.Location = new System.Drawing.Point(367, 58);
+            this.lblVopt.Location = new System.Drawing.Point(401, 58);
             this.lblVopt.Name = "lblVopt";
             this.lblVopt.Size = new System.Drawing.Size(14, 13);
             this.lblVopt.TabIndex = 1;
@@ -140,7 +140,7 @@
             // lblOptimalFreq
             // 
             this.lblOptimalFreq.AutoSize = true;
-            this.lblOptimalFreq.Location = new System.Drawing.Point(367, 42);
+            this.lblOptimalFreq.Location = new System.Drawing.Point(401, 42);
             this.lblOptimalFreq.Name = "lblOptimalFreq";
             this.lblOptimalFreq.Size = new System.Drawing.Size(26, 13);
             this.lblOptimalFreq.TabIndex = 1;
@@ -209,17 +209,17 @@
             // 
             this.label8.AutoSize = true;
             this.label8.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label8.Location = new System.Drawing.Point(263, 13);
+            this.label8.Location = new System.Drawing.Point(269, 13);
             this.label8.Name = "label8";
-            this.label8.Size = new System.Drawing.Size(291, 13);
+            this.label8.Size = new System.Drawing.Size(256, 13);
             this.label8.TabIndex = 3;
-            this.label8.Text = "The tags used by TeddyBench use the 13.56 MHz antenna.";
+            this.label8.Text = "TeddyBench uses the HF (13.56 MHz) antenna only.";
             // 
             // PlotAntennaForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(800, 450);
+            this.ClientSize = new System.Drawing.Size(606, 450);
             this.Controls.Add(this.splitContainer1);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "PlotAntennaForm";

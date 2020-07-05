@@ -187,6 +187,8 @@ namespace TeddyBench
         private Dictionary<string, DateTime> PortsFailed = new Dictionary<string, DateTime>();
         private Dictionary<string, DateTime> PortsAppeared = new Dictionary<string, DateTime>();
         public bool UnlockSupported = false;
+        public float AntennaVoltage = 0.0f;
+        public bool Connected = false;
 
         public Proxmark3()
         {
@@ -272,6 +274,8 @@ namespace TeddyBench
                             }
                             Flush(Port);
 
+                            ReadVoltage();
+
                             byte[] rnd = GetRandom();
 
                             /* no SLIX-L found */
@@ -282,6 +286,7 @@ namespace TeddyBench
                                     CurrentUidString = null;
                                     UidFound?.Invoke(this, null);
                                 }
+
                                 Thread.Sleep(100);
                                 continue;
                             }
@@ -369,6 +374,7 @@ namespace TeddyBench
                                     Flush(Port);
                                     return;
                                 }
+                                ReadVoltage();
                                 Thread.Sleep(100);
                             }
                             LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] MainFunc: Tag disappeared");
@@ -397,6 +403,13 @@ namespace TeddyBench
             }
         }
 
+        private void ReadVoltage()
+        {
+            MeasurementResult result = new MeasurementResult();
+            MeasureAntennaInternal(result, eMeasurementType.HFAntenna);
+            AntennaVoltage = result.vHF;
+        }
+
         private void Close()
         {
             lock (this)
@@ -422,6 +435,7 @@ namespace TeddyBench
                     Port = null;
                     CurrentPort = null;
                 }
+                Connected = false;
                 DeviceFound?.Invoke(this, CurrentPort);
             }
         }
@@ -658,6 +672,13 @@ namespace TeddyBench
             }
         }
 
+        public enum eMeasurementType
+        {
+            LFAntenna = 1,
+            HFAntenna = 2,
+            Both = 3
+        }
+
         public class MeasurementResult
         {
             public float vLF125;
@@ -689,13 +710,13 @@ namespace TeddyBench
             }
         }
 
-        private bool MeasureAntennaInternal(MeasurementResult result)
+        private bool MeasureAntennaInternal(MeasurementResult result, eMeasurementType type = eMeasurementType.Both)
         {
             if (Port == null)
             {
                 return false;
             }
-            Pm3UsbCommand cmd = new Pm3UsbCommand(0x400, 3);
+            Pm3UsbCommand cmd = new Pm3UsbCommand(0x400, (ulong)type);
 
             LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] MeasureAntenna: Start");
             cmd.Write(Port);
@@ -870,6 +891,8 @@ namespace TeddyBench
 
                 DeviceFound?.Invoke(this, CurrentPort);
                 LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] TryOpen: " + port + " successfully opened");
+
+                Connected = true;
                 return true;
             }
             catch(Exception ex)
@@ -975,7 +998,7 @@ namespace TeddyBench
             StartThread();
         }
 
-        internal MeasurementResult MeasureAntenna()
+        internal MeasurementResult MeasureAntenna(eMeasurementType type = eMeasurementType.Both)
         {
             MeasurementResult result = new MeasurementResult();
             if (Port == null)
@@ -986,11 +1009,16 @@ namespace TeddyBench
             StopThread();
             lock (ReaderLock)
             {
-                MeasureAntennaInternal(result);
+                MeasureAntennaInternal(result, type);
             }
             StartThread();
 
             return result;
+        }
+
+        internal float GetHFVoltage()
+        {
+            return AntennaVoltage;
         }
     }
 }
