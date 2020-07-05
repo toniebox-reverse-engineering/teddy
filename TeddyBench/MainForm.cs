@@ -1624,9 +1624,14 @@ namespace TeddyBench
 
         private void measureAnteannaToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            TagOperationDialog opDlg = new TagOperationDialog();
+
+            opDlg.Show();
             Proxmark3.MeasurementResult result = Proxmark3.MeasureAntenna();
 
-            if(result == null)
+            opDlg.Close();
+
+            if (result == null)
             {
                 MessageBox.Show("Measurement failed.", "Failed");
             }
