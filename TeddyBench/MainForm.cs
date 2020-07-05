@@ -19,6 +19,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Windows.Forms.VisualStyles;
 using TeddyBench.Properties;
 using TonieFile;
 using Application = System.Windows.Forms.Application;
@@ -217,12 +218,6 @@ namespace TeddyBench
             Settings.Save("teddyBench.cfg");
         }
 
-        protected override void OnFormClosing(FormClosingEventArgs e)
-        {
-            SaveSettings();
-            base.OnFormClosing(e);
-        }
-
         private void Proxmark3_DeviceFound(object sender, string e)
         {
             if (InvokeRequired)
@@ -352,6 +347,7 @@ namespace TeddyBench
         protected override void OnClosing(CancelEventArgs e)
         {
             StopThreads();
+            SaveSettings();
             base.OnClosing(e);
         }
 
@@ -623,14 +619,14 @@ namespace TeddyBench
                                     }
                                     if (!string.IsNullOrEmpty(info.Pic) && !lstTonies.LargeImageList.Images.ContainsKey(hash))
                                     {
-                                        HttpWebRequest request = (HttpWebRequest)WebRequest.Create(info.Pic);
-                                        HttpWebResponse response = (HttpWebResponse)request.GetResponse();
-                                        Image img = ResizeImage(Image.FromStream(response.GetResponseStream()), 128, 128);
-
-                                        this.BeginInvoke(new Action(() =>
+                                        Image img = GetImage(info.Pic, hash);
+                                        if (img != null)
                                         {
-                                            lstTonies.LargeImageList.Images.Add(hash, img);
-                                        }));
+                                            this.BeginInvoke(new Action(() =>
+                                            {
+                                                lstTonies.LargeImageList.Images.Add(hash, img);
+                                            }));
+                                        }
                                     }
                                     image = hash;
                                 }
@@ -676,6 +672,48 @@ namespace TeddyBench
                     }
                 }
             }
+        }
+
+        private Image GetImage(string pic, string hash)
+        {
+            string cacheFileName = Path.Combine("cache", hash + ".png");
+
+            try
+            {
+                if(!Directory.Exists("cache"))
+                {
+                    Directory.CreateDirectory("cache");
+                }
+
+                if (File.Exists(cacheFileName))
+                {
+                    return Image.FromFile(cacheFileName);
+                }
+            }
+            catch (Exception ex)
+            {
+            }
+
+            try
+            {
+                HttpWebRequest request = (HttpWebRequest)WebRequest.Create(pic);
+                HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+                Image img = ResizeImage(Image.FromStream(response.GetResponseStream()), 128, 128);
+
+                try
+                {
+                    img.Save(cacheFileName);
+                }
+                catch (Exception ex)
+                {
+                }
+                return img;
+            }
+            catch (Exception ex)
+            {
+            }
+
+            return null;
         }
 
         private TonieAudio GetTonieAudio(string fileName)
