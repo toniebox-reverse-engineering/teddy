@@ -254,7 +254,7 @@ namespace TeddyBench
                 {
                     statusStrip1.Show();
                 }
-                string voltageString = Settings.DebugWindow ? ", " + Proxmark3.AntennaVoltage.ToString("0.00") + " V" : "";
+                string voltageString = Settings.DebugWindow ? ", " + Proxmark3.AntennaVoltage.ToString("0.00", CultureInfo.InvariantCulture) + " V" : "";
                 statusLabel.Text = "Proxmark3 (FW: " + (Proxmark3.UnlockSupported ? "SLIX-L enabled" : "stock") + voltageString + ") found at " + Proxmark3.CurrentPort + ". The UID of the tag will be automatically used where applicable.";
             }
             else
@@ -1451,7 +1451,50 @@ namespace TeddyBench
 
             if (form.ShowDialog() == DialogResult.OK)
             {
+                Settings.Username = form.Username;
+
                 bool success = await DiagnosticsSendInfo(str.ToString(), form.Username, form.Message);
+                if (success)
+                {
+                    MessageBox.Show("Success", "Report sent");
+                }
+                else
+                {
+                    MessageBox.Show("Error sending the report", "Report failure");
+                }
+            }
+        }
+
+        private async void reportProxmarkAnToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            TagOperationDialog opDlg = new TagOperationDialog();
+
+            opDlg.Show();
+            Proxmark3.MeasurementResult result = Proxmark3.MeasureAntenna();
+
+            opDlg.Close();
+
+            if (result == null)
+            {
+                MessageBox.Show("Measurement failed.", "Failed");
+                return;
+            }
+
+            string content = "";
+
+            content += "HF:     " + result.vHF.ToString("0.00", CultureInfo.InvariantCulture) + " V" + Environment.NewLine;
+            content += "LF125:  " + result.vLF125.ToString("0.00", CultureInfo.InvariantCulture) + " V" + Environment.NewLine;
+            content += "LF134:  " + result.vLF134.ToString("0.00", CultureInfo.InvariantCulture) + " V" + Environment.NewLine;
+            content += "LFfopt: " + (result.GetPeakFrequency() / 1000.0f).ToString("0.00", CultureInfo.InvariantCulture) + " kHz" + Environment.NewLine;
+            content += "LFVopt: " + result.peakV.ToString("0.00", CultureInfo.InvariantCulture) + " V" + Environment.NewLine;
+
+            ReportForm form = new ReportForm();
+
+            if (form.ShowDialog() == DialogResult.OK)
+            {
+                Settings.Username = form.Username;
+
+                bool success = await DiagnosticsSendInfo(content, form.Username, form.Message);
                 if (success)
                 {
                     MessageBox.Show("Success", "Report sent");
@@ -1662,6 +1705,7 @@ namespace TeddyBench
             if (result == null)
             {
                 MessageBox.Show("Measurement failed.", "Failed");
+                return;
             }
 
             PlotAntennaForm form = new PlotAntennaForm(result);

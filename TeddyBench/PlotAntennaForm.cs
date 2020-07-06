@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -26,11 +27,11 @@ namespace TeddyBench
             formsPlot1.Render();
             formsPlot1.Show();
 
-            lblV125.Text = result.vLF125.ToString("0.00") + " V";
-            lblV134.Text = result.vLF134.ToString("0.00") + " V";
-            lblVHF.Text = result.vHF.ToString("0.00") + " V";
-            lblOptimalFreq.Text = (result.GetPeakFrequency() / 1000.0f).ToString("0.00") + " kHz";
-            lblVopt.Text = result.peakV.ToString("0.00") + " V";
+            lblV125.Text = result.vLF125.ToString("0.00", CultureInfo.InvariantCulture) + " V";
+            lblV134.Text = result.vLF134.ToString("0.00", CultureInfo.InvariantCulture) + " V";
+            lblVHF.Text = result.vHF.ToString("0.00", CultureInfo.InvariantCulture) + " V";
+            lblOptimalFreq.Text = (result.GetPeakFrequency() / 1000.0f).ToString("0.00", CultureInfo.InvariantCulture) + " kHz";
+            lblVopt.Text = result.peakV.ToString("0.00", CultureInfo.InvariantCulture) + " V";
 
             if (result.vHF > 45)
             {
