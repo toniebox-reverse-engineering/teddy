@@ -367,11 +367,11 @@ namespace TeddyBench
             }
         }
 
-        protected override void OnClosing(CancelEventArgs e)
+        protected override void OnFormClosing(FormClosingEventArgs e)
         {
             StopThreads();
             SaveSettings();
-            base.OnClosing(e);
+            base.OnFormClosing(e);
         }
 
         private void StopThreads()
