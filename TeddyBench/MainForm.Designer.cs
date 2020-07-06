@@ -43,6 +43,7 @@
             this.advancedActionsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.readContentToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.emulateTagToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.measureAnteannaToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripSeparator();
@@ -72,7 +73,6 @@
             this.showInExplorerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.exportTooggToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.sendDiagnosticsReportToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.measureAnteannaToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.grpCardContent.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
@@ -153,16 +153,23 @@
             // readContentToolStripMenuItem
             // 
             this.readContentToolStripMenuItem.Name = "readContentToolStripMenuItem";
-            this.readContentToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.readContentToolStripMenuItem.Size = new System.Drawing.Size(171, 22);
             this.readContentToolStripMenuItem.Text = "Read tag content";
             this.readContentToolStripMenuItem.Click += new System.EventHandler(this.readContentToolStripMenuItem_Click);
             // 
             // emulateTagToolStripMenuItem
             // 
             this.emulateTagToolStripMenuItem.Name = "emulateTagToolStripMenuItem";
-            this.emulateTagToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.emulateTagToolStripMenuItem.Size = new System.Drawing.Size(171, 22);
             this.emulateTagToolStripMenuItem.Text = "Emulate tag";
             this.emulateTagToolStripMenuItem.Click += new System.EventHandler(this.emulateTagToolStripMenuItem_Click);
+            // 
+            // measureAnteannaToolStripMenuItem
+            // 
+            this.measureAnteannaToolStripMenuItem.Name = "measureAnteannaToolStripMenuItem";
+            this.measureAnteannaToolStripMenuItem.Size = new System.Drawing.Size(171, 22);
+            this.measureAnteannaToolStripMenuItem.Text = "Measure anteanna";
+            this.measureAnteannaToolStripMenuItem.Click += new System.EventHandler(this.measureAnteannaToolStripMenuItem_Click);
             // 
             // helpToolStripMenuItem
             // 
@@ -385,7 +392,6 @@
             // txtLog
             // 
             this.txtLog.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.txtLog.Enabled = false;
             this.txtLog.Font = new System.Drawing.Font("Courier New", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.txtLog.Location = new System.Drawing.Point(0, 24);
             this.txtLog.Multiline = true;
@@ -464,13 +470,6 @@
             this.sendDiagnosticsReportToolStripMenuItem.Size = new System.Drawing.Size(198, 22);
             this.sendDiagnosticsReportToolStripMenuItem.Text = "Send diagnostics report";
             this.sendDiagnosticsReportToolStripMenuItem.Click += new System.EventHandler(this.sendDiagnosticsReportToolStripMenuItem_Click);
-            // 
-            // measureAnteannaToolStripMenuItem
-            // 
-            this.measureAnteannaToolStripMenuItem.Name = "measureAnteannaToolStripMenuItem";
-            this.measureAnteannaToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
-            this.measureAnteannaToolStripMenuItem.Text = "Measure anteanna";
-            this.measureAnteannaToolStripMenuItem.Click += new System.EventHandler(this.measureAnteannaToolStripMenuItem_Click);
             // 
             // TeddyMain
             // 

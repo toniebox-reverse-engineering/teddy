@@ -550,7 +550,10 @@ namespace TeddyBench
 
             lock (RegisteredItems)
             {
-                Enabled = true;
+                btnAdd.Enabled = true;
+                btnDelete.Enabled = true;
+                btnSave.Enabled = true;
+
                 txtLog.Visible = false;
                 grpCardContent.Visible = true;
                 lblMessage.Visible = false;
@@ -846,7 +849,10 @@ namespace TeddyBench
 
         private void CopyFile(string uid, string fileName)
         {
-            Enabled = false;
+            btnAdd.Enabled = false;
+            btnDelete.Enabled = false;
+            btnSave.Enabled = false;
+
             EncodeThread = new Thread(() =>
             {
                 string newDir = Path.Combine(CurrentDirectory, ReverseUid(uid).Substring(0, 8));
@@ -879,7 +885,10 @@ namespace TeddyBench
 
         private void EncodeFile(string uid, string[] v)
         {
-            Enabled = false;
+            btnAdd.Enabled = false;
+            btnDelete.Enabled = false;
+            btnSave.Enabled = false;
+
             grpCardContent.Visible = false;
             txtLog.Visible = true;
 
