@@ -238,11 +238,13 @@ namespace TeddyBench
             {
                 UpdateStatusBar();
                 advancedActionsToolStripMenuItem.Enabled = false;
+                reportProxmarkAnToolStripMenuItem.Enabled = false;
             }
             else
             {
                 UpdateStatusBar();
                 advancedActionsToolStripMenuItem.Enabled = Proxmark3.UnlockSupported;
+                reportProxmarkAnToolStripMenuItem.Enabled = true;
             }
         }
 

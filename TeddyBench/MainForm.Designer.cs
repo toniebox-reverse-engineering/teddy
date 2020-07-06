@@ -475,6 +475,7 @@
             // 
             // reportProxmarkAnToolStripMenuItem
             // 
+            this.reportProxmarkAnToolStripMenuItem.Enabled = false;
             this.reportProxmarkAnToolStripMenuItem.Name = "reportProxmarkAnToolStripMenuItem";
             this.reportProxmarkAnToolStripMenuItem.Size = new System.Drawing.Size(291, 22);
             this.reportProxmarkAnToolStripMenuItem.Text = "Report Proxmark3 antenna measurement";
