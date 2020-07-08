@@ -55,6 +55,9 @@
     <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="ELFSharp, Version=2.0.0.0, Culture=neutral, PublicKeyToken=f2d0c9031b10d3c0, processorArchitecture=MSIL">
+      <HintPath>..\packages\ELFSharp.2.11.0\lib\netstandard2.0\ELFSharp.dll</HintPath>
+    </Reference>
     <Reference Include="GitHubUpdate, Version=1.2.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\GitHubUpdate.1.2.0.0\lib\net45\GitHubUpdate.dll</HintPath>
     </Reference>

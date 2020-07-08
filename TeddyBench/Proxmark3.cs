@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ELFSharp.ELF;
+using System;
 using System.Collections.Generic;
 using System.Drawing.Drawing2D;
 using System.IO;
@@ -18,6 +19,13 @@ namespace TeddyBench
     {
         public class Pm3UsbCommand
         {
+            public enum eCommandType : ulong
+            {
+                SetupWrite = 0x001,
+                FinishWrite = 0x003,
+                HardwareReset = 0x004,
+                StartFlash = 0x005,
+            }
             public Pm3UsbCommandStruct data = new Pm3UsbCommandStruct();
 
             public Pm3UsbCommand(ulong cmd = 0, ulong arg0 = 0, ulong arg1 = 0, ulong arg2 = 0, byte[] payload = null)
@@ -50,6 +58,8 @@ namespace TeddyBench
             {
                 byte[] buf = ToByteArray();
                 p.Write(buf, 0, buf.Length);
+                //LogWindow.Log(LogWindow.eLogLevel.Debug, "[Serial] Wrote " + buf.Length + " byte");
+                //LogWindow.Log(LogWindow.eLogLevel.Debug, "[Serial] Dump: '" + BitConverter.ToString(buf).Replace("-", " ") + "'");
             }
         }
 
@@ -57,6 +67,7 @@ namespace TeddyBench
         {
             public enum eResponseType
             {
+                DeviceInfo = 0,
                 NACK = 0xFE,
                 ACK = 0xFF,
                 DebugString = 0x100,
@@ -69,12 +80,13 @@ namespace TeddyBench
             }
 
             public Pm3UsbResponseStruct data;
+            public Pm3UsbCommandStruct dataLegacy;
             public bool VarSize => (data.cmd & 0x8000) != 0;
             public eResponseType Cmd => (eResponseType)(data.cmd & ~0x8000);
-            public int Length => (ReceivedHeaderLength + ReceivedPayloadLength);
+            public int Length => (16 + ReceivedPayloadLength);
             public int ReceivedPayloadLength = 0;
-            public int ReceivedHeaderLength = 0;
-            private int ExpectedPayloadLength = 0;
+            public int ExpectedPayloadLength = 0;
+            public byte[] ReceivedData = new byte[512 + 16 + 16];
 
 
             public Pm3UsbResponse(byte[] buf, int offset, int length)
@@ -82,51 +94,104 @@ namespace TeddyBench
                 ByteArrayToStructure(buf, offset, ref data);
             }
 
+            private int BlockingRead(SerialPort p, byte[] receivedData, int start, int readCount, int waitTime)
+            {
+                int readTotal = 0;
+                DateTime startTime = DateTime.Now;
+
+                while (readCount > 0 && (DateTime.Now - startTime).TotalMilliseconds < waitTime)
+                {
+                    int read = p.Read(receivedData, start, readCount);
+
+                    if (read < 0)
+                    {
+                        break;
+                    }
+                    else if (read == 0)
+                    {
+                        Thread.Sleep(5);
+                        continue;
+                    }
+
+                    //LogWindow.Log(LogWindow.eLogLevel.Debug, "[Serial] Read " + read + " byte");
+                    //LogWindow.Log(LogWindow.eLogLevel.Debug, "[Serial] Dump: '" + BitConverter.ToString(receivedData, start, read).Replace("-", " ") + "'");
+
+                    start += read;
+                    readCount -= read;
+                    readTotal += read;
+                }
+
+                return readTotal;
+            }
+
             public Pm3UsbResponse(SerialPort p, int waitTime = 1000)
             {
                 try
                 {
-                    int loops = 0;
-                    while ((p.BytesToRead < 16) && ((loops++ * 10) < waitTime))
+                    int read = BlockingRead(p, ReceivedData, 0, 16, waitTime);
+                    if (read != 16)
                     {
-                        Thread.Sleep(10);
-                    }
-                    if (p.BytesToRead < 16)
-                    {
+                        LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] Pm3UsbResponse: " + p.PortName + " did not reply with header, " + read + "/" + 16 + " bytes)");
+                        LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] Dump: '" + BitConverter.ToString(ReceivedData, 0, read).Replace("-", " ") + "'");
+
                         data.cmd = (int)eResponseType.NoData;
                         return;
                     }
 
-                    byte[] buf = new byte[512 + 16];
-
-                    if (p.Read(buf, 0, 16) != 16)
-                    {
-                        return;
-                    }
-                    ReceivedHeaderLength = 16;
                     ExpectedPayloadLength = 0;
 
-                    ByteArrayToStructure(buf, 0, ref data);
+                    ByteArrayToStructure(ReceivedData, 0, ref data);
 
                     if (VarSize)
                     {
                         ExpectedPayloadLength = data.dataLen;
+
+                        if (ExpectedPayloadLength > 0)
+                        {
+                            int readOffset = 16;
+                            int readCount = ExpectedPayloadLength;
+
+                            read = BlockingRead(p, ReceivedData, readOffset, readCount, waitTime);
+                            if (read != readCount)
+                            {
+                                LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] Pm3UsbResponse: " + p.PortName + " did not reply with payload, " + read + "/" + readCount + " bytes)");
+                                LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] Dump: '" + BitConverter.ToString(ReceivedData, readOffset, read).Replace("-", " ") + "'");
+
+                                data.cmd = (int)eResponseType.Partial;
+                                return;
+                            }
+
+                            ReceivedPayloadLength = read;
+                        }
+                        ByteArrayToStructure(ReceivedData, 0, ref data);
                     }
                     else
                     {
-                        ExpectedPayloadLength = 512;
-                    }
+                        /* the ugly legacy format. lets convert. */
+                        ExpectedPayloadLength = 512 + 4 * 8 - 16;
+                        int readOffset = 16;
+                        int readCount = ExpectedPayloadLength;
 
-                    if (ExpectedPayloadLength > 0)
-                    {
-                        ReceivedPayloadLength = p.Read(buf, 16, ExpectedPayloadLength);
-                        if (ExpectedPayloadLength != ReceivedPayloadLength)
+                        read = BlockingRead(p, ReceivedData, readOffset, readCount, waitTime);
+                        if (read != readCount)
                         {
+                            LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] Pm3UsbResponse: " + p.PortName + " did not reply with payload, " + read + "/" + readCount + " bytes)");
+                            LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] Dump: '" + BitConverter.ToString(ReceivedData, readOffset, read).Replace("-", " ") + "'");
+
                             data.cmd = (int)eResponseType.Partial;
                             return;
                         }
+
+                        ReceivedPayloadLength = read;
+                        ByteArrayToStructure(ReceivedData, 0, ref dataLegacy);
+
+                        data.arg[0] = (uint)dataLegacy.arg[0];
+                        data.arg[1] = (uint)dataLegacy.arg[1];
+                        data.arg[2] = (uint)dataLegacy.arg[2];
+                        data.cmd = (ushort)dataLegacy.cmd;
+                        data.dataLen = 512;
+                        Array.Copy(dataLegacy.d, data.d, data.d.Length);
                     }
-                    ByteArrayToStructure(buf, 0, ref data);
                 }
                 catch (TimeoutException ex)
                 {
@@ -175,6 +240,18 @@ namespace TeddyBench
             obj = (T)Marshal.PtrToStructure(i, typeof(T));
             Marshal.FreeHGlobal(i);
         }
+
+        [Flags]
+        public enum eDeviceInfo
+        {
+            None = 0,
+            BootromPresent = 1,
+            OsImagePresent = 2,
+            ModeBootrom = 4,
+            ModeOs = 8,
+            UnderstandStartFlash = 16
+        }
+
         public string CurrentPort { get; private set; }
         public SerialPort Port { get; private set; }
         public event EventHandler<string> UidFound;
@@ -189,6 +266,9 @@ namespace TeddyBench
         public bool UnlockSupported = false;
         public float AntennaVoltage = 0.0f;
         public bool Connected = false;
+
+        public eDeviceInfo DeviceInfo = eDeviceInfo.None;
+        private string Flashfile = "fullimage.elf";
 
         public Proxmark3()
         {
@@ -834,9 +914,11 @@ namespace TeddyBench
             return false;
         }
 
+
         private bool TryOpen(string port)
         {
-            SerialPort p = new SerialPort(port, 115200);
+            SerialPort p = null;
+
             try
             {
                 p = new SerialPort(port, 115200);
@@ -845,13 +927,48 @@ namespace TeddyBench
                 p.Open();
                 Flush(p);
 
+                /* read version */
+                Pm3UsbCommand cmdDevInfo = new Pm3UsbCommand(0);
+                cmdDevInfo.Write(p);
+                Pm3UsbResponse resDevInfo = new Pm3UsbResponse(p);
+                if (resDevInfo.Cmd != Pm3UsbResponse.eResponseType.DeviceInfo)
+                {
+                    LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] TryOpen: " + port + " did not reply to a device info");
+                    p.Close();
+                    return false;
+                }
+
+                DeviceInfo = (eDeviceInfo)resDevInfo.data.arg[0];
+
+                LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] Device info: ");
+                LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3]   BOOTROM_PRESENT         " + ((DeviceInfo & eDeviceInfo.BootromPresent) != 0 ? "Y" : "N"));
+                LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3]   OSIMAGE_PRESENT         " + ((DeviceInfo & eDeviceInfo.OsImagePresent) != 0 ? "Y" : "N"));
+                LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3]   MODE_BOOTROM            " + ((DeviceInfo & eDeviceInfo.ModeBootrom) != 0 ? "Y" : "N"));
+                LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3]   MODE_OS                 " + ((DeviceInfo & eDeviceInfo.ModeOs) != 0 ? "Y" : "N"));
+                LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3]   UNDERSTANDS_START_FLASH " + ((DeviceInfo & eDeviceInfo.UnderstandStartFlash) != 0 ? "Y" : "N"));
+
+                if((DeviceInfo & eDeviceInfo.ModeBootrom) != 0 && (DeviceInfo & eDeviceInfo.ModeBootrom) != 0)
+                {
+                    CurrentPort = port;
+                    Port = p;
+                    if(!File.Exists(Flashfile))
+                    {
+                        LogWindow.Log(LogWindow.eLogLevel.Error, "[PM3] Device started in bootloader mode, but I cannot find flash file " + Flashfile + ".");
+                        p.Close();
+                        return false;
+                    }
+                    Flash(Flashfile);
+                    p.Close();
+                    return false;
+                }
+
                 Pm3UsbCommand cmdPing = new Pm3UsbCommand(0x109);
                 cmdPing.Write(p);
                 Pm3UsbResponse resPing = new Pm3UsbResponse(p);
 
                 if (resPing.Cmd != Pm3UsbResponse.eResponseType.ACK)
                 {
-                    LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] TryOpen: "+ port + " did not reply to a ping");
+                    LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] TryOpen: " + port + " did not reply to a ping");
                     p.Close();
                     return false;
                 }
@@ -862,10 +979,12 @@ namespace TeddyBench
                 Pm3UsbResponse resVers = new Pm3UsbResponse(p);
                 if (resVers.Cmd != Pm3UsbResponse.eResponseType.ACK)
                 {
-                    LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] TryOpen: " + port + " did not reply to a version query. (got " + resVers.Cmd.ToString() + " instead, " + resVers.Length + " bytes)");
+                    LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] TryOpen: " + port + " did not reply to a version info");
                     p.Close();
                     return false;
                 }
+                Thread.Sleep(500);
+                Flush(p);
 
                 LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] Chip ID: 0x" + resVers.data.arg[0].ToString("X8"));
                 LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] Flash:   0x" + resVers.data.arg[1].ToString("X8"));
@@ -892,6 +1011,7 @@ namespace TeddyBench
                 DeviceFound?.Invoke(this, CurrentPort);
                 LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] TryOpen: " + port + " successfully opened");
 
+
                 Connected = true;
                 return true;
             }
@@ -911,6 +1031,155 @@ namespace TeddyBench
 
             return false;
         }
+
+
+        #region Flashing
+
+        private const uint FlashStart = 0x100000;
+        private const uint FlashSize = 256 * 1024;
+        private const uint FlashEnd = FlashStart + FlashSize;
+        private const uint BootloaderSize = 0x2000;
+        private const uint BootloaderEnd = FlashStart + BootloaderSize;
+
+        private class MemSegment
+        {
+            public uint Address;
+            public byte[] Data;
+            public uint EndAddress => (uint)(Address + Data.Length);
+            public uint EndAddressPadded => (uint)((Address + Data.Length + 0xFF) & ~0xFF);
+
+            public MemSegment(uint addr, byte[] data)
+            {
+                Address = addr;
+                Data = data;
+            }
+
+
+            public bool Contains(MemSegment seg)
+            {
+                return (seg.Address >= Address && seg.Address < EndAddressPadded);
+            }
+
+            internal void Add(MemSegment seg)
+            {
+                if(seg.Address >= Address && seg.Address <= EndAddressPadded)
+                {
+                    uint newSize = seg.EndAddress - Address;
+                    Array.Resize(ref Data, (int)newSize);
+                    Array.Copy(seg.Data, 0, Data, seg.Address - Address, seg.Data.Length);
+                }
+            }
+        }
+
+        public void EnterBootloader(string fileName)
+        {
+            Flashfile = fileName;
+            Pm3UsbCommand cmdStart = new Pm3UsbCommand((ulong)Pm3UsbCommand.eCommandType.StartFlash);
+            cmdStart.Write(Port);
+        }
+
+        private bool Flash(string fileName)
+        {
+            IELF elf = ELFReader.Load(fileName);
+
+            List<MemSegment> segments = new List<MemSegment>();
+
+
+            foreach (var seg in elf.Segments)
+            {
+                ELFSharp.ELF.Segments.Segment<uint> sec32 = seg as ELFSharp.ELF.Segments.Segment<uint>;
+
+                if (sec32 == null || sec32.Type != ELFSharp.ELF.Segments.SegmentType.Load || sec32.Size == 0 || sec32.PhysicalAddress < BootloaderEnd || (sec32.PhysicalAddress + sec32.Size) > FlashEnd)
+                {
+                    continue;
+                }
+
+                MemSegment memSeg = new MemSegment(sec32.PhysicalAddress, sec32.GetMemoryContents());
+                var match = segments.Where(s => s.Contains(memSeg)).FirstOrDefault();
+                if (match != null)
+                {
+                    match.Add(memSeg);
+                }
+                else
+                {
+                    segments.Add(memSeg);
+                }
+            }
+
+            Pm3UsbCommand cmdStart = new Pm3UsbCommand((ulong)Pm3UsbCommand.eCommandType.StartFlash, BootloaderEnd, FlashEnd);
+            cmdStart.Write(Port);
+
+            foreach (var seg in segments)
+            {
+                if (!Flash(seg.Address, seg.Data))
+                {
+                    return false;
+                }
+            }
+
+            Pm3UsbCommand cmdReset = new Pm3UsbCommand((ulong)Pm3UsbCommand.eCommandType.HardwareReset);
+            cmdReset.Write(Port);
+
+            LogWindow.Log(LogWindow.eLogLevel.Debug, "[Flash] DONE, reconnecting device");
+            return true;
+        }
+
+        private bool Flash(uint address, byte[] data)
+        {
+            int blockPos = 0;
+
+            LogWindow.Log(LogWindow.eLogLevel.Debug, "[Flash] Flashing 0x" + address.ToString("X8") + " - 0x" + (address + data.Length).ToString("X8") + " (0x" + data.Length.ToString("X8") + " byte)");
+
+            while (blockPos < data.Length)
+            {
+                int blockLen = Math.Min(0x100, data.Length - blockPos);
+                uint blockAddress = address + (uint)blockPos;
+
+                if (!WriteBlock(blockAddress, data, blockPos, blockLen))
+                {
+                    LogWindow.Log(LogWindow.eLogLevel.Debug, "[Flash] FAILED at 0x" + blockAddress.ToString("X8"));
+                    return false;
+                }
+
+                blockPos += blockLen;
+            }
+
+            return true;
+        }
+
+        private bool WriteBlock(uint address, byte[] data, int offset, int length)
+        {
+            byte[] memBuf = Enumerable.Repeat((byte)0xFF, 0x100).ToArray();
+            Array.Copy(data, offset, memBuf, 0, length);
+
+            //LogWindow.Log(LogWindow.eLogLevel.Debug, "[Flash]   Block 0x" + address.ToString("X8") + "..." );
+
+            Pm3UsbCommand finish = new Pm3UsbCommand((ulong)Pm3UsbCommand.eCommandType.FinishWrite, address);
+            Array.Copy(memBuf, finish.data.d, memBuf.Length);
+            finish.Write(Port);
+            if (!ReadAck())
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        private bool ReadAck()
+        {
+            Pm3UsbResponse res = new Pm3UsbResponse(Port);
+
+            if (res.Cmd != Pm3UsbResponse.eResponseType.ACK)
+            {
+                LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] ReadAck: did not reply with ACK");
+                return false;
+            }
+
+            return true;
+        }
+
+        #endregion
+
 
         private byte[] ReadMemoryInternal()
         {

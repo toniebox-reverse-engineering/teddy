@@ -1714,5 +1714,15 @@ namespace TeddyBench
 
             form.ShowDialog();
         }
+
+        private void flashFirmwareToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            OpenFileDialog dlg = new OpenFileDialog();
+            dlg.Filter = "ELF files (*.elf)|*.elf|All files (*.*)|*.*";
+            if (dlg.ShowDialog() == DialogResult.OK)
+            {
+                Proxmark3.EnterBootloader(dlg.FileName);
+            }
+        }
     }
 }
