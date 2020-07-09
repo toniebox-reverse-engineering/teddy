@@ -226,6 +226,64 @@ namespace TeddyBench
             Settings.Save("teddyBench.cfg");
         }
 
+
+        private void Proxmark3_FlashResult(object sender, bool e)
+        {
+            if (InvokeRequired)
+            {
+                BeginInvoke(new Action(() => Proxmark3_FlashResult(sender, e)));
+                return;
+            }
+
+            if (e)
+            {
+                MessageBox.Show("Flashing the device succeeded, it will reconnect now", "Flashing Proxmark3 done");
+            }
+            else
+            {
+                MessageBox.Show(
+                    "Flashing the device FAILED, it will reconnect now." + Environment.NewLine +
+                    "" + Environment.NewLine +
+                    "If Device starts with LEDs A and C lit and it doesn't show" + Environment.NewLine +
+                    "on USB, replug the device with the button pressed and *keep*" + Environment.NewLine +
+                    "it pressed until it's flashed again." + Environment.NewLine +
+                    "" + Environment.NewLine +
+                    "If this still fails, please" + Environment.NewLine +
+                    " a) check the firmware file or" + Environment.NewLine +
+                    " b) use the official flasher tool"
+                    , "Flashing Proxmark3 failed");
+            }
+        }
+
+        private void Proxmark3_FlashRequest(object sender, Proxmark3.FlashRequestContext e)
+        {
+            if (InvokeRequired)
+            {
+                Invoke(new Action(() => Proxmark3_FlashRequest(sender, e)));
+                return;
+            }
+
+            if (MessageBox.Show(
+                "Please be aware that this procedure could fail and your device" + Environment.NewLine +
+                "main firmware is lost. (Device starts with LEDs A and C lit and" + Environment.NewLine +
+                "it doesn't enumerate on USB anymore)." + Environment.NewLine +
+                "No panic, the bootloader wasn't touched and you can reflash it." + Environment.NewLine +
+                "" + Environment.NewLine +
+                "If so, plug the device with the button pressed and *keep* it" + Environment.NewLine +
+                "pressed until it's flashed again." + Environment.NewLine +
+                "I did this procedure several times and it always worked." + Environment.NewLine +
+                "" + Environment.NewLine +
+                "If this still fails, please" + Environment.NewLine +
+                " a) check the firmware file or" + Environment.NewLine +
+                " b) use the official flasher tool" + Environment.NewLine +
+                "" + Environment.NewLine +
+                "Do you want to flash the file " + e.FlashFile + "?" , 
+                "Flash Proxmark3?", MessageBoxButtons.YesNo) == DialogResult.Yes)
+            {
+                e.Proceed = true;
+            }
+        }
+
         private void Proxmark3_DeviceFound(object sender, string e)
         {
             if (InvokeRequired)
@@ -1658,6 +1716,8 @@ namespace TeddyBench
                     Proxmark3 = new Proxmark3();
                     Proxmark3.UidFound += Proxmark3_UidFound;
                     Proxmark3.DeviceFound += Proxmark3_DeviceFound;
+                    Proxmark3.FlashRequest += Proxmark3_FlashRequest;
+                    Proxmark3.FlashResult += Proxmark3_FlashResult;
                     Proxmark3.Start();
                 }
             }

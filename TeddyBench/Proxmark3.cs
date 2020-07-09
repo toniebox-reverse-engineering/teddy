@@ -252,10 +252,18 @@ namespace TeddyBench
             UnderstandStartFlash = 16
         }
 
+        public class FlashRequestContext
+        {
+            public bool Proceed;
+            public string FlashFile;
+        }
+
         public string CurrentPort { get; private set; }
         public SerialPort Port { get; private set; }
         public event EventHandler<string> UidFound;
         public event EventHandler<string> DeviceFound;
+        public event EventHandler<FlashRequestContext> FlashRequest;
+        public event EventHandler<bool> FlashResult;
         public string CurrentUidString = null;
         private Thread ScanThread = null;
         private bool ExitScanThread = false;
@@ -949,16 +957,28 @@ namespace TeddyBench
 
                 if((DeviceInfo & eDeviceInfo.ModeBootrom) != 0 && (DeviceInfo & eDeviceInfo.ModeBootrom) != 0)
                 {
-                    CurrentPort = port;
-                    Port = p;
-                    if(!File.Exists(Flashfile))
+                    FlashRequestContext ctx = new FlashRequestContext();
+
+                    ctx.FlashFile = Flashfile;
+                    ctx.Proceed = false;
+
+                    FlashRequest?.Invoke(this, ctx);
+
+                    if (ctx.Proceed)
                     {
-                        LogWindow.Log(LogWindow.eLogLevel.Error, "[PM3] Device started in bootloader mode, but I cannot find flash file " + Flashfile + ".");
+                        CurrentPort = port;
+                        Port = p;
+                        if (!File.Exists(Flashfile))
+                        {
+                            LogWindow.Log(LogWindow.eLogLevel.Error, "[PM3] Device started in bootloader mode, but I cannot find flash file " + Flashfile + ".");
+                            p.Close();
+                            return false;
+                        }
+                        bool success = Flash(Flashfile);
+
+                        FlashResult?.Invoke(this, success);
                         p.Close();
-                        return false;
                     }
-                    Flash(Flashfile);
-                    p.Close();
                     return false;
                 }
 
