@@ -255,6 +255,7 @@ namespace TeddyBench
         public class FlashRequestContext
         {
             public bool Proceed;
+            public bool Bootloader;
             public string FlashFile;
         }
 
@@ -955,30 +956,39 @@ namespace TeddyBench
                 LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3]   MODE_OS                 " + ((DeviceInfo & eDeviceInfo.ModeOs) != 0 ? "Y" : "N"));
                 LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3]   UNDERSTANDS_START_FLASH " + ((DeviceInfo & eDeviceInfo.UnderstandStartFlash) != 0 ? "Y" : "N"));
 
-                if((DeviceInfo & eDeviceInfo.ModeBootrom) != 0 && (DeviceInfo & eDeviceInfo.ModeBootrom) != 0)
+                if ((DeviceInfo & eDeviceInfo.ModeBootrom) != 0 && (DeviceInfo & eDeviceInfo.ModeBootrom) != 0)
                 {
-                    FlashRequestContext ctx = new FlashRequestContext();
+                    Pm3UsbCommand cmdReset = new Pm3UsbCommand((ulong)Pm3UsbCommand.eCommandType.HardwareReset);
+                    CurrentPort = port;
+                    Port = p;
 
-                    ctx.FlashFile = Flashfile;
-                    ctx.Proceed = false;
-
-                    FlashRequest?.Invoke(this, ctx);
-
-                    if (ctx.Proceed)
+                    if (!File.Exists(Flashfile))
                     {
-                        CurrentPort = port;
-                        Port = p;
-                        if (!File.Exists(Flashfile))
-                        {
-                            LogWindow.Log(LogWindow.eLogLevel.Error, "[PM3] Device started in bootloader mode, but I cannot find flash file " + Flashfile + ".");
-                            p.Close();
-                            return false;
-                        }
-                        bool success = Flash(Flashfile);
-
-                        FlashResult?.Invoke(this, success);
-                        p.Close();
+                        LogWindow.Log(LogWindow.eLogLevel.Error, "[PM3] Device started in bootloader mode, but I cannot find flash file " + Flashfile + ". Reset device.");
                     }
+                    else
+                    {
+                        bool bootloader = false;
+                        var segs = ReadFlash(Flashfile, out bootloader);
+
+                        FlashRequestContext ctx = new FlashRequestContext();
+
+                        ctx.Bootloader = bootloader;
+                        ctx.FlashFile = Flashfile;
+                        ctx.Proceed = false;
+
+                        FlashRequest?.Invoke(this, ctx);
+
+                        if (ctx.Proceed)
+                        {
+                            bool success = Flash(segs, bootloader);
+                            FlashResult?.Invoke(this, success);
+                        }
+                    }
+
+                    cmdReset.Write(p);
+                    p.Close();
+
                     return false;
                 }
 
@@ -1098,20 +1108,29 @@ namespace TeddyBench
             cmdStart.Write(Port);
         }
 
-        private bool Flash(string fileName)
+        private List<MemSegment> ReadFlash(string fileName, out bool containsBootloader)
         {
             IELF elf = ELFReader.Load(fileName);
-
             List<MemSegment> segments = new List<MemSegment>();
 
+            containsBootloader = false;
 
             foreach (var seg in elf.Segments)
             {
                 ELFSharp.ELF.Segments.Segment<uint> sec32 = seg as ELFSharp.ELF.Segments.Segment<uint>;
 
-                if (sec32 == null || sec32.Type != ELFSharp.ELF.Segments.SegmentType.Load || sec32.Size == 0 || sec32.PhysicalAddress < BootloaderEnd || (sec32.PhysicalAddress + sec32.Size) > FlashEnd)
+                if (sec32 == null || sec32.Type != ELFSharp.ELF.Segments.SegmentType.Load || sec32.Size == 0)
                 {
                     continue;
+                }
+                if ((sec32.PhysicalAddress + sec32.Size) > FlashEnd)
+                {
+                    continue;
+                }
+
+                if (sec32.PhysicalAddress < BootloaderEnd)
+                {
+                    containsBootloader = true;
                 }
 
                 MemSegment memSeg = new MemSegment(sec32.PhysicalAddress, sec32.GetMemoryContents());
@@ -1126,21 +1145,30 @@ namespace TeddyBench
                 }
             }
 
-            Pm3UsbCommand cmdStart = new Pm3UsbCommand((ulong)Pm3UsbCommand.eCommandType.StartFlash, BootloaderEnd, FlashEnd);
-            cmdStart.Write(Port);
+            return segments;
+        }
 
-            foreach (var seg in segments)
+        private bool Flash(List<MemSegment> segments, bool bootloader)
+        {
+            if (segments.Count < 1)
             {
-                if (!Flash(seg.Address, seg.Data))
+                LogWindow.Log(LogWindow.eLogLevel.Debug, "[Flash] Failed, no data to flash - reconnecting device");
+            }
+            else
+            {
+                Pm3UsbCommand cmdStart = new Pm3UsbCommand((ulong)Pm3UsbCommand.eCommandType.StartFlash, bootloader ? FlashStart : BootloaderEnd, FlashEnd, bootloader ? 0x54494f44UL : 0UL);
+                cmdStart.Write(Port);
+
+                foreach (var seg in segments)
                 {
-                    return false;
+                    if (!Flash(seg.Address, seg.Data))
+                    {
+                        return false;
+                    }
                 }
+                LogWindow.Log(LogWindow.eLogLevel.Debug, "[Flash] DONE, reconnecting device");
             }
 
-            Pm3UsbCommand cmdReset = new Pm3UsbCommand((ulong)Pm3UsbCommand.eCommandType.HardwareReset);
-            cmdReset.Write(Port);
-
-            LogWindow.Log(LogWindow.eLogLevel.Debug, "[Flash] DONE, reconnecting device");
             return true;
         }
 

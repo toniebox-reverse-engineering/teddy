@@ -44,6 +44,7 @@
             this.readContentToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.emulateTagToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.measureAnteannaToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.flashFirmwareToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripSeparator();
@@ -74,7 +75,8 @@
             this.showInExplorerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.exportTooggToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.sendDiagnosticsReportToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.flashFirmwareToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.flashBootloaderToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItem3 = new System.Windows.Forms.ToolStripSeparator();
             this.menuStrip1.SuspendLayout();
             this.grpCardContent.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
@@ -147,7 +149,9 @@
             this.readContentToolStripMenuItem,
             this.emulateTagToolStripMenuItem,
             this.measureAnteannaToolStripMenuItem,
-            this.flashFirmwareToolStripMenuItem});
+            this.toolStripMenuItem3,
+            this.flashFirmwareToolStripMenuItem,
+            this.flashBootloaderToolStripMenuItem});
             this.advancedActionsToolStripMenuItem.Enabled = false;
             this.advancedActionsToolStripMenuItem.Name = "advancedActionsToolStripMenuItem";
             this.advancedActionsToolStripMenuItem.Size = new System.Drawing.Size(193, 22);
@@ -173,6 +177,13 @@
             this.measureAnteannaToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.measureAnteannaToolStripMenuItem.Text = "Measure anteanna";
             this.measureAnteannaToolStripMenuItem.Click += new System.EventHandler(this.measureAnteannaToolStripMenuItem_Click);
+            // 
+            // flashFirmwareToolStripMenuItem
+            // 
+            this.flashFirmwareToolStripMenuItem.Name = "flashFirmwareToolStripMenuItem";
+            this.flashFirmwareToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.flashFirmwareToolStripMenuItem.Text = "Flash Firmware";
+            this.flashFirmwareToolStripMenuItem.Click += new System.EventHandler(this.flashFirmwareToolStripMenuItem_Click);
             // 
             // helpToolStripMenuItem
             // 
@@ -483,12 +494,17 @@
             this.sendDiagnosticsReportToolStripMenuItem.Text = "Send diagnostics report";
             this.sendDiagnosticsReportToolStripMenuItem.Click += new System.EventHandler(this.sendDiagnosticsReportToolStripMenuItem_Click);
             // 
-            // flashFirmwareToolStripMenuItem
+            // flashBootloaderToolStripMenuItem
             // 
-            this.flashFirmwareToolStripMenuItem.Name = "flashFirmwareToolStripMenuItem";
-            this.flashFirmwareToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
-            this.flashFirmwareToolStripMenuItem.Text = "Flash Firmware";
-            this.flashFirmwareToolStripMenuItem.Click += new System.EventHandler(this.flashFirmwareToolStripMenuItem_Click);
+            this.flashBootloaderToolStripMenuItem.Name = "flashBootloaderToolStripMenuItem";
+            this.flashBootloaderToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.flashBootloaderToolStripMenuItem.Text = "Flash Bootloader";
+            this.flashBootloaderToolStripMenuItem.Click += new System.EventHandler(this.flashBootloaderToolStripMenuItem_Click);
+            // 
+            // toolStripMenuItem3
+            // 
+            this.toolStripMenuItem3.Name = "toolStripMenuItem3";
+            this.toolStripMenuItem3.Size = new System.Drawing.Size(177, 6);
             // 
             // TeddyMain
             // 
@@ -567,6 +583,8 @@
         private System.Windows.Forms.ToolStripMenuItem measureAnteannaToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem reportProxmarkAnToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem flashFirmwareToolStripMenuItem;
+        private System.Windows.Forms.ToolStripSeparator toolStripMenuItem3;
+        private System.Windows.Forms.ToolStripMenuItem flashBootloaderToolStripMenuItem;
     }
 }
 

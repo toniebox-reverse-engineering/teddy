@@ -263,24 +263,44 @@ namespace TeddyBench
                 return;
             }
 
-            if (MessageBox.Show(
-                "Please be aware that this procedure could fail and your device" + Environment.NewLine +
-                "main firmware is lost. (Device starts with LEDs A and C lit and" + Environment.NewLine +
-                "it doesn't enumerate on USB anymore)." + Environment.NewLine +
-                "No panic, the bootloader wasn't touched and you can reflash it." + Environment.NewLine +
-                "" + Environment.NewLine +
-                "If so, plug the device with the button pressed and *keep* it" + Environment.NewLine +
-                "pressed until it's flashed again." + Environment.NewLine +
-                "I did this procedure several times and it always worked." + Environment.NewLine +
-                "" + Environment.NewLine +
-                "If this still fails, please" + Environment.NewLine +
-                " a) check the firmware file or" + Environment.NewLine +
-                " b) use the official flasher tool" + Environment.NewLine +
-                "" + Environment.NewLine +
-                "Do you want to flash the file " + e.FlashFile + "?" , 
-                "Flash Proxmark3?", MessageBoxButtons.YesNo) == DialogResult.Yes)
+            e.Proceed = false;
+
+            if (e.Bootloader)
             {
-                e.Proceed = true;
+                if (MessageBox.Show(
+                    "=== FLASHING BOOTLOADER ===" + Environment.NewLine +
+                    "" + Environment.NewLine +
+                    "Please be aware that this procedure could fail and your device" + Environment.NewLine +
+                    "gets bricked. To recover you need a special programmer." + Environment.NewLine +
+                    "" + Environment.NewLine +
+                    "Do you still want to flash the file " + e.FlashFile + "?",
+                    "Flash Proxmark3?", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                {
+                    e.Proceed = true;
+                }
+            }
+            else
+            {
+
+                if (MessageBox.Show(
+                    "Please be aware that this procedure could fail and your device" + Environment.NewLine +
+                    "main firmware is lost. (Device starts with LEDs A and C lit and" + Environment.NewLine +
+                    "it doesn't enumerate on USB anymore)." + Environment.NewLine +
+                    "No panic, the bootloader wasn't touched and you can reflash it." + Environment.NewLine +
+                    "" + Environment.NewLine +
+                    "If so, plug the device with the button pressed and *keep* it" + Environment.NewLine +
+                    "pressed until it's flashed again." + Environment.NewLine +
+                    "I did this procedure several times and it always worked." + Environment.NewLine +
+                    "" + Environment.NewLine +
+                    "If this still fails, please" + Environment.NewLine +
+                    " a) check the firmware file or" + Environment.NewLine +
+                    " b) use the official flasher tool" + Environment.NewLine +
+                    "" + Environment.NewLine +
+                    "Do you want to flash the file " + e.FlashFile + "?",
+                    "Flash Proxmark3?", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                {
+                    e.Proceed = true;
+                }
             }
         }
 
@@ -1778,7 +1798,21 @@ namespace TeddyBench
         private void flashFirmwareToolStripMenuItem_Click(object sender, EventArgs e)
         {
             OpenFileDialog dlg = new OpenFileDialog();
-            dlg.Filter = "ELF files (*.elf)|*.elf|All files (*.*)|*.*";
+
+            dlg.Title = "Please select the fullimage.elf you want to flash";
+            dlg.Filter = "Firmware ELF files (*.elf)|*.elf|All files (*.*)|*.*";
+            if (dlg.ShowDialog() == DialogResult.OK)
+            {
+                Proxmark3.EnterBootloader(dlg.FileName);
+            }
+        }
+
+        private void flashBootloaderToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            OpenFileDialog dlg = new OpenFileDialog();
+
+            dlg.Title = "Please select the bootrom.elf you want to flash";
+            dlg.Filter = "Bootloader ELF files (*.elf)|*.elf|All files (*.*)|*.*";
             if (dlg.ShowDialog() == DialogResult.OK)
             {
                 Proxmark3.EnterBootloader(dlg.FileName);
