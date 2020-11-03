@@ -12,9 +12,10 @@ namespace TeddyBench
 {
     public partial class TagOperationDialog : Form
     {
-        public TagOperationDialog()
+        public TagOperationDialog(bool cancelEnabled = true)
         {
             InitializeComponent();
+            btnCancel.Enabled = cancelEnabled;
         }
     }
 }

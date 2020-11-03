@@ -1654,8 +1654,7 @@ namespace TeddyBench
                 AsyncTagActionThread = null;
             });
             AsyncTagActionThread.Start();
-
-            TagOperationDialog opDlg = new TagOperationDialog();
+            TagOperationDialog opDlg = new TagOperationDialog(true);
 
             opDlg.Show();        
 
@@ -1668,6 +1667,7 @@ namespace TeddyBench
                     {
                         AsyncTagActionThread.Abort();
                         AsyncTagActionThread = null;
+                        return;
                     }
                 }
                 Invoke(new Action(() => opDlg.Close()));
@@ -1710,10 +1710,11 @@ namespace TeddyBench
                 while (AsyncTagActionThread != null)
                 {
                     Thread.Sleep(100);
-                    if(opDlg.DialogResult == DialogResult.Cancel)
+                    if (opDlg.DialogResult == DialogResult.Cancel)
                     {
-                        AsyncTagActionThread.Abort();
-                        AsyncTagActionThread = null;
+                        //AsyncTagActionThread.Abort();
+                        //AsyncTagActionThread = null;
+                        return;
                     }
                 }
                 Invoke(new Action(() => opDlg.Close()));
