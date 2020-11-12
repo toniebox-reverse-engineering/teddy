@@ -1048,7 +1048,7 @@ namespace TeddyBench
 
         public static string ReverseUid(string uid)
         {
-            List<string> groups = (from Match m in Regex.Matches(uid, @"[A-F0-9]{2}") select m.Value).ToList();
+            List<string> groups = (from Match m in Regex.Matches(uid, @"[A-Fa-f0-9]{2}") select m.Value).ToList();
             groups.Reverse();
             string ret = string.Join("", groups.ToArray());
 

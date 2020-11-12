@@ -57,7 +57,8 @@ namespace TeddyBench
             {
                 Proxmark3.UidFound -= Proxmark3_UidFound;
             }
-            Uid = txtUid.Text;
+            Uid = txtUid.Text.ToUpper();
+
             base.OnClosing(e);
         }
 
