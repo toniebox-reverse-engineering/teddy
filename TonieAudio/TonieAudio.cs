@@ -288,9 +288,15 @@ namespace TonieFile
                 }
                 else if (File.Exists(item))
                 {
-                    if (!item.ToLower().EndsWith(".mp3"))
+                    string[] extensions;
+                    if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+                        extensions = new String[] { ".mp3", ".ogg", ".wav", "wma", "aac" };
+                    else
+                        extensions = new String[] { ".mp3" };
+
+                    if (!extensions.Any(ext => item.ToLower().EndsWith(ext)))
                     {
-                        throw new InvalidDataException("Specified item '" + item + "' is no MP3");
+                        throw new InvalidDataException("Specified item '" + item + "' is no a supported audio file");
                     }
                     FileList.Add(item);
                 }
