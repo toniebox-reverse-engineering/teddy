@@ -870,7 +870,14 @@ namespace TeddyBench
             OpenFileDialog dlg = new OpenFileDialog();
             dlg.Multiselect = true;
 
-            if (dlg.ShowDialog() == DialogResult.OK)
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            {
+                // Sort in alphabetical order because the Windows.Form dialog under Linux is scrappy
+                var list = dlg.FileNames.ToList();
+                list.Sort();
+                AddFiles(list.ToArray());
+            }
+            else
             {
                 AddFiles(dlg.FileNames);
             }
