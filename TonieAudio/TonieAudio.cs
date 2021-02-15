@@ -506,8 +506,12 @@ namespace TonieFile
                                     prefixResampled.Write(prefixWavBytes, 0, prefixWavBytes.Length);
                                     prefixResampled.Seek(0, SeekOrigin.Begin);
 
-                                    // Skip header, for some reason ffmpeg uses 46 bytes instead of 44 bytes
-                                    prefixResampled.Read(buffer, 0, 46);
+                                    // Skip WAV header
+                                    byte[] bytes = new byte[4];
+                                    prefixResampled.Seek(16, 0);
+                                    prefixResampled.Read(bytes, 0, 4);
+                                    int Subchunk1Size = BitConverter.ToInt32(bytes, 0); // Get FMT size
+                                    prefixResampled.Read(buffer, 0, Subchunk1Size + 8); // Date starts at FMT size + 8 byte
                                 }
                                 else
                                 {
@@ -617,8 +621,12 @@ namespace TonieFile
                             streamResampled.Write(wavBytes, 0, wavBytes.Length);
                             streamResampled.Seek(0, SeekOrigin.Begin);
 
-                            // Skip header, for some reason ffmpeg uses 46 bytes instead of 44 bytes
-                            streamResampled.Read(buffer, 0, 46);
+                            // Skip WAV header
+                            byte[] bytes = new byte[4];
+                            streamResampled.Seek(16, 0);
+                            streamResampled.Read(bytes, 0, 4);
+                            int Subchunk1Size = BitConverter.ToInt32(bytes, 0); // Get FMT size
+                            streamResampled.Read(buffer, 0, Subchunk1Size + 8); // Date starts at FMT size + 8 byte
                         }
                         else
                         {
