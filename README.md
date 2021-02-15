@@ -11,7 +11,7 @@ It is tested with Ubuntu 20.04.
 Please install the following packages
 
 ```
-# sudo apt install mono-complete xcb ffmpeg libgdiplus
+# sudo apt install mono-complete xcb ffmpeg libgdiplus libcanberra-gtk-module libcanberra-gtk3-module
 ```
 
 ## Running
