@@ -511,7 +511,18 @@ namespace TonieFile
                                     prefixResampled.Seek(16, 0);
                                     prefixResampled.Read(bytes, 0, 4);
                                     int Subchunk1Size = BitConverter.ToInt32(bytes, 0); // Get FMT size
-                                    prefixResampled.Read(buffer, 0, Subchunk1Size + 8); // Date starts at FMT size + 8 byte
+
+                                    // Skip some header information
+                                    prefixResampled.Read(buffer, 0, Subchunk1Size + 12); // Data starts at FMT size + 12 bytes
+
+                                    // Read data chunk
+                                    prefixResampled.Read(bytes, 0, 4);
+                                    var str = System.Text.Encoding.Default.GetString(bytes);
+                                    if (str != "data")
+                                        throw new Exception("WAV error: Data section not found \n");
+
+                                    // Skip data length
+                                    prefixResampled.Read(bytes, 0, 4);
                                 }
                                 else
                                 {
@@ -597,6 +608,7 @@ namespace TonieFile
                                     IConversionResult conversionResult = await FFmpeg.Conversions.New()
                                         .AddStream(audioStream)
                                         .SetOutput(tmpWavFile)
+                                        .AddParameter("-map_metadata -1 -fflags +bitexact -flags:v +bitexact -flags:a +bitexact") // Remove meta data
                                         .Start();
                                 }
                                 catch (Exception e)
@@ -626,7 +638,18 @@ namespace TonieFile
                             streamResampled.Seek(16, 0);
                             streamResampled.Read(bytes, 0, 4);
                             int Subchunk1Size = BitConverter.ToInt32(bytes, 0); // Get FMT size
-                            streamResampled.Read(buffer, 0, Subchunk1Size + 8); // Date starts at FMT size + 8 byte
+
+                            // Skip some header information
+                            streamResampled.Read(buffer, 0, Subchunk1Size + 12); // Data starts at FMT size + 12 bytes
+
+                            // Read data chunk
+                            streamResampled.Read(bytes, 0, 4);
+                            var str = System.Text.Encoding.Default.GetString(bytes);
+                            if(str != "data")
+                                throw new Exception("WAV error: Data section not found \n");
+
+                            // Skip data length
+                            streamResampled.Read(bytes, 0, 4);
                         }
                         else
                         {
