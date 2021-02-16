@@ -1,0 +1,22 @@
+#!/bin/sh
+
+# check for mono
+if ! type "mono" > /dev/null
+then
+    echo "mono could not be found. Please read the README.md for installation instructions."
+    exit
+fi
+
+# check for ffmpeg
+if !  type "ffmpeg" > /dev/null
+then
+    echo "ffmpeg could not be found. Please read the README.md for installation instructions."
+    exit
+fi
+
+# Some exports to avoid crashes
+export MONO_MANAGED_WATCHER=disabled
+export MONO_WINFORMS_XIM_STYLE=disabled
+
+# Start TeddyBench
+mono TeddyBench.exe
