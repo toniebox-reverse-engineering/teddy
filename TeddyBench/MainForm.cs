@@ -711,6 +711,8 @@ namespace TeddyBench
                                 var found = TonieInfos.Where(t => t.Hash.Where(h => h == hash).Count() > 0);
                                 string tonieName = "[" + tag.Uid + "]" + Environment.NewLine + "(unknown: " + dumpFile.Header.AudioId.ToString("X8") + ")";
 
+                                bool update = false;
+
                                 if (found.Count() > 0)
                                 {
                                     var info = found.First();
@@ -732,6 +734,7 @@ namespace TeddyBench
                                             }));
                                         }
                                     }
+                                    update = true;
                                     image = hash;
                                 }
                                 else
@@ -744,30 +747,35 @@ namespace TeddyBench
                                         tonieName = CustomTonies[hash];
                                         tag.Info.Title = tonieName;
                                         image = "custom";
+                                        update = true;
                                     }
                                     else if (dumpFile.Header.AudioId < 0x50000000)
                                     {
                                         tonieName = "Unnamed Teddy - " + tonieName;
                                         tag.Info.Title = "Unnamed Teddy";
                                         image = "custom";
+                                        update = true;
                                     }
                                 }
 
-                                tag.Hash = hash;
-                                tag.AudioId = dumpFile.Header.AudioId;
-
-                                this.BeginInvoke(new Action(() =>
+                                if (update)
                                 {
-                                    entry.Value.Text = tonieName;
-                                    entry.Value.ImageKey = image;
-                                    entry.Value.ToolTipText =
-                                    "File:     " + tag.FileName + Environment.NewLine +
-                                    "UID:      " + tag.Uid + Environment.NewLine +
-                                    "Date:     " + tag.FileInfo.CreationTime + Environment.NewLine +
-                                    "AudioID:  0x" + tag.AudioId.ToString("X8") + Environment.NewLine +
-                                    "Chapters: " + dumpFile.Header.AudioChapters.Length + Environment.NewLine;
-                                    UpdateSorting();
-                                }));
+                                    tag.Hash = hash;
+                                    tag.AudioId = dumpFile.Header.AudioId;
+
+                                    this.BeginInvoke(new Action(() =>
+                                    {
+                                        entry.Value.Text = tonieName;
+                                        entry.Value.ImageKey = image;
+                                        entry.Value.ToolTipText =
+                                        "File:     " + tag.FileName + Environment.NewLine +
+                                        "UID:      " + tag.Uid + Environment.NewLine +
+                                        "Date:     " + tag.FileInfo.CreationTime + Environment.NewLine +
+                                        "AudioID:  0x" + tag.AudioId.ToString("X8") + Environment.NewLine +
+                                        "Chapters: " + dumpFile.Header.AudioChapters.Length + Environment.NewLine;
+                                        UpdateSorting();
+                                    }));
+                                }
                             }
                             catch (Exception ex)
                             {
