@@ -758,24 +758,25 @@ namespace TeddyBench
                                     }
                                 }
 
-                                if (update)
-                                {
-                                    tag.Hash = hash;
-                                    tag.AudioId = dumpFile.Header.AudioId;
+                                tag.Hash = hash;
+                                tag.AudioId = dumpFile.Header.AudioId;
 
-                                    this.BeginInvoke(new Action(() =>
+                                this.BeginInvoke(new Action(() =>
+                                {
+                                    entry.Value.Text = tonieName;
+                                    entry.Value.ImageKey = image;
+                                    entry.Value.ToolTipText =
+                                    "File:     " + tag.FileName + Environment.NewLine +
+                                    "UID:      " + tag.Uid + Environment.NewLine +
+                                    "Date:     " + tag.FileInfo.CreationTime + Environment.NewLine +
+                                    "AudioID:  0x" + tag.AudioId.ToString("X8") + Environment.NewLine +
+                                    "Chapters: " + dumpFile.Header.AudioChapters.Length + Environment.NewLine;
+                                    if (update)
                                     {
-                                        entry.Value.Text = tonieName;
-                                        entry.Value.ImageKey = image;
-                                        entry.Value.ToolTipText =
-                                        "File:     " + tag.FileName + Environment.NewLine +
-                                        "UID:      " + tag.Uid + Environment.NewLine +
-                                        "Date:     " + tag.FileInfo.CreationTime + Environment.NewLine +
-                                        "AudioID:  0x" + tag.AudioId.ToString("X8") + Environment.NewLine +
-                                        "Chapters: " + dumpFile.Header.AudioChapters.Length + Environment.NewLine;
                                         UpdateSorting();
-                                    }));
-                                }
+                                    }
+                                }));
+
                             }
                             catch (Exception ex)
                             {
