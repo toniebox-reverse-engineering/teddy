@@ -15,6 +15,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -880,7 +881,17 @@ namespace TeddyBench
 
             if (dlg.ShowDialog() == DialogResult.OK)
             {
-                AddFiles(dlg.FileNames);
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+                {
+                    // Sort in alphabetical order because the Windows.Form dialog under Linux is scrappy
+                    var list = dlg.FileNames.ToList();
+                    list.Sort();
+                    AddFiles(list.ToArray());
+                }
+                else
+                {
+                    AddFiles(dlg.FileNames);
+                }
             }
         }
 
@@ -890,13 +901,19 @@ namespace TeddyBench
 
             if (ask.ShowDialog() == DialogResult.OK)
             {
+                string[] extensions;
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+                    extensions = new String[] {".mp3", ".ogg", ".wav", "wma", "aac"};
+                else
+                    extensions = new String[] {".mp3"};
+
                 if (fileNames.Count() == 1)
                 {
                     string fileName = fileNames[0];
 
-                    if (fileName.ToLower().EndsWith(".mp3"))
+                    if (extensions.Any(ext => fileName.ToLower().EndsWith(ext)))
                     {
-                        switch (MessageBox.Show("You are about to encode a single MP3, is this right?", "Encode a MP3 file", MessageBoxButtons.YesNo))
+                        switch (MessageBox.Show("You are about to encode an single audio file, is this right?", "Encode an audio file", MessageBoxButtons.YesNo))
                         {
                             case DialogResult.No:
                                 return;
@@ -925,9 +942,9 @@ namespace TeddyBench
                 }
                 else
                 {
-                    if (fileNames.Where(f => !f.ToLower().EndsWith(".mp3")).Count() > 0)
+                    if (fileNames.Where(f => !extensions.Any(ext => f.ToLower().EndsWith(ext))).Count() > 0)
                     {
-                        MessageBox.Show("Please select MP3 files only.", "Add file...");
+                        MessageBox.Show("Please select supported audio files only.", "Add file...");
                         return;
                     }
 

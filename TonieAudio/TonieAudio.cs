@@ -41,6 +41,9 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+using Xabe.FFmpeg;
 using static TonieFile.ProtoCoder;
 
 namespace TonieFile
@@ -242,7 +245,11 @@ namespace TonieFile
         {
             foreach (var source in sources)
             {
-                string item = source.Trim('"').Trim(Path.DirectorySeparatorChar);
+                string item;
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+                    item = source;
+                else
+                    item = source.Trim('"').Trim(Path.DirectorySeparatorChar);
 
                 if (Directory.Exists(item))
                 {
@@ -281,9 +288,15 @@ namespace TonieFile
                 }
                 else if (File.Exists(item))
                 {
-                    if (!item.ToLower().EndsWith(".mp3"))
+                    string[] extensions;
+                    if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+                        extensions = new String[] { ".mp3", ".ogg", ".wav", "wma", "aac" };
+                    else
+                        extensions = new String[] { ".mp3" };
+
+                    if (!extensions.Any(ext => item.ToLower().EndsWith(ext)))
                     {
-                        throw new InvalidDataException("Specified item '" + item + "' is no MP3");
+                        throw new InvalidDataException("Specified item '" + item + "' is no a supported audio file");
                     }
                     FileList.Add(item);
                 }
@@ -439,11 +452,97 @@ namespace TonieFile
 
                             try
                             {
-                                var prefixStream = new Mp3FileReader(prefixFile);
-                                var prefixResampled = new MediaFoundationResampler(prefixStream, outFormat);
+                                Stream prefixResampled = new MemoryStream();
+
+                                // Linux
+                                string prefixTmpWavFile = "";
+
+                                if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+                                {
+                                    prefixTmpWavFile = Path.ChangeExtension(Path.GetTempFileName(), "wav");
+
+                                    //Console.Write(" Convert file " + sourceFile + " to WAV. Temp file " + prefixTmpWavFile);
+
+                                    // The isReady flag and error test variables are not a nice solution but is working
+                                    bool isReadyPrefix = false;
+                                    String FFmpegErrorTextPrefix = "";
+
+                                    // Convert to WAV
+                                    Task.Run(async () =>
+                                    {
+                                        try
+                                        {
+                                            // Convert to WAV and resample
+                                            IMediaInfo prefixInputFile = await FFmpeg.GetMediaInfo(sourceFile);
+
+                                            IAudioStream prefixAudioStream = prefixInputFile.AudioStreams.First()
+                                                .SetCodec(AudioCodec.pcm_f32le)
+                                                .SetChannels(2)
+                                                .SetSampleRate(samplingRate);
+
+                                            IConversionResult prefixConversionResult = await FFmpeg.Conversions.New()
+                                                .AddStream(prefixAudioStream)
+                                                .SetOutput(prefixTmpWavFile)
+                                                .Start();
+                                        }
+                                        catch (Exception e)
+                                        {
+                                            FFmpegErrorTextPrefix = e.Message;
+                                            throw new Exception("FFmepg error " + e.Message + "\n");
+                                        }
+
+                                        isReadyPrefix = true;
+                                    });
+
+                                    while (!isReadyPrefix)
+                                    {
+                                        Thread.Sleep(200);
+                                        if (FFmpegErrorTextPrefix != "")
+                                            throw new Exception("FFmepg error: " + FFmpegErrorTextPrefix + "\n");
+                                    }
+
+                                    // Read WAV file
+                                    byte[] prefixWavBytes = File.ReadAllBytes(prefixTmpWavFile);
+                                    prefixResampled.Write(prefixWavBytes, 0, prefixWavBytes.Length);
+                                    prefixResampled.Seek(0, SeekOrigin.Begin);
+
+                                    // Skip WAV header
+                                    byte[] bytes = new byte[4];
+                                    prefixResampled.Seek(16, 0);
+                                    prefixResampled.Read(bytes, 0, 4);
+                                    int Subchunk1Size = BitConverter.ToInt32(bytes, 0); // Get FMT size
+
+                                    // Skip some header information
+                                    prefixResampled.Read(buffer, 0, Subchunk1Size + 12); // Data starts at FMT size + 12 bytes
+
+                                    // Read data chunk
+                                    prefixResampled.Read(bytes, 0, 4);
+                                    var str = System.Text.Encoding.Default.GetString(bytes);
+                                    if (str != "data")
+                                        throw new Exception("WAV error: Data section not found \n");
+
+                                    // Skip data length
+                                    prefixResampled.Read(bytes, 0, 4);
+                                }
+                                else
+                                {
+                                    var prefixStream = new Mp3FileReader(prefixFile);
+                                    var prefixResampledTmp = new MediaFoundationResampler(prefixStream, outFormat);
+
+                                    // Convert NAudioStream to System.IO.Stream
+                                    byte[] sampleByte = { 0 };
+                                    int read;
+                                    while ((read = prefixResampledTmp.Read(sampleByte, 0, sampleByte.Length)) > 0)
+                                    {
+                                        prefixResampled.Write(sampleByte, 0, read);
+                                    }
+
+                                    prefixResampled.Seek(0, SeekOrigin.Begin);
+                                }
 
                                 while (true)
                                 {
+
                                     bytesReturned = prefixResampled.Read(buffer, 0, buffer.Length);
 
                                     if (bytesReturned <= 0)
@@ -454,7 +553,11 @@ namespace TonieFile
                                     bool isEmpty = (buffer.Where(v => v != 0).Count() == 0);
                                     if (!isEmpty)
                                     {
-                                        float[] sampleBuffer = ConvertToFloat(buffer, bytesReturned, channels);
+                                        float[] sampleBuffer;
+                                        if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+                                            sampleBuffer = MemoryMarshal.Cast<byte, float>(buffer.AsSpan()).ToArray();
+                                        else
+                                            sampleBuffer = ConvertToFloat(buffer, bytesReturned, channels);
 
                                         if ((outputData.Length + 0x1000 + sampleBuffer.Length) >= maxSize)
                                         {
@@ -464,6 +567,9 @@ namespace TonieFile
                                     }
                                     lastIndex = (uint)oggOut.PageCounter;
                                 }
+
+                                if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+                                    File.Delete(prefixTmpWavFile);
                             }
                             catch (Exception ex)
                             {
@@ -471,9 +577,95 @@ namespace TonieFile
                             }
                         }
 
+                        Stream streamResampled = new MemoryStream();
+
+                        // Linux
+                        string tmpWavFile = "";
+
                         /* then the real audio file */
-                        var stream = new Mp3FileReader(sourceFile);
-                        var streamResampled = new MediaFoundationResampler(stream, outFormat);
+                        if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+                        {
+                            tmpWavFile = Path.ChangeExtension(Path.GetTempFileName(), "wav");
+
+                            //Console.Write(" Convert file " + sourceFile + " to WAV. Temp file " + TmpWavFile);
+
+                            // The isReady flag and error test variables are not a nice solution but is working
+                            bool isReady = false;
+                            String FFmpegErrorText = "";
+
+                            // Convert to WAV and resample
+                            Task.Run(async () =>
+                            {
+                                try
+                                {
+                                    IMediaInfo inputFile = await FFmpeg.GetMediaInfo(sourceFile);
+
+                                    IAudioStream audioStream = inputFile.AudioStreams.First()
+                                        .SetCodec(AudioCodec.pcm_f32le)
+                                        .SetChannels(2)
+                                        .SetSampleRate(samplingRate);
+
+                                    IConversionResult conversionResult = await FFmpeg.Conversions.New()
+                                        .AddStream(audioStream)
+                                        .SetOutput(tmpWavFile)
+                                        .AddParameter("-map_metadata -1 -fflags +bitexact -flags:v +bitexact -flags:a +bitexact") // Remove meta data
+                                        .Start();
+                                }
+                                catch (Exception e)
+                                {
+                                    FFmpegErrorText = e.Message;
+                                    Console.WriteLine(e.Message);
+                                    throw new Exception("FFmepg error " + e.Message + "\n");
+                                }
+
+                                isReady = true;
+                            });
+
+                            while (!isReady)
+                            {
+                                Thread.Sleep(200);
+                                if (FFmpegErrorText != "")
+                                    throw new Exception("FFmepg error: " + FFmpegErrorText + "\n");
+                            }
+
+                            // Read WAV file
+                            byte[] wavBytes = File.ReadAllBytes(tmpWavFile);
+                            streamResampled.Write(wavBytes, 0, wavBytes.Length);
+                            streamResampled.Seek(0, SeekOrigin.Begin);
+
+                            // Skip WAV header
+                            byte[] bytes = new byte[4];
+                            streamResampled.Seek(16, 0);
+                            streamResampled.Read(bytes, 0, 4);
+                            int Subchunk1Size = BitConverter.ToInt32(bytes, 0); // Get FMT size
+
+                            // Skip some header information
+                            streamResampled.Read(buffer, 0, Subchunk1Size + 12); // Data starts at FMT size + 12 bytes
+
+                            // Read data chunk
+                            streamResampled.Read(bytes, 0, 4);
+                            var str = System.Text.Encoding.Default.GetString(bytes);
+                            if(str != "data")
+                                throw new Exception("WAV error: Data section not found \n");
+
+                            // Skip data length
+                            streamResampled.Read(bytes, 0, 4);
+                        }
+                        else
+                        {
+                            var stream = new Mp3FileReader(sourceFile);
+                            var streamResampledTmp = new MediaFoundationResampler(stream, outFormat);
+
+                            // Convert NAudioStream to System.IO.Stream
+                            byte[] sampleByte = { 0 };
+                            int read;
+                            while ((read = streamResampledTmp.Read(sampleByte, 0, sampleByte.Length)) > 0)
+                            {
+                                streamResampled.Write(sampleByte, 0, read);
+                            }
+
+                            streamResampled.Seek(0, SeekOrigin.Begin);
+                        }
 
                         while (true)
                         {
@@ -485,7 +677,7 @@ namespace TonieFile
                             }
                             totalBytesRead += bytesReturned;
 
-                            float progress = (float)stream.Position / stream.Length;
+                            float progress = (float)streamResampled.Position / streamResampled.Length;
 
                             if ((int)(progress * 20) != lastPct)
                             {
@@ -506,15 +698,22 @@ namespace TonieFile
                             bool isEmpty = (buffer.Where(v => v != 0).Count() == 0);
                             if (!isEmpty)
                             {
-                                float[] sampleBuffer = ConvertToFloat(buffer, bytesReturned, channels);
-
+                                float[] sampleBuffer;
+                                if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+                                    sampleBuffer = MemoryMarshal.Cast<byte, float>(buffer.AsSpan()).ToArray();
+                                else
+                                    sampleBuffer = ConvertToFloat(buffer, bytesReturned, channels);
+                                   
                                 oggOut.WriteSamples(sampleBuffer, 0, sampleBuffer.Length);
                             }
                             lastIndex = (uint)oggOut.PageCounter;
                         }
 
                         Console.WriteLine("]");
-                        stream.Close();
+                        if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+                            File.Delete(tmpWavFile);
+
+                        streamResampled.Close();
                     }
                     catch (OpusOggWriteStream.PaddingException e)
                     {
@@ -534,7 +733,7 @@ namespace TonieFile
                     catch (Exception e)
                     {
                         Console.WriteLine();
-                        throw new Exception("Failed processing " + sourceFile);
+                        throw new Exception("Failed processing " + sourceFile + "\n Error: " + e.Message + "\n");
                     }
 
                     if (!warned && outputData.Length >= maxSize / 2)
