@@ -1828,5 +1828,19 @@ namespace TeddyBench
                 Proxmark3.EnterBootloader(dlg.FileName);
             }
         }
+
+        private void consoleModeToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if(!consoleModeToolStripMenuItem.Checked)
+            {
+                consoleModeToolStripMenuItem.Checked = true;
+                Proxmark3.EnterConsole();
+            }
+            else
+            {
+                consoleModeToolStripMenuItem.Checked = false;
+                Proxmark3.ExitConsole();
+            }
+        }
     }
 }

@@ -5,6 +5,7 @@ using System.Drawing.Drawing2D;
 using System.IO;
 using System.IO.Ports;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
@@ -268,6 +269,8 @@ namespace TeddyBench
         public string CurrentUidString = null;
         private Thread ScanThread = null;
         private bool ExitScanThread = false;
+        private Thread ConsoleThread = null;
+        private bool ExitConsoleThread = false;
         private object ReaderLock = new object();
 
         private Dictionary<string, DateTime> PortsFailed = new Dictionary<string, DateTime>();
@@ -397,7 +400,7 @@ namespace TeddyBench
                                     {
                                         LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] MainFunc: Unlocked tag");
                                         uid = GetUID();
-                                        if(uid == null)
+                                        if (uid == null)
                                         {
                                             LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] MainFunc: But it did still not respond to an INVENTORY command?!");
                                             Thread.Sleep(100);
@@ -572,7 +575,7 @@ namespace TeddyBench
                         reason = 1 + (int)response.data.arg[0];
                         LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] UnlockTag: NACK (reason: " + reason + ")");
                         return false;
-                
+
                     case Pm3UsbResponse.eResponseType.NoData:
                     case Pm3UsbResponse.eResponseType.Timeout:
                         reason = -1;
@@ -722,7 +725,7 @@ namespace TeddyBench
 
         private void EmulateTagInternal(byte[] data)
         {
-            if(Port == null)
+            if (Port == null)
             {
                 return;
             }
@@ -781,7 +784,7 @@ namespace TeddyBench
             {
                 double[] freq = new double[256];
 
-                for(int pos = 0; pos < freq.Length; pos++)
+                for (int pos = 0; pos < freq.Length; pos++)
                 {
                     freq[pos] = (12000000.0f / (pos + 1)) / 1000.0f;
                 }
@@ -873,15 +876,15 @@ namespace TeddyBench
                     p.Close();
                     reallyAvailablePorts.Add(listedPort);
                 }
-                catch(Exception e0)
+                catch (Exception e0)
                 {
                 }
             }
 
             /* update seen list */
-            foreach(string newPort in reallyAvailablePorts)
+            foreach (string newPort in reallyAvailablePorts)
             {
-                if(!PortsAppeared.ContainsKey(newPort))
+                if (!PortsAppeared.ContainsKey(newPort))
                 {
                     PortsAppeared.Add(newPort, DateTime.Now);
                     LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] New port: " + newPort);
@@ -897,10 +900,10 @@ namespace TeddyBench
             }
 
             /* only try to connect to ports that have been seen more than a second ago. Ensure PM3 has booted properly. */
-            foreach(string port in reallyAvailablePorts.Where(p=> (DateTime.Now - PortsAppeared[p]).TotalMilliseconds > 1000))
+            foreach (string port in reallyAvailablePorts.Where(p => (DateTime.Now - PortsAppeared[p]).TotalMilliseconds > 1000))
             {
                 /* retry failed ports only every 60 seconds */
-                if(PortsFailed.ContainsKey(port) && (DateTime.Now - PortsFailed[port]).TotalSeconds < 60)
+                if (PortsFailed.ContainsKey(port) && (DateTime.Now - PortsFailed[port]).TotalSeconds < 60)
                 {
                     continue;
                 }
@@ -1045,7 +1048,7 @@ namespace TeddyBench
                 Connected = true;
                 return true;
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 try
                 {
@@ -1054,7 +1057,7 @@ namespace TeddyBench
                         p.Close();
                     }
                 }
-                catch(Exception e)
+                catch (Exception e)
                 {
                 }
             }
@@ -1092,7 +1095,7 @@ namespace TeddyBench
 
             internal void Add(MemSegment seg)
             {
-                if(seg.Address >= Address && seg.Address <= EndAddressPadded)
+                if (seg.Address >= Address && seg.Address <= EndAddressPadded)
                 {
                     uint newSize = seg.EndAddress - Address;
                     Array.Resize(ref Data, (int)newSize);
@@ -1336,6 +1339,78 @@ namespace TeddyBench
         internal float GetHFVoltage()
         {
             return AntennaVoltage;
+        }
+
+        internal void EnterConsole()
+        {
+            if (Port == null)
+            {
+                return;
+            }
+
+            StopThread();
+
+            ExitConsoleThread = false;
+            ConsoleThread = new Thread(() =>
+            {
+                LogWindow.Log(LogWindow.eLogLevel.Debug, "");
+                LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] Console mode. If you have no clue what this is for, then you clicked the wrong menu entry.");
+                LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] If you know what you are doing, then long-press the PM3 button.");
+                lock (ReaderLock)
+                {
+                    try
+                    {
+                        while (!ExitConsoleThread)
+                        {
+                            Pm3UsbResponse response = new Pm3UsbResponse(Port);
+
+                            switch (response.Cmd)
+                            {
+                                case Pm3UsbResponse.eResponseType.DebugString:
+                                    {
+                                        string debugStr = Encoding.UTF8.GetString(response.data.d, 0, response.data.dataLen);
+                                        LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] GetResponse: DebugMessage '" + debugStr + "'");
+                                        break;
+                                    }
+
+                                case Pm3UsbResponse.eResponseType.NoData:
+                                case Pm3UsbResponse.eResponseType.Timeout:
+                                    break;
+
+                                case Pm3UsbResponse.eResponseType.ACK:
+                                    LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] GetResponse: ACK");
+                                    break;
+
+                                case Pm3UsbResponse.eResponseType.NACK:
+                                    LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] GetResponse: NACK");
+                                    break;
+
+                                default:
+                                    LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] GetResponse: Unhandled: " + response.Cmd);
+                                    break;
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                    }
+                }
+            });
+            ConsoleThread.Start();
+            return;
+
+        }
+
+        internal void ExitConsole()
+        {
+            ExitConsoleThread = true;
+
+            if (!ConsoleThread.Join(2000))
+            {
+                ConsoleThread.Abort();
+            }
+            ConsoleThread = null;
+            StartThread();
         }
     }
 }
