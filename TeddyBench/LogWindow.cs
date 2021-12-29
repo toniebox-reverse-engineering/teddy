@@ -21,10 +21,11 @@ namespace TeddyBench
 
         public enum eLogLevel
         {
-            Debug = 0,
-            Information = 1,
-            Warning = 2,
-            Error = 3
+            DebugVerbose = 0,
+            Debug = 1,
+            Information = 2,
+            Warning = 3,
+            Error = 4
         }
 
         public LogWindow()

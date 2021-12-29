@@ -70,7 +70,7 @@ namespace TeddyBench
                 FileName = filename;
 
                 FileInfo = new FileInfo(FileName);
-                Uid = ReverseUid(FileInfo.DirectoryName + FileInfo.Name);
+                Uid = ReverseUid(FileInfo.Directory.Name + FileInfo.Name);
             }
         }
 
@@ -697,9 +697,12 @@ namespace TeddyBench
 
                 lock (RegisteredItems)
                 {
+                    LogWindow.Log(LogWindow.eLogLevel.DebugVerbose, "Rescanning");
                     foreach (var entry in RegisteredItems)
                     {
                         ListViewTag tag = entry.Key;
+                        LogWindow.Log(LogWindow.eLogLevel.DebugVerbose, "  Filename: " + entry.Key.FileName);
+                        LogWindow.Log(LogWindow.eLogLevel.DebugVerbose, "     Image: " + entry.Value.ImageKey);
 
                         if (entry.Value.ImageKey == "unknown")
                         {
@@ -715,6 +718,7 @@ namespace TeddyBench
 
                                 if (found.Count() > 0)
                                 {
+                                    LogWindow.Log(LogWindow.eLogLevel.DebugVerbose, "     Found");
                                     var info = found.First();
                                     tag.Info = info;
                                     tonieName = info.Title;
@@ -744,6 +748,7 @@ namespace TeddyBench
 
                                     if (CustomTonies.ContainsKey(hash))
                                     {
+                                        LogWindow.Log(LogWindow.eLogLevel.DebugVerbose, "     known custom tonie");
                                         tonieName = CustomTonies[hash];
                                         tag.Info.Title = tonieName;
                                         image = "custom";
@@ -751,38 +756,54 @@ namespace TeddyBench
                                     }
                                     else if (dumpFile.Header.AudioId < 0x50000000)
                                     {
+                                        LogWindow.Log(LogWindow.eLogLevel.DebugVerbose, "     unknown custom tonie");
                                         tonieName = "Unnamed Teddy - " + tonieName;
                                         tag.Info.Title = "Unnamed Teddy";
                                         image = "custom";
                                         update = true;
                                     }
+                                    else
+                                    {
+                                        LogWindow.Log(LogWindow.eLogLevel.DebugVerbose, "     Not found -> unknown");
+                                    }
                                 }
 
                                 tag.Hash = hash;
                                 tag.AudioId = dumpFile.Header.AudioId;
+                                LogWindow.Log(LogWindow.eLogLevel.DebugVerbose, "     Hash: " + tag.Hash);
+                                LogWindow.Log(LogWindow.eLogLevel.DebugVerbose, "     AudioId: " + tag.AudioId);
 
-                                this.BeginInvoke(new Action(() =>
-                                {
-                                    entry.Value.Text = tonieName;
-                                    entry.Value.ImageKey = image;
-                                    entry.Value.ToolTipText =
+                                string newText = tonieName;
+                                string newImakeKey = image;
+                                string newToolTipText =
                                     "File:     " + tag.FileName + Environment.NewLine +
                                     "UID:      " + tag.Uid + Environment.NewLine +
                                     "Date:     " + tag.FileInfo.CreationTime + Environment.NewLine +
                                     "AudioID:  0x" + tag.AudioId.ToString("X8") + Environment.NewLine +
                                     "Chapters: " + dumpFile.Header.AudioChapters.Length + Environment.NewLine;
-                                    if (update)
-                                    {
-                                        UpdateSorting();
-                                    }
-                                }));
 
+                                update |= entry.Value.Text != newText;
+                                update |= entry.Value.ImageKey != newImakeKey;
+                                update |= entry.Value.ToolTipText != newToolTipText;
+
+                                if (update)
+                                {
+                                    this.BeginInvoke(new Action(() =>
+                                    {
+                                        LogWindow.Log(LogWindow.eLogLevel.DebugVerbose, "     Update list");
+                                        entry.Value.Text = newText;
+                                        entry.Value.ImageKey = newImakeKey;
+                                        entry.Value.ToolTipText = newToolTipText;
+                                        UpdateSorting();
+                                    }));
+                                }
                             }
                             catch (Exception ex)
                             {
                             }
                         }
                     }
+                    LogWindow.Log(LogWindow.eLogLevel.DebugVerbose, "Done");
                 }
             }
         }
@@ -1781,7 +1802,7 @@ namespace TeddyBench
             else
             {
                 LogWindow.LogLevel = LogWindow.eLogLevel.Warning;
-                Log.Close();
+                Log.Hide();
             }
         }
 
