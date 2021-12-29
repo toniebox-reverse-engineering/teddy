@@ -767,6 +767,11 @@ namespace TeddyBench
                                     {
                                         tonieName = info.Model + " - " + tonieName;
                                     }
+                                    if (CustomTonies.ContainsKey(hash))
+                                    {
+                                        LogWindow.Log(LogWindow.eLogLevel.DebugVerbose, "     known tonie, overriding name");
+                                        tonieName = CustomTonies[hash];
+                                    }
                                     if (!string.IsNullOrEmpty(info.Pic) && !lstTonies.LargeImageList.Images.ContainsKey(hash))
                                     {
                                         Image img = GetImage(info.Pic, hash);
@@ -817,6 +822,7 @@ namespace TeddyBench
                                 string newImakeKey = image;
                                 string newToolTipText =
                                     "File:     " + tag.FileName + Environment.NewLine +
+                                    "Name:     " + tag.Info.Title + Environment.NewLine +
                                     "UID:      " + tag.Uid + Environment.NewLine +
                                     "Date:     " + tag.FileInfo.CreationTime + Environment.NewLine +
                                     "AudioID:  0x" + tag.AudioId.ToString("X8") + Environment.NewLine +
@@ -1142,7 +1148,7 @@ namespace TeddyBench
 
         private void renameToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (LastSelectediItem != null && LastSelectediItem.ImageKey == "custom")
+            if (LastSelectediItem != null/* && LastSelectediItem.ImageKey == "custom"*/)
             {
                 LastSelectediItem.BeginEdit();
             }
@@ -1188,7 +1194,7 @@ namespace TeddyBench
                 if (lstTonies.FocusedItem.Bounds.Contains(e.Location))
                 {
                     LastSelectediItem = lstTonies.SelectedItems[0];
-                    //TonieContextMenu.Show(Cursor.Position);
+                    TonieContextMenu.Show(System.Windows.Forms.Cursor.Position);
                 }
             }
             else
@@ -1689,7 +1695,12 @@ namespace TeddyBench
 
         private void AddInfo(StringBuilder str, ListViewTag tag)
         {
-            TonieTools.DumpInfo(str, TonieTools.eDumpFormat.FormatText, tag.FileName, TonieInfos);
+            string customName = null;
+            if(CustomTonies.ContainsKey(tag.Hash))
+            {
+                customName = CustomTonies[tag.Hash];
+            }
+            TonieTools.DumpInfo(str, TonieTools.eDumpFormat.FormatText, tag.FileName, TonieInfos, customName);
         }
 
         private async void readContentToolStripMenuItem_Click(object sender, EventArgs e)
