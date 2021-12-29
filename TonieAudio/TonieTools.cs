@@ -79,7 +79,7 @@ namespace TonieFile
             public string Pic;
         }
 
-        public static bool DumpInfo(StringBuilder message, eDumpFormat dumpFormat, string file, TonieData[] tonieInfos)
+        public static bool DumpInfo(StringBuilder message, eDumpFormat dumpFormat, string file, TonieData[] tonieInfos, string customName = null)
         {
             TonieAudio dumpFile = TonieAudio.FromFile(file);
             dumpFile.CalculateStatistics(out long segCount, out long segLength, out int minSegs, out int maxSegs, out ulong minGranule, out ulong maxGranule, out ulong highestGranule);
@@ -153,6 +153,10 @@ namespace TonieFile
                             infoHashString = info.Hash[infoIndex];
 
                             message.AppendLine("  Header: JSON Name   '" + info.Title + "'");
+                        }
+                        if(!string.IsNullOrEmpty(customName))
+                        {
+                            message.AppendLine("  Header: Custom Name '" + customName + "'");
                         }
 
                         message.AppendLine("  Header: Length      0x" + dumpFile.HeaderLength.ToString("X8") + " " + ((dumpFile.HeaderLength != 0xFFC) ? " [WARNING: EXTRA DATA]" : "[OK]"));

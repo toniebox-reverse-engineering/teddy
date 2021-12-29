@@ -18,14 +18,14 @@ namespace TeddyBench
         {
             InitializeComponent();
 
-            formsPlot1.plt.PlotScatter(result.GetFrequencieskHz(), result.GetVoltages());
-            formsPlot1.plt.XLabel("Frequency [kHz]");
-            formsPlot1.plt.YLabel("Amplitude [V]");
-            formsPlot1.plt.Title("LF Antenna Plot (no relevance)");
-            formsPlot1.plt.AxisBounds(46.0f, 600.0f, 0, 65.0f);
-            formsPlot1.plt.Style(Style.Gray2);
-            formsPlot1.Render();
-            formsPlot1.Show();
+            antennaPlot.Plot.AddScatter(result.GetFrequencieskHz(), result.GetVoltages());
+            antennaPlot.Plot.XLabel("Frequency [kHz]");
+            antennaPlot.Plot.YLabel("Amplitude [V]");
+            antennaPlot.Plot.Title("LF Antenna Plot (no relevance)");
+            antennaPlot.Plot.SetAxisLimits(46.0f, 600.0f, 0, 65.0f);
+            antennaPlot.Plot.Style(Style.Gray2);
+            antennaPlot.Render();
+            antennaPlot.Show();
 
             lblV125.Text = result.vLF125.ToString("0.00", CultureInfo.InvariantCulture) + " V";
             lblV134.Text = result.vLF134.ToString("0.00", CultureInfo.InvariantCulture) + " V";

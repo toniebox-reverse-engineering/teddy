@@ -1,5 +1,6 @@
-﻿using GitHubUpdate;
+﻿using AutoUpdateViaGitHubRelease;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using ScottPlot;
 using System;
 using System.Collections;
@@ -15,6 +16,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -53,6 +55,7 @@ namespace TeddyBench
         private string LastFoundUid = null;
         private Thread AsyncTagActionThread = null;
         private System.Windows.Forms.Timer StatusBarTimer = null;
+        private Update Updater;
 
         private string TitleString => "TeddyBench (beta) - " + GetVersion();
 
@@ -200,6 +203,7 @@ namespace TeddyBench
             LoadJson();
             StartThreads();
 
+
             UpdateCheckThread = new Thread(UpdateCheck);
             UpdateCheckThread.Start();
 
@@ -219,6 +223,17 @@ namespace TeddyBench
             StatusBarTimer.Tick += (object sender, EventArgs e) => { UpdateStatusBar(); };
             StatusBarTimer.Interval = 500;
             StatusBarTimer.Start();
+        }
+
+        private void Update_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (Updater.Available)
+            {
+                Assembly assembly = Assembly.GetExecutingAssembly();
+                Version version = assembly.GetName().Version;
+                Updater.StartInstall(assembly.Location);
+                Application.Exit();
+            }
         }
 
         void SaveSettings()
@@ -404,28 +419,53 @@ namespace TeddyBench
             try
             {
                 Thread.Sleep(2000);
-                UpdateChecker checker = new UpdateChecker("toniebox-reverse-engineering", "teddy", ThisAssembly.Git.BaseTag);
 
-                UpdateType type = await checker.CheckUpdate();
+                HttpClient client = new HttpClient();
+                client.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (compatible; TeddyBench/1.0)");
+                async Task<JObject> GithubApiGet(string path) => JObject.Parse(await client.GetStringAsync($"https://api.github.com/{path}"));
+                async Task<JObject> GithubLastRelease(string user, string repo) => await GithubApiGet($"repos/{user}/{repo}/releases/latest");
 
-                if (type == UpdateType.None)
+                async Task DownloadFile(string url, string destinationFileName)
                 {
-                    return;
+                    using var stream = await client.GetStreamAsync(url);
+                    using var file = new FileStream(destinationFileName, FileMode.Create);
+                    stream.CopyTo(file);
                 }
-                BeginInvoke(new Action(() =>
+
+                dynamic latestRelease = await GithubLastRelease("toniebox-reverse-engineering", "teddy");
+                string latestVersion = latestRelease.tag_name;
+
+                if (latestVersion != ThisAssembly.Git.BaseTag)
                 {
-                    UpdateNotifyDialog dlg = new UpdateNotifyDialog(checker);
-                    if (dlg.ShowDialog() == DialogResult.Yes)
+                    string destPath = new FileInfo(Assembly.GetExecutingAssembly().Location).DirectoryName;
+                    string zipName = Path.Combine(destPath, "TeddyBench.zip");
+
+                    if (latestRelease.assets[0].name == "TeddyBench.zip")
                     {
-                        checker.DownloadAsset("TeddyBench.zip");
+                        string url = latestRelease.assets[0].browser_download_url;
+
+                        BeginInvoke(new Action(async () =>
+                        {
+                            UpdateNotifyDialog dlg = new UpdateNotifyDialog(latestVersion, (string)latestRelease.name);
+                            if (dlg.ShowDialog() == DialogResult.Yes)
+                            {
+                                await DownloadFile(url, zipName);
+                                ProcessStartInfo startInfo = new ProcessStartInfo
+                                {
+                                    Arguments = zipName,
+                                    FileName = "explorer.exe"
+                                };
+
+                                Process.Start(startInfo);
+                            }
+                        }));
                     }
-                }));
+                }
             }
             catch (Exception ex)
             {
             }
         }
-
 
         protected override void OnDragEnter(DragEventArgs e)
         {
@@ -458,27 +498,27 @@ namespace TeddyBench
             {
                 ScanCardThreadStop = true;
                 ScanCardThread.Join(100);
-                ScanCardThread.Abort();
+                //ScanCardThread.Abort();
                 ScanCardThread = null;
             }
             StopAnalyzeThread();
             if (UpdateCheckThread != null)
             {
                 UpdateCheckThread.Join(100);
-                UpdateCheckThread.Abort();
+                //UpdateCheckThread.Abort();
                 UpdateCheckThread = null;
             }
             if (EncodeThread != null)
             {
                 EncodeThread.Join(100);
-                EncodeThread.Abort();
+                //EncodeThread.Abort();
                 EncodeThread = null;
             }
             if (LogThread != null)
             {
                 LogThreadStop = true;
                 LogThread.Join(100);
-                LogThread.Abort();
+                //LogThread.Abort();
                 LogThread = null;
             }
             if (Proxmark3 != null)
@@ -684,7 +724,7 @@ namespace TeddyBench
             {
                 AnalyzeThreadStop = true;
                 AnalyzeThread.Join(200);
-                AnalyzeThread.Abort();
+                //AnalyzeThread.Abort();
                 AnalyzeThread = null;
             }
         }
@@ -1073,7 +1113,7 @@ namespace TeddyBench
         {
             LogThreadStop = true;
             LogThread.Join(500);
-            LogThread.Abort();
+            //LogThread.Abort();
         }
 
         public static string ReverseUid(string uid)
@@ -1148,7 +1188,7 @@ namespace TeddyBench
                 if (lstTonies.FocusedItem.Bounds.Contains(e.Location))
                 {
                     LastSelectediItem = lstTonies.SelectedItems[0];
-                    TonieContextMenu.Show(Cursor.Position);
+                    //TonieContextMenu.Show(Cursor.Position);
                 }
             }
             else
@@ -1695,7 +1735,7 @@ namespace TeddyBench
                     Thread.Sleep(100);
                     if (opDlg.DialogResult == DialogResult.Cancel)
                     {
-                        AsyncTagActionThread.Abort();
+                        //AsyncTagActionThread.Abort();
                         AsyncTagActionThread = null;
                         return;
                     }
@@ -1743,7 +1783,7 @@ namespace TeddyBench
                     if (opDlg.DialogResult == DialogResult.Cancel)
                     {
                         //AsyncTagActionThread.Abort();
-                        //AsyncTagActionThread = null;
+                        AsyncTagActionThread = null;
                         return;
                     }
                 }
