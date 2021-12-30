@@ -1,4 +1,7 @@
 ﻿using AutoUpdateViaGitHubRelease;
+using Concentus.Oggfile;
+using Concentus.Structs;
+using NAudio.Wave;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using ScottPlot;
@@ -11,12 +14,14 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
+using System.Drawing.Text;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Reflection;
+using System.Reflection.Metadata.Ecma335;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -58,6 +63,11 @@ namespace TeddyBench
         private Update Updater;
 
         private string TitleString => "TeddyBench (beta) - " + GetVersion();
+
+        private Thread PlayThread = null;
+        private bool PlayThreadStop = true;
+        private bool TrackMouseDown = false;
+        private int TrackNewPosition = -1;
 
         public class ListViewTag
         {
@@ -374,7 +384,7 @@ namespace TeddyBench
             if (e != null)
             {
                 /* already handled this UID? then return */
-                if(e == LastFoundUid)
+                if (e == LastFoundUid)
                 {
                     return;
                 }
@@ -500,6 +510,13 @@ namespace TeddyBench
                 ScanCardThread.Join(100);
                 //ScanCardThread.Abort();
                 ScanCardThread = null;
+            }
+            if (PlayThread != null)
+            {
+                PlayThreadStop = true;
+                PlayThread.Join(1000);
+                //PlayThread.Abort();
+                PlayThread = null;
             }
             StopAnalyzeThread();
             if (UpdateCheckThread != null)
@@ -860,7 +877,7 @@ namespace TeddyBench
 
             try
             {
-                if(!Directory.Exists("cache"))
+                if (!Directory.Exists("cache"))
                 {
                     Directory.CreateDirectory("cache");
                 }
@@ -902,7 +919,7 @@ namespace TeddyBench
             if (CachedAudios.ContainsKey(fileName))
             {
                 Tuple<TonieAudio, DateTime> cachedItem = CachedAudios[fileName];
-                if(cachedItem.Item2 == info.LastWriteTime)
+                if (cachedItem.Item2 == info.LastWriteTime)
                 {
                     return cachedItem.Item1;
                 }
@@ -1544,7 +1561,7 @@ namespace TeddyBench
         }
 
         private async Task<bool> ReportSelected()
-        { 
+        {
             if (lstTonies.SelectedItems.Count == 0)
             {
                 return false;
@@ -1584,7 +1601,7 @@ namespace TeddyBench
 
         private async void reportallFilesToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if(lstTonies.Items.Count == 0)
+            if (lstTonies.Items.Count == 0)
             {
                 return;
             }
@@ -1681,7 +1698,7 @@ namespace TeddyBench
 
                 LogWindow.Log(LogWindow.eLogLevel.Debug, sd);
 
-                if(sd != "")
+                if (sd != "")
                 {
                     return true;
                 }
@@ -1696,7 +1713,7 @@ namespace TeddyBench
         private void AddInfo(StringBuilder str, ListViewTag tag)
         {
             string customName = null;
-            if(CustomTonies.ContainsKey(tag.Hash))
+            if (CustomTonies.ContainsKey(tag.Hash))
             {
                 customName = CustomTonies[tag.Hash];
             }
@@ -1705,7 +1722,7 @@ namespace TeddyBench
 
         private async void readContentToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if(Proxmark3 == null || AsyncTagActionThread != null)
+            if (Proxmark3 == null || AsyncTagActionThread != null)
             {
                 return;
             }
@@ -1729,7 +1746,7 @@ namespace TeddyBench
                         }
                     }));
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                 }
                 AsyncTagActionThread = null;
@@ -1737,7 +1754,7 @@ namespace TeddyBench
             AsyncTagActionThread.Start();
             TagOperationDialog opDlg = new TagOperationDialog(true);
 
-            opDlg.Show();        
+            opDlg.Show();
 
             await Task.Run(() =>
             {
@@ -1768,7 +1785,7 @@ namespace TeddyBench
             {
                 byte[] data = Helpers.ConvertHexStringToByteArray(dlg.String);
 
-                AsyncTagActionThread = new Thread(() => 
+                AsyncTagActionThread = new Thread(() =>
                 {
                     try
                     {
@@ -1811,7 +1828,7 @@ namespace TeddyBench
 
         private void UpdateNfcReader()
         {
-            if(Settings.NfcEnabled)
+            if (Settings.NfcEnabled)
             {
                 if (Proxmark3 == null)
                 {
@@ -1825,7 +1842,7 @@ namespace TeddyBench
             }
             else
             {
-                if(Proxmark3 != null)
+                if (Proxmark3 != null)
                 {
                     Proxmark3.Stop();
                     Proxmark3 = null;
@@ -1903,7 +1920,7 @@ namespace TeddyBench
 
         private void consoleModeToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if(!consoleModeToolStripMenuItem.Checked)
+            if (!consoleModeToolStripMenuItem.Checked)
             {
                 consoleModeToolStripMenuItem.Checked = true;
                 Proxmark3.EnterConsole();
@@ -1913,6 +1930,107 @@ namespace TeddyBench
                 consoleModeToolStripMenuItem.Checked = false;
                 Proxmark3.ExitConsole();
             }
+        }
+
+        private void btnPlay_Click(object sender, EventArgs e)
+        {
+            if (PlayThread == null)
+            {
+                if (lstTonies.SelectedItems.Count != 1)
+                {
+                    return;
+                }
+
+                var selected = lstTonies.SelectedItems[0];
+                ListViewTag tag = selected.Tag as ListViewTag;
+                string file = tag.FileName;
+
+                PlayThread = new Thread(() =>
+                {
+                    try
+                    {
+                        TonieAudio dump = TonieAudio.FromFile(file);
+
+                        using var waveOut = new WaveOutEvent();
+                        using var reader = new OpusWaveStream(new MemoryStream(dump.Audio), 48000, 2);
+
+                        waveOut.Init(reader);
+                        waveOut.PlaybackStopped += WaveOut_PlaybackStopped;
+                        waveOut.Play();
+                        LogWindow.Log(LogWindow.eLogLevel.Debug, "Playback started");
+
+                        while (!PlayThreadStop)
+                        {
+                            Thread.Sleep(100);
+                            int pos = (int)reader.OpusDecoder.CurrentTime.TotalSeconds;
+                            int len = (int)reader.OpusDecoder.TotalTime.TotalSeconds;
+
+                            string time = reader.OpusDecoder.CurrentTime.ToString(@"hh\:mm\:ss") + "/" + reader.OpusDecoder.TotalTime.ToString(@"hh\:mm\:ss");
+
+                            if (TrackNewPosition >= 0)
+                            {
+                                TimeSpan newPos = new TimeSpan(0, 0, 0, TrackNewPosition);
+                                reader.SeekTo(newPos);
+                                TrackNewPosition = -1;
+                            }
+
+                            BeginInvoke(new Action(() =>
+                            {
+                                if (!TrackMouseDown)
+                                {
+                                    if (trackPlayPosition.Maximum != len)
+                                    {
+                                        trackPlayPosition.Maximum = len;
+                                        trackPlayPosition.TickFrequency = 60;
+                                    }
+                                    trackPlayPosition.Value = pos;
+                                }
+                                lblPlayTime.Text = time;
+                            }));
+                        }
+                        waveOut.Stop();
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show("Failed to play file '" + tag.FileName + "': " + ex.Message);
+                    }
+                });
+
+                btnPlay.Text = "Stop";
+                PlayThreadStop = false;
+                PlayThread.Start();
+            }
+            else
+            {
+                PlayThreadStop = true;
+            }
+        }
+
+        private void WaveOut_PlaybackStopped(object sender, StoppedEventArgs e)
+        {
+            LogWindow.Log(LogWindow.eLogLevel.Debug, "Playback stopped");
+
+            BeginInvoke(new Action(() =>
+            {
+                PlayThreadStop = true;
+                btnPlay.Text = "Play file";
+                PlayThread = null;
+            }));
+        }
+
+        private void trackPlayPosition_Scroll(object sender, EventArgs e)
+        {
+            TrackNewPosition = trackPlayPosition.Value;
+        }
+
+        private void trackPlayPosition_MouseDown(object sender, MouseEventArgs e)
+        {
+            TrackMouseDown = true;
+        }
+
+        private void trackPlayPosition_MouseUp(object sender, MouseEventArgs e)
+        {
+            TrackMouseDown = false;
         }
     }
 }
