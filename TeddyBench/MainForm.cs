@@ -1779,24 +1779,42 @@ namespace TeddyBench
                 return;
             }
 
-            TagDumpDialog dlg = new TagDumpDialog(false);
+            string previous = "";
 
-            if (dlg.ShowDialog() == DialogResult.OK)
+            while (true)
             {
-                byte[] data = Helpers.ConvertHexStringToByteArray(dlg.String);
+                TagDumpDialog dlg = new TagDumpDialog(false, previous);
 
-                AsyncTagActionThread = new Thread(() =>
+                if (dlg.ShowDialog() == DialogResult.OK)
                 {
+                    byte[] data = null;
+
+                    previous = dlg.String;
+
                     try
                     {
-                        Proxmark3.EmulateTag(data);
+                        data = Helpers.ConvertHexStringToByteArray(previous);
                     }
                     catch (Exception ex)
                     {
+                        MessageBox.Show("Failed to parse '" + previous + "'."+Environment.NewLine+ "The hex code must represent 40 byte in hexadecimal numbers:" + Environment.NewLine + "8 byte UUID and 32 byte data.");
+                        continue;
                     }
-                    AsyncTagActionThread = null;
-                });
-                AsyncTagActionThread.Start();
+
+                    AsyncTagActionThread = new Thread(() =>
+                    {
+                        try
+                        {
+                            Proxmark3.EmulateTag(data);
+                        }
+                        catch (Exception ex)
+                        {
+                        }
+                        AsyncTagActionThread = null;
+                    });
+                    AsyncTagActionThread.Start();
+                }
+                break;
             }
 
             TagOperationDialog opDlg = new TagOperationDialog();
