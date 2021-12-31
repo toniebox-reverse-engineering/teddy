@@ -66,10 +66,10 @@
             this.cmbSorting = new System.Windows.Forms.ComboBox();
             this.lstTonies = new System.Windows.Forms.ListView();
             this.columnHeader1 = new System.Windows.Forms.ColumnHeader();
-            this.lblMessage = new System.Windows.Forms.Label();
             this.btnSave = new System.Windows.Forms.Button();
             this.btnDelete = new System.Windows.Forms.Button();
             this.btnAdd = new System.Windows.Forms.Button();
+            this.lblMessage = new System.Windows.Forms.Label();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.statusLabel = new System.Windows.Forms.ToolStripStatusLabel();
             this.txtLog = new System.Windows.Forms.TextBox();
@@ -121,14 +121,14 @@
             // openDirectoryToolStripMenuItem
             // 
             this.openDirectoryToolStripMenuItem.Name = "openDirectoryToolStripMenuItem";
-            this.openDirectoryToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.openDirectoryToolStripMenuItem.Size = new System.Drawing.Size(154, 22);
             this.openDirectoryToolStripMenuItem.Text = "&Open Directory";
             this.openDirectoryToolStripMenuItem.Click += new System.EventHandler(this.openDirectoryToolStripMenuItem_Click);
             // 
             // exitToolStripMenuItem
             // 
             this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
-            this.exitToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.exitToolStripMenuItem.Size = new System.Drawing.Size(154, 22);
             this.exitToolStripMenuItem.Text = "E&xit";
             this.exitToolStripMenuItem.Click += new System.EventHandler(this.exitToolStripMenuItem_Click);
             // 
@@ -289,9 +289,9 @@
             // 
             // splitContainer1
             // 
-            this.splitContainer1.Cursor = System.Windows.Forms.Cursors.VSplit;
             this.splitContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.splitContainer1.FixedPanel = System.Windows.Forms.FixedPanel.Panel2;
+            this.splitContainer1.IsSplitterFixed = true;
             this.splitContainer1.Location = new System.Drawing.Point(7, 23);
             this.splitContainer1.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.splitContainer1.Name = "splitContainer1";
@@ -306,13 +306,12 @@
             this.splitContainer1.Panel2.Controls.Add(this.btnDelete);
             this.splitContainer1.Panel2.Controls.Add(this.btnAdd);
             this.splitContainer1.Size = new System.Drawing.Size(919, 465);
-            this.splitContainer1.SplitterDistance = 788;
-            this.splitContainer1.SplitterWidth = 5;
+            this.splitContainer1.SplitterDistance = 797;
+            this.splitContainer1.SplitterWidth = 1;
             this.splitContainer1.TabIndex = 1;
             // 
             // splitContainer2
             // 
-            this.splitContainer2.Cursor = System.Windows.Forms.Cursors.HSplit;
             this.splitContainer2.Dock = System.Windows.Forms.DockStyle.Fill;
             this.splitContainer2.FixedPanel = System.Windows.Forms.FixedPanel.Panel1;
             this.splitContainer2.IsSplitterFixed = true;
@@ -332,15 +331,15 @@
             // splitContainer2.Panel2
             // 
             this.splitContainer2.Panel2.Controls.Add(this.lstTonies);
-            this.splitContainer2.Size = new System.Drawing.Size(788, 465);
+            this.splitContainer2.Size = new System.Drawing.Size(797, 465);
             this.splitContainer2.SplitterDistance = 36;
-            this.splitContainer2.SplitterWidth = 5;
+            this.splitContainer2.SplitterWidth = 1;
             this.splitContainer2.TabIndex = 1;
             // 
             // lblPlayTime
             // 
             this.lblPlayTime.AutoSize = true;
-            this.lblPlayTime.Location = new System.Drawing.Point(697, 7);
+            this.lblPlayTime.Location = new System.Drawing.Point(690, 7);
             this.lblPlayTime.Name = "lblPlayTime";
             this.lblPlayTime.Size = new System.Drawing.Size(64, 15);
             this.lblPlayTime.TabIndex = 4;
@@ -350,7 +349,7 @@
             // 
             this.trackPlayPosition.Location = new System.Drawing.Point(269, 0);
             this.trackPlayPosition.Name = "trackPlayPosition";
-            this.trackPlayPosition.Size = new System.Drawing.Size(422, 45);
+            this.trackPlayPosition.Size = new System.Drawing.Size(415, 45);
             this.trackPlayPosition.TabIndex = 3;
             this.trackPlayPosition.Scroll += new System.EventHandler(this.trackPlayPosition_Scroll);
             this.trackPlayPosition.MouseDown += new System.Windows.Forms.MouseEventHandler(this.trackPlayPosition_MouseDown);
@@ -417,7 +416,7 @@
             this.lstTonies.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.lstTonies.Name = "lstTonies";
             this.lstTonies.ShowItemToolTips = true;
-            this.lstTonies.Size = new System.Drawing.Size(788, 424);
+            this.lstTonies.Size = new System.Drawing.Size(797, 428);
             this.lstTonies.TabIndex = 0;
             this.lstTonies.TileSize = new System.Drawing.Size(64, 64);
             this.lstTonies.UseCompatibleStateImageBehavior = false;
@@ -430,16 +429,6 @@
             // columnHeader1
             // 
             this.columnHeader1.Text = "Product Name";
-            // 
-            // lblMessage
-            // 
-            this.lblMessage.AutoSize = true;
-            this.lblMessage.Location = new System.Drawing.Point(318, 196);
-            this.lblMessage.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-            this.lblMessage.Name = "lblMessage";
-            this.lblMessage.Size = new System.Drawing.Size(168, 15);
-            this.lblMessage.TabIndex = 2;
-            this.lblMessage.Text = "Please insert your box\' SD card";
             // 
             // btnSave
             // 
@@ -473,6 +462,16 @@
             this.btnAdd.Text = "Add...";
             this.btnAdd.UseVisualStyleBackColor = true;
             this.btnAdd.Click += new System.EventHandler(this.btnAdd_Click);
+            // 
+            // lblMessage
+            // 
+            this.lblMessage.AutoSize = true;
+            this.lblMessage.Location = new System.Drawing.Point(318, 196);
+            this.lblMessage.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.lblMessage.Name = "lblMessage";
+            this.lblMessage.Size = new System.Drawing.Size(168, 15);
+            this.lblMessage.TabIndex = 2;
+            this.lblMessage.Text = "Please insert your box\' SD card";
             // 
             // statusStrip1
             // 

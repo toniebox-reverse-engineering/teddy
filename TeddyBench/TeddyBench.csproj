@@ -1,5 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
+    <RuntimeIdentifier>win10-x64</RuntimeIdentifier>
+    <PublishSingleFile>true</PublishSingleFile>
+  </PropertyGroup>
+
+  <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <OutputType>WinExe</OutputType>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
@@ -30,7 +35,6 @@
     <None Include="Resources\UnknownTonie.bmp" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="AutoUpdateViaGitHubRelease" Version="0.1.53" />
     <PackageReference Include="ELFSharp" Version="2.13.2" />
     <PackageReference Include="GitInfo" Version="2.2.0" />
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />

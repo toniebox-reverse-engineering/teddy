@@ -1,10 +1,6 @@
-﻿using AutoUpdateViaGitHubRelease;
-using Concentus.Oggfile;
-using Concentus.Structs;
-using NAudio.Wave;
+﻿using NAudio.Wave;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using ScottPlot;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -14,20 +10,17 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
-using System.Drawing.Text;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Reflection;
-using System.Reflection.Metadata.Ecma335;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using System.Windows.Forms.VisualStyles;
 using TeddyBench.Properties;
 using TonieFile;
 using Application = System.Windows.Forms.Application;
@@ -60,9 +53,8 @@ namespace TeddyBench
         private string LastFoundUid = null;
         private Thread AsyncTagActionThread = null;
         private System.Windows.Forms.Timer StatusBarTimer = null;
-        private Update Updater;
 
-        private string TitleString => "TeddyBench (beta) - " + GetVersion();
+        private string TitleString => "TeddyBench (alpha) - " + GetVersion();
 
         private Thread PlayThread = null;
         private bool PlayThreadStop = true;
@@ -233,17 +225,6 @@ namespace TeddyBench
             StatusBarTimer.Tick += (object sender, EventArgs e) => { UpdateStatusBar(); };
             StatusBarTimer.Interval = 500;
             StatusBarTimer.Start();
-        }
-
-        private void Update_PropertyChanged(object sender, PropertyChangedEventArgs e)
-        {
-            if (Updater.Available)
-            {
-                Assembly assembly = Assembly.GetExecutingAssembly();
-                Version version = assembly.GetName().Version;
-                Updater.StartInstall(assembly.Location);
-                Application.Exit();
-            }
         }
 
         void SaveSettings()
@@ -632,8 +613,16 @@ namespace TeddyBench
 
             if (AutoOpenDrive)
             {
-                OpenPath(Path.Combine(drive.RootDirectory.FullName, "CONTENT"));
-                AutoOpenDrive = false;
+                try
+                {
+                    OpenPath(Path.Combine(drive.RootDirectory.FullName, "CONTENT"));
+                    AutoOpenDrive = false;
+                }
+                catch (Exception ex)
+                {
+                    LogWindow.Log(LogWindow.eLogLevel.Error, "Wanted to open CONTENT on " + drive.RootDirectory + " but that caused a: " + ex.Message);
+                    Thread.Sleep(1000);
+                }
             }
         }
 
@@ -721,6 +710,7 @@ namespace TeddyBench
                 }
                 catch (Exception ex)
                 {
+                    LogWindow.Log(LogWindow.eLogLevel.Error, "Exception while scanning directory '" + CurrentDirectory + "':" + ex.Message);
                 }
                 lstTonies.Sort();
             }
@@ -740,7 +730,10 @@ namespace TeddyBench
             if (AnalyzeThread != null)
             {
                 AnalyzeThreadStop = true;
-                AnalyzeThread.Join(200);
+                if(!AnalyzeThread.Join(2000))
+                {
+                    LogWindow.Log(LogWindow.eLogLevel.Error, "Failed to stop Analyze Thread");
+                }
                 //AnalyzeThread.Abort();
                 AnalyzeThread = null;
             }
