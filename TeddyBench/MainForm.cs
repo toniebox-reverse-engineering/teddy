@@ -1657,7 +1657,8 @@ namespace TeddyBench
 
                             str.AppendLine(" Reporting NFC tag content");
                             str.AppendLine("-----------------------------------");
-                            str.AppendLine(BitConverter.ToString(data).Replace("-", ""));
+                            str.AppendLine("UUID:        " + BitConverter.ToString(data.Take(8).ToArray()).Replace("-", ""));
+                            str.AppendLine("Memory:      " + BitConverter.ToString(data.Skip(8).ToArray()).Replace("-", ""));
 
                             ReportForm form = new ReportForm(str.ToString());
 
