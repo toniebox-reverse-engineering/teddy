@@ -55,6 +55,7 @@
             this.reportallFilesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.reportselectedFilesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.reportProxmarkAnToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.reportNFCTagToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.enableDebugModeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.grpCardContent = new System.Windows.Forms.GroupBox();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
@@ -220,6 +221,7 @@
             this.reportallFilesToolStripMenuItem,
             this.reportselectedFilesToolStripMenuItem,
             this.reportProxmarkAnToolStripMenuItem,
+            this.reportNFCTagToolStripMenuItem,
             this.enableDebugModeToolStripMenuItem});
             this.helpToolStripMenuItem.Name = "helpToolStripMenuItem";
             this.helpToolStripMenuItem.Size = new System.Drawing.Size(44, 20);
@@ -266,6 +268,14 @@
             this.reportProxmarkAnToolStripMenuItem.Text = "Report Proxmark3 antenna measurement";
             this.reportProxmarkAnToolStripMenuItem.Click += new System.EventHandler(this.reportProxmarkAnToolStripMenuItem_Click);
             // 
+            // reportNFCTagToolStripMenuItem
+            // 
+            this.reportNFCTagToolStripMenuItem.Enabled = false;
+            this.reportNFCTagToolStripMenuItem.Name = "reportNFCTagToolStripMenuItem";
+            this.reportNFCTagToolStripMenuItem.Size = new System.Drawing.Size(291, 22);
+            this.reportNFCTagToolStripMenuItem.Text = "Report detected NFC Tag";
+            this.reportNFCTagToolStripMenuItem.Click += new System.EventHandler(this.reportNFCTagToolStripMenuItem_Click);
+            // 
             // enableDebugModeToolStripMenuItem
             // 
             this.enableDebugModeToolStripMenuItem.Name = "enableDebugModeToolStripMenuItem";
@@ -306,7 +316,7 @@
             this.splitContainer1.Panel2.Controls.Add(this.btnDelete);
             this.splitContainer1.Panel2.Controls.Add(this.btnAdd);
             this.splitContainer1.Size = new System.Drawing.Size(919, 465);
-            this.splitContainer1.SplitterDistance = 797;
+            this.splitContainer1.SplitterDistance = 803;
             this.splitContainer1.SplitterWidth = 1;
             this.splitContainer1.TabIndex = 1;
             // 
@@ -331,7 +341,7 @@
             // splitContainer2.Panel2
             // 
             this.splitContainer2.Panel2.Controls.Add(this.lstTonies);
-            this.splitContainer2.Size = new System.Drawing.Size(797, 465);
+            this.splitContainer2.Size = new System.Drawing.Size(803, 465);
             this.splitContainer2.SplitterDistance = 36;
             this.splitContainer2.SplitterWidth = 1;
             this.splitContainer2.TabIndex = 1;
@@ -416,7 +426,7 @@
             this.lstTonies.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.lstTonies.Name = "lstTonies";
             this.lstTonies.ShowItemToolTips = true;
-            this.lstTonies.Size = new System.Drawing.Size(797, 428);
+            this.lstTonies.Size = new System.Drawing.Size(803, 428);
             this.lstTonies.TabIndex = 0;
             this.lstTonies.TileSize = new System.Drawing.Size(64, 64);
             this.lstTonies.UseCompatibleStateImageBehavior = false;
@@ -650,6 +660,7 @@
         private System.Windows.Forms.Button btnPlay;
         private System.Windows.Forms.TrackBar trackPlayPosition;
         private System.Windows.Forms.Label lblPlayTime;
+        private System.Windows.Forms.ToolStripMenuItem reportNFCTagToolStripMenuItem;
     }
 }
 

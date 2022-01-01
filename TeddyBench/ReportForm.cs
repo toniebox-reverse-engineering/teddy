@@ -17,11 +17,12 @@ namespace TeddyBench
         public string Username = "";
         public string Message = "";
 
-        public ReportForm()
+        public ReportForm(string content)
         {
             InitializeComponent();
             txtUser.Text = DefaultUsername;
             txtMessage.Text = DefaultMessage;
+            txtContent.Text = content;
         }
 
         private void btnOk_Click(object sender, EventArgs e)

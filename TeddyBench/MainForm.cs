@@ -323,12 +323,14 @@ namespace TeddyBench
                 UpdateStatusBar();
                 advancedActionsToolStripMenuItem.Enabled = false;
                 reportProxmarkAnToolStripMenuItem.Enabled = false;
+                reportNFCTagToolStripMenuItem.Enabled = false;
             }
             else
             {
                 UpdateStatusBar();
                 advancedActionsToolStripMenuItem.Enabled = Proxmark3.UnlockSupported;
                 reportProxmarkAnToolStripMenuItem.Enabled = true;
+                reportNFCTagToolStripMenuItem.Enabled = true;
             }
         }
 
@@ -1280,7 +1282,7 @@ namespace TeddyBench
 
                 ListViewTag tag = item.Tag as ListViewTag;
                 var fi = new FileInfo(tag.FileName);
-                string oldUid = ReverseUid(fi.DirectoryName + fi.Name);
+                string oldUid = ReverseUid(fi.Directory.Name + fi.Name);
 
                 AskUIDForm dlg = new AskUIDForm(Proxmark3);
                 dlg.Uid = oldUid;
@@ -1562,7 +1564,8 @@ namespace TeddyBench
 
             StringBuilder str = new StringBuilder();
 
-            str.AppendLine("Dumping " + lstTonies.SelectedItems.Count + " files");
+            str.AppendLine(" Reporting " + lstTonies.SelectedItems.Count + " files");
+            str.AppendLine("-----------------------------------");
 
             foreach (ListViewItem t in lstTonies.SelectedItems)
             {
@@ -1571,7 +1574,7 @@ namespace TeddyBench
                 AddInfo(str, tag);
             }
 
-            ReportForm form = new ReportForm();
+            ReportForm form = new ReportForm(str.ToString());
 
             if (form.ShowDialog() == DialogResult.OK)
             {
@@ -1601,7 +1604,8 @@ namespace TeddyBench
 
             StringBuilder str = new StringBuilder();
 
-            str.AppendLine("Dumping " + lstTonies.Items.Count + " files");
+            str.AppendLine(" Reporting " + lstTonies.Items.Count + " files");
+            str.AppendLine("-----------------------------------");
 
             foreach (ListViewItem t in lstTonies.Items)
             {
@@ -1613,7 +1617,7 @@ namespace TeddyBench
                 }
             }
 
-            ReportForm form = new ReportForm();
+            ReportForm form = new ReportForm(str.ToString());
 
             if (form.ShowDialog() == DialogResult.OK)
             {
@@ -1631,6 +1635,79 @@ namespace TeddyBench
             }
         }
 
+        private async void reportNFCTagToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (Proxmark3 == null || AsyncTagActionThread != null)
+            {
+                return;
+            }
+
+            AsyncTagActionThread = new Thread(() =>
+            {
+                try
+                {
+                    byte[] data = Proxmark3.ReadMemory();
+
+                    Invoke(new Action(async () =>
+                    {
+
+                        if (data != null)
+                        {
+                            StringBuilder str = new StringBuilder();
+
+                            str.AppendLine(" Reporting NFC tag content");
+                            str.AppendLine("-----------------------------------");
+                            str.AppendLine(BitConverter.ToString(data).Replace("-", ""));
+
+                            ReportForm form = new ReportForm(str.ToString());
+
+                            if (form.ShowDialog() == DialogResult.OK)
+                            {
+                                Settings.Username = form.Username;
+
+                                bool success = await DiagnosticsSendInfo(str.ToString(), form.Username, form.Message);
+                                if (success)
+                                {
+                                    MessageBox.Show("Success", "Report sent");
+                                }
+                                else
+                                {
+                                    MessageBox.Show("Error sending the report", "Report failure");
+                                }
+                            }
+                        }
+                        else
+                        {
+                            MessageBox.Show("No tag found. Please make sure you position it correctly.", "Failed");
+                        }
+                    }));
+                }
+                catch (Exception ex)
+                {
+                }
+                AsyncTagActionThread = null;
+            });
+            AsyncTagActionThread.Start();
+            TagOperationDialog opDlg = new TagOperationDialog(true);
+
+            opDlg.Show();
+
+            await Task.Run(() =>
+            {
+                while (AsyncTagActionThread != null)
+                {
+                    Thread.Sleep(100);
+                    if (opDlg.DialogResult == DialogResult.Cancel)
+                    {
+                        //AsyncTagActionThread.Abort();
+                        AsyncTagActionThread = null;
+                        return;
+                    }
+                }
+                Invoke(new Action(() => opDlg.Close()));
+            });
+        }
+
         private async void reportProxmarkAnToolStripMenuItem_Click(object sender, EventArgs e)
         {
             TagOperationDialog opDlg = new TagOperationDialog();
@@ -1646,7 +1723,8 @@ namespace TeddyBench
                 return;
             }
 
-            string content = "";
+            string content = " Reporting Proxmark3 antenna performance" + Environment.NewLine;
+            content +=       "------------------------------------------" + Environment.NewLine;
 
             content += "HF:     " + result.vHF.ToString("0.00", CultureInfo.InvariantCulture) + " V" + Environment.NewLine;
             content += "LF125:  " + result.vLF125.ToString("0.00", CultureInfo.InvariantCulture) + " V" + Environment.NewLine;
@@ -1654,7 +1732,7 @@ namespace TeddyBench
             content += "LFfopt: " + (result.GetPeakFrequency() / 1000.0f).ToString("0.00", CultureInfo.InvariantCulture) + " kHz" + Environment.NewLine;
             content += "LFVopt: " + result.peakV.ToString("0.00", CultureInfo.InvariantCulture) + " V" + Environment.NewLine;
 
-            ReportForm form = new ReportForm();
+            ReportForm form = new ReportForm(content);
 
             if (form.ShowDialog() == DialogResult.OK)
             {
