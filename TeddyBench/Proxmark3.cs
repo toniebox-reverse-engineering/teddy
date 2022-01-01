@@ -275,6 +275,7 @@ namespace TeddyBench
 
         private Dictionary<string, DateTime> PortsFailed = new Dictionary<string, DateTime>();
         private Dictionary<string, DateTime> PortsAppeared = new Dictionary<string, DateTime>();
+        public string HardwareType = "";
         public bool UnlockSupported = false;
         public float AntennaVoltage = 0.0f;
         public bool Connected = false;
@@ -561,7 +562,7 @@ namespace TeddyBench
                 {
                     case Pm3UsbResponse.eResponseType.DebugString:
                         {
-                            string debugStr = Encoding.UTF8.GetString(response.data.d, 0, response.data.dataLen);
+                            string debugStr = Encoding.UTF8.GetString(response.data.d, 0, response.data.dataLen).TrimEnd('\0');
                             LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] UnlockTag:   String '" + debugStr + "'");
                             break;
                         }
@@ -618,7 +619,7 @@ namespace TeddyBench
                 {
                     case Pm3UsbResponse.eResponseType.DebugString:
                         {
-                            string debugStr = Encoding.UTF8.GetString(response.data.d, 0, response.data.dataLen);
+                            string debugStr = Encoding.UTF8.GetString(response.data.d, 0, response.data.dataLen).TrimEnd('\0');
                             LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] GetResponse: DebugMessage '" + debugStr + "'");
                             break;
                         }
@@ -742,7 +743,7 @@ namespace TeddyBench
                 {
                     case Pm3UsbResponse.eResponseType.DebugString:
                         {
-                            string debugStr = Encoding.UTF8.GetString(response.data.d, 0, response.data.dataLen);
+                            string debugStr = Encoding.UTF8.GetString(response.data.d, 0, response.data.dataLen).TrimEnd('\0');
                             LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] Emulate: DebugMessage '" + debugStr + "'");
                             break;
                         }
@@ -821,7 +822,7 @@ namespace TeddyBench
                 {
                     case Pm3UsbResponse.eResponseType.DebugString:
                         {
-                            string debugStr = Encoding.UTF8.GetString(response.data.d, 0, response.data.dataLen);
+                            string debugStr = Encoding.UTF8.GetString(response.data.d, 0, response.data.dataLen).TrimEnd('\0');
                             LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] MeasureAntenna: DebugMessage '" + debugStr + "'");
                             break;
                         }
@@ -937,6 +938,7 @@ namespace TeddyBench
                 p.ReadTimeout = 500;
 
                 p.Open();
+                //Thread.Sleep(500);
                 Flush(p);
 
                 /* read version */
@@ -959,7 +961,7 @@ namespace TeddyBench
                 LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3]   MODE_OS                 " + ((DeviceInfo & eDeviceInfo.ModeOs) != 0 ? "Y" : "N"));
                 LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3]   UNDERSTANDS_START_FLASH " + ((DeviceInfo & eDeviceInfo.UnderstandStartFlash) != 0 ? "Y" : "N"));
 
-                if ((DeviceInfo & eDeviceInfo.ModeBootrom) != 0 && (DeviceInfo & eDeviceInfo.ModeBootrom) != 0)
+                if ((DeviceInfo & eDeviceInfo.ModeBootrom) != 0)
                 {
                     Pm3UsbCommand cmdReset = new Pm3UsbCommand((ulong)Pm3UsbCommand.eCommandType.HardwareReset);
                     CurrentPort = port;
@@ -1022,11 +1024,25 @@ namespace TeddyBench
                 LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] Chip ID: 0x" + resVers.data.arg[0].ToString("X8"));
                 LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] Flash:   0x" + resVers.data.arg[1].ToString("X8"));
                 LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] Caps:    0x" + resVers.data.arg[2].ToString("X8"));
+
                 string versionString = Encoding.UTF8.GetString(resVers.data.d, 0, resVers.data.dataLen - 1);
                 LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] Version:");
                 foreach (string line in versionString.Split('\n'))
                 {
                     LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3]     " + line);
+                }
+
+                switch (resVers.data.arg[0])
+                {
+                    case 0x00063660:
+                        HardwareType = versionString;
+                        break;
+                    case 0x270B0A4F:
+                        HardwareType = "Proxmark3 (SAM7S)";
+                        break;
+                    default:
+                        HardwareType = "Proxmark3 (unknown controller)";
+                        break;
                 }
 
                 CurrentPort = port;
@@ -1043,7 +1059,6 @@ namespace TeddyBench
 
                 DeviceFound?.Invoke(this, CurrentPort);
                 LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] TryOpen: " + port + " successfully opened");
-
 
                 Connected = true;
                 return true;
@@ -1106,6 +1121,11 @@ namespace TeddyBench
 
         public void EnterBootloader(string fileName)
         {
+            if((DeviceInfo & eDeviceInfo.BootromPresent) == 0)
+            {
+                LogWindow.Log(LogWindow.eLogLevel.Error, "Device does not support bootloader mode");
+                return;
+            }
             Flashfile = fileName;
             Pm3UsbCommand cmdStart = new Pm3UsbCommand((ulong)Pm3UsbCommand.eCommandType.StartFlash);
             cmdStart.Write(Port);
@@ -1368,7 +1388,7 @@ namespace TeddyBench
                             {
                                 case Pm3UsbResponse.eResponseType.DebugString:
                                     {
-                                        string debugStr = Encoding.UTF8.GetString(response.data.d, 0, response.data.dataLen);
+                                        string debugStr = Encoding.UTF8.GetString(response.data.d, 0, response.data.dataLen).TrimEnd('\0');
                                         LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] GetResponse: DebugMessage '" + debugStr + "'");
                                         break;
                                     }

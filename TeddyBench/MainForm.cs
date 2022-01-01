@@ -331,6 +331,9 @@ namespace TeddyBench
                 advancedActionsToolStripMenuItem.Enabled = Proxmark3.UnlockSupported;
                 reportProxmarkAnToolStripMenuItem.Enabled = true;
                 reportNFCTagToolStripMenuItem.Enabled = true;
+
+                flashBootloaderToolStripMenuItem.Enabled = (Proxmark3.DeviceInfo & Proxmark3.eDeviceInfo.BootromPresent) != 0;
+                flashFirmwareToolStripMenuItem.Enabled = (Proxmark3.DeviceInfo & Proxmark3.eDeviceInfo.BootromPresent) != 0;
             }
         }
 
@@ -343,7 +346,7 @@ namespace TeddyBench
                     statusStrip1.Show();
                 }
                 string voltageString = Settings.DebugWindow ? ", " + Proxmark3.AntennaVoltage.ToString("0.00", CultureInfo.InvariantCulture) + " V" : "";
-                statusLabel.Text = "Proxmark3 (FW: " + (Proxmark3.UnlockSupported ? "SLIX-L enabled" : "stock") + voltageString + ") found at " + Proxmark3.CurrentPort + ". The UID of the tag will be automatically used where applicable.";
+                statusLabel.Text = Proxmark3.HardwareType + " (FW: " + (Proxmark3.UnlockSupported ? "SLIX-L enabled" : "stock") + voltageString + ") found at " + Proxmark3.CurrentPort + ". The UID of the tag will be automatically used where applicable.";
             }
             else
             {
@@ -1579,8 +1582,9 @@ namespace TeddyBench
             if (form.ShowDialog() == DialogResult.OK)
             {
                 Settings.Username = form.Username;
+                SaveSettings();
 
-                bool success = await DiagnosticsSendInfo(str.ToString(), form.Username, form.Message);
+                bool success = await DiagnosticsSendInfo(str.ToString(), form.Username, form.Message, "Audio Report.txt");
                 if (success)
                 {
                     MessageBox.Show("Success", "Report sent");
@@ -1622,8 +1626,9 @@ namespace TeddyBench
             if (form.ShowDialog() == DialogResult.OK)
             {
                 Settings.Username = form.Username;
+                SaveSettings();
 
-                bool success = await DiagnosticsSendInfo(str.ToString(), form.Username, form.Message);
+                bool success = await DiagnosticsSendInfo(str.ToString(), form.Username, form.Message, "All Audio Report.txt");
                 if (success)
                 {
                     MessageBox.Show("Success", "Report sent");
@@ -1665,8 +1670,9 @@ namespace TeddyBench
                             if (form.ShowDialog() == DialogResult.OK)
                             {
                                 Settings.Username = form.Username;
+                                SaveSettings();
 
-                                bool success = await DiagnosticsSendInfo(str.ToString(), form.Username, form.Message);
+                                bool success = await DiagnosticsSendInfo(str.ToString(), form.Username, form.Message, "Tag Dump.txt");
                                 if (success)
                                 {
                                     MessageBox.Show("Success", "Report sent");
@@ -1738,8 +1744,9 @@ namespace TeddyBench
             if (form.ShowDialog() == DialogResult.OK)
             {
                 Settings.Username = form.Username;
+                SaveSettings();
 
-                bool success = await DiagnosticsSendInfo(content, form.Username, form.Message);
+                bool success = await DiagnosticsSendInfo(content, form.Username, form.Message, "Antenna Report.txt");
                 if (success)
                 {
                     MessageBox.Show("Success", "Report sent");
@@ -1751,7 +1758,7 @@ namespace TeddyBench
             }
         }
 
-        private async Task<bool> DiagnosticsSendInfo(string payload, string sender, string message)
+        private async Task<bool> DiagnosticsSendInfo(string payload, string sender, string message, string filename)
         {
             try
             {
@@ -1761,6 +1768,7 @@ namespace TeddyBench
                 form.Add(new StringContent(sender), "sender");
                 form.Add(new StringContent(payload), "payload");
                 form.Add(new StringContent(message), "message");
+                form.Add(new StringContent(filename), "filename");
                 form.Add(new StringContent(GetVersion()), "version");
 
                 HttpResponseMessage response = await httpClient.PostAsync("https://g3gg0.magiclantern.fm/diag.php", form);
