@@ -1,11 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<RuntimeIdentifier>win10-x64</RuntimeIdentifier>
+		<PublishSingleFile>true</PublishSingleFile>
+	</PropertyGroup>
   <PropertyGroup>
-    <RuntimeIdentifier>win10-x64</RuntimeIdentifier>
-    <PublishSingleFile>true</PublishSingleFile>
-  </PropertyGroup>
-
-  <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>net6.0-windows</TargetFramework>
     <OutputType>WinExe</OutputType>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <UseWindowsForms>true</UseWindowsForms>
@@ -19,6 +18,7 @@
   </PropertyGroup>
   <PropertyGroup>
     <StartupObject>TeddyBench.Program</StartupObject>
+    <DebugType>embedded</DebugType>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug %28Release settings%29|AnyCPU'">
     <OutputPath>bin\Debug %28Release settings%29\</OutputPath>

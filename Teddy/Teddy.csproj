@@ -16,6 +16,7 @@
   </PropertyGroup>
   <PropertyGroup>
     <StartupObject>Teddy.Program</StartupObject>
+    <DebugType>embedded</DebugType>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug %28Release Settings%29|AnyCPU'">
     <OutputPath>bin\Debug %28Release Settings%29\</OutputPath>

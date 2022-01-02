@@ -316,7 +316,7 @@
             this.splitContainer1.Panel2.Controls.Add(this.btnDelete);
             this.splitContainer1.Panel2.Controls.Add(this.btnAdd);
             this.splitContainer1.Size = new System.Drawing.Size(919, 465);
-            this.splitContainer1.SplitterDistance = 803;
+            this.splitContainer1.SplitterDistance = 800;
             this.splitContainer1.SplitterWidth = 1;
             this.splitContainer1.TabIndex = 1;
             // 
@@ -341,7 +341,7 @@
             // splitContainer2.Panel2
             // 
             this.splitContainer2.Panel2.Controls.Add(this.lstTonies);
-            this.splitContainer2.Size = new System.Drawing.Size(803, 465);
+            this.splitContainer2.Size = new System.Drawing.Size(800, 465);
             this.splitContainer2.SplitterDistance = 36;
             this.splitContainer2.SplitterWidth = 1;
             this.splitContainer2.TabIndex = 1;
@@ -412,7 +412,6 @@
             listViewGroup2.Name = "Custom";
             listViewGroup3.Header = "Retail";
             listViewGroup3.Name = "Retail";
-            listViewGroup4.Header = "";
             listViewGroup4.Name = "listViewGroup1";
             this.lstTonies.Groups.AddRange(new System.Windows.Forms.ListViewGroup[] {
             listViewGroup1,
@@ -420,13 +419,12 @@
             listViewGroup3,
             listViewGroup4});
             this.lstTonies.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.None;
-            this.lstTonies.HideSelection = false;
             this.lstTonies.LabelEdit = true;
             this.lstTonies.Location = new System.Drawing.Point(0, 0);
             this.lstTonies.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.lstTonies.Name = "lstTonies";
             this.lstTonies.ShowItemToolTips = true;
-            this.lstTonies.Size = new System.Drawing.Size(803, 428);
+            this.lstTonies.Size = new System.Drawing.Size(800, 428);
             this.lstTonies.TabIndex = 0;
             this.lstTonies.TileSize = new System.Drawing.Size(64, 64);
             this.lstTonies.UseCompatibleStateImageBehavior = false;
