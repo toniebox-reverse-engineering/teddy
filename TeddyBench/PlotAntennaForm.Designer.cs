@@ -30,7 +30,7 @@
         {
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(PlotAntennaForm));
-            this.formsPlot1 = new ScottPlot.FormsPlot();
+            this.antennaPlot = new ScottPlot.FormsPlot();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.label5 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
@@ -53,11 +53,11 @@
             // 
             // formsPlot1
             // 
-            this.formsPlot1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.formsPlot1.Location = new System.Drawing.Point(0, 0);
-            this.formsPlot1.Name = "formsPlot1";
-            this.formsPlot1.Size = new System.Drawing.Size(606, 367);
-            this.formsPlot1.TabIndex = 0;
+            this.antennaPlot.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.antennaPlot.Location = new System.Drawing.Point(0, 0);
+            this.antennaPlot.Name = "formsPlot1";
+            this.antennaPlot.Size = new System.Drawing.Size(606, 367);
+            this.antennaPlot.TabIndex = 0;
             // 
             // splitContainer1
             // 
@@ -86,7 +86,7 @@
             // 
             // splitContainer1.Panel2
             // 
-            this.splitContainer1.Panel2.Controls.Add(this.formsPlot1);
+            this.splitContainer1.Panel2.Controls.Add(this.antennaPlot);
             this.splitContainer1.Size = new System.Drawing.Size(606, 450);
             this.splitContainer1.SplitterDistance = 79;
             this.splitContainer1.TabIndex = 1;
@@ -235,7 +235,7 @@
 
         #endregion
 
-        private ScottPlot.FormsPlot formsPlot1;
+        private ScottPlot.FormsPlot antennaPlot;
         private System.Windows.Forms.SplitContainer splitContainer1;
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.Label label3;

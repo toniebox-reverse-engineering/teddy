@@ -20,7 +20,6 @@ limitations under the License.
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
-using JetBrains.Annotations;
 
 namespace Id3.Frames
 {
@@ -30,12 +29,12 @@ namespace Id3.Frames
         {
         }
 
-        public CommentFrame([NotNull] string comment)
+        public CommentFrame(string comment)
         {
             Comment = comment ?? throw new ArgumentNullException(nameof(comment));
         }
 
-        public CommentFrame([NotNull] string comment, [NotNull] string description)
+        public CommentFrame(string comment, string description)
         {
             Comment = comment ?? throw new ArgumentNullException(nameof(comment));
             Description = description ?? throw new ArgumentNullException(nameof(description));

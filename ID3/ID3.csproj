@@ -1,134 +1,18 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{123B448A-3042-43C1-AA5D-2FCD0443A71D}</ProjectGuid>
+    <TargetFramework>netstandard2.0</TargetFramework>
     <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>ID3</RootNamespace>
-    <AssemblyName>ID3</AssemblyName>
-    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-    <Deterministic>true</Deterministic>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug %28Release Settings%29|AnyCPU'">
     <OutputPath>bin\Debug %28Release Settings%29\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
     <Optimize>true</Optimize>
-    <DebugType>pdbonly</DebugType>
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <LangVersion>7.3</LangVersion>
-    <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
-  <ItemGroup>
-    <Reference Include="JetBrains.Annotations, Version=2019.1.3.0, Culture=neutral, PublicKeyToken=1010a0d8d6380325, processorArchitecture=MSIL">
-      <HintPath>..\packages\JetBrains.Annotations.2019.1.3\lib\net20\JetBrains.Annotations.dll</HintPath>
-    </Reference>
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Net.Http" />
-    <Reference Include="System.Xml" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="Frames\DateTimeFrame.cs" />
-    <Compile Include="Frames\DateTime\RecordingDateFrame.cs" />
-    <Compile Include="Frames\Id3Frame.cs" />
-    <Compile Include="Frames\ListTextFrame.cs" />
-    <Compile Include="Frames\ListText\ArtistsFrame.cs" />
-    <Compile Include="Frames\ListText\ComposersFrame.cs" />
-    <Compile Include="Frames\ListText\LyricistsFrame.cs" />
-    <Compile Include="Frames\NumericFrame.cs" />
-    <Compile Include="Frames\Numeric\BeatsPerMinuteFrame.cs" />
-    <Compile Include="Frames\Numeric\YearFrame.cs" />
-    <Compile Include="Frames\Others\CommentFrame.cs" />
-    <Compile Include="Frames\Others\LyricsFrame.cs" />
-    <Compile Include="Frames\Others\PictureFrame.cs" />
-    <Compile Include="Frames\Others\PrivateFrame.cs" />
-    <Compile Include="Frames\Others\UnknownFrame.cs" />
-    <Compile Include="Frames\String\AlbumFrame.cs" />
-    <Compile Include="Frames\String\BandFrame.cs" />
-    <Compile Include="Frames\String\ConductorFrame.cs" />
-    <Compile Include="Frames\String\ContentGroupDescriptionFrame.cs" />
-    <Compile Include="Frames\String\CopyrightFrame.cs" />
-    <Compile Include="Frames\String\CustomTextFrame.cs" />
-    <Compile Include="Frames\String\EncoderFrame.cs" />
-    <Compile Include="Frames\String\EncodingSettingsFrame.cs" />
-    <Compile Include="Frames\String\FileOwnerFrame.cs" />
-    <Compile Include="Frames\String\GenreFrame.cs" />
-    <Compile Include="Frames\String\PublisherFrame.cs" />
-    <Compile Include="Frames\String\SubtitleFrame.cs" />
-    <Compile Include="Frames\String\TitleFrame.cs" />
-    <Compile Include="Frames\TextFrame.cs" />
-    <Compile Include="Frames\TextFrameBase.cs" />
-    <Compile Include="Frames\Textual\FileTypeFrame.cs" />
-    <Compile Include="Frames\Textual\LengthFrame.cs" />
-    <Compile Include="Frames\Textual\TrackFrame.cs" />
-    <Compile Include="Frames\UrlLinkFrame.cs" />
-    <Compile Include="Frames\UrlLink\ArtistUrlFrame.cs" />
-    <Compile Include="Frames\UrlLink\AudioFileUrlFrame.cs" />
-    <Compile Include="Frames\UrlLink\AudioSourceUrlFrame.cs" />
-    <Compile Include="Frames\UrlLink\CommercialUrlFrame.cs" />
-    <Compile Include="Frames\UrlLink\CopyrightUrlFrame.cs" />
-    <Compile Include="Frames\UrlLink\CustomUrlLinkFrame.cs" />
-    <Compile Include="Frames\UrlLink\PaymentUrlFrame.cs" />
-    <Compile Include="Id3Exception.cs" />
-    <Compile Include="Id3\FrameHandlers.cs" />
-    <Compile Include="Id3\Id3Handler.cs" />
-    <Compile Include="Id3\Id3Language.cs" />
-    <Compile Include="Id3\Id3Tag.cs" />
-    <Compile Include="Id3\Id3TagFamily.cs" />
-    <Compile Include="Id3\Id3TextEncoding.cs" />
-    <Compile Include="Id3\Id3Version.cs" />
-    <Compile Include="Id3\TagComparer.cs" />
-    <Compile Include="Id3\v1\Id3v1Handler.cs" />
-    <Compile Include="Id3\v2\Id3v23Handler.cs" />
-    <Compile Include="Id3\v2\Id3v23Handler.Frames.cs" />
-    <Compile Include="Id3\v2\Id3v2Handler.cs" />
-    <Compile Include="Id3\v2\Id3v2StandardHeader.cs" />
-    <Compile Include="Mp3\AudioMode.cs" />
-    <Compile Include="Mp3\AudioStream.cs" />
-    <Compile Include="Mp3\AudioStreamProperties.cs" />
-    <Compile Include="Mp3\Mp3.cs" />
-    <Compile Include="Mp3\Mp3Permissions.cs" />
-    <Compile Include="Mp3\WriteConflictAction.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Resources\FrameMessages.Designer.cs" />
-    <Compile Include="Resources\Mp3Messages.Designer.cs" />
-    <Compile Include="Utils\ByteArrayHelper.cs" />
-    <Compile Include="Utils\SyncSafeNumber.cs" />
-    <Compile Include="Utils\TextEncodingHelper.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Frames\DEVELOPER.md" />
-    <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Resources\FrameMessages.resx" />
-    <EmbeddedResource Include="Resources\Mp3Messages.resx" />
-  </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <NoWarn>1701;1702;168</NoWarn>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <NoWarn>1701;1702;168</NoWarn>
+  </PropertyGroup>
 </Project>

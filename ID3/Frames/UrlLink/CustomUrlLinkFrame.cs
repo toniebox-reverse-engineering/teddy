@@ -18,7 +18,7 @@ limitations under the License.
 #endregion
 
 using System;
-using JetBrains.Annotations;
+
 
 namespace Id3.Frames
 {
@@ -28,11 +28,11 @@ namespace Id3.Frames
         {
         }
 
-        public CustomUrlLinkFrame([NotNull] string url) : base(url)
+        public CustomUrlLinkFrame(string url) : base(url)
         {
         }
 
-        public CustomUrlLinkFrame([NotNull] string url, [NotNull] string description) : base(url)
+        public CustomUrlLinkFrame(string url, string description) : base(url)
         {
             Description = description ?? throw new ArgumentNullException(nameof(description));
         }

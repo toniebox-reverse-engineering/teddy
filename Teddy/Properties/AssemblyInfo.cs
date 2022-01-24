@@ -31,6 +31,7 @@ using System.Runtime.InteropServices;
 // Sie können alle Werte angeben oder Standardwerte für die Build- und Revisionsnummern verwenden,
 // indem Sie "*" wie unten gezeigt eingeben:
 // [assembly: AssemblyVersion("1.0.*")]
+/*
 [assembly: AssemblyVersion(ThisAssembly.Git.SemVer.Major + "." + ThisAssembly.Git.SemVer.Minor + "." + ThisAssembly.Git.SemVer.Patch)]
 [assembly: AssemblyInformationalVersion(
   ThisAssembly.Git.SemVer.Major + "." +
@@ -38,3 +39,4 @@ using System.Runtime.InteropServices;
   ThisAssembly.Git.SemVer.Patch + "-" +
   ThisAssembly.Git.Branch + "+" +
   ThisAssembly.Git.Commit)]
+*/

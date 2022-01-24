@@ -25,7 +25,7 @@ using Id3.Frames;
 using Id3.v1;
 using Id3.v2;
 
-using JetBrains.Annotations;
+
 
 namespace Id3
 {
@@ -135,7 +135,6 @@ namespace Id3
         /// </summary>
         /// <param name="version">Version of ID3 tag</param>
         /// <returns>The tag handler for the specified version or null if it is not in the collection.</returns>
-        [NotNull]
         internal static Id3Handler GetHandler(Id3Version version)
         {
             Id3HandlerMetadata foundHandler = AvailableHandlers.First(ah => ah.Version == version);
