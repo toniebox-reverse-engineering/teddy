@@ -54,7 +54,7 @@ namespace TeddyBench
         private Thread AsyncTagActionThread = null;
         private System.Windows.Forms.Timer StatusBarTimer = null;
 
-        private string TitleString => "TeddyBench (alpha) - " + GetVersion();
+        private string TitleString => "TeddyBench - " + GetVersion();
 
         private Thread PlayThread = null;
         private bool PlayThreadStop = true;
