@@ -498,34 +498,34 @@ namespace TeddyBench
             {
                 ScanCardThreadStop = true;
                 ScanCardThread.Join(100);
-                //ScanCardThread.Abort();
+                ScanCardThread.Abort();
                 ScanCardThread = null;
             }
             if (PlayThread != null)
             {
                 PlayThreadStop = true;
                 PlayThread.Join(1000);
-                //PlayThread.Abort();
+                PlayThread.Abort();
                 PlayThread = null;
             }
             StopAnalyzeThread();
             if (UpdateCheckThread != null)
             {
                 UpdateCheckThread.Join(100);
-                //UpdateCheckThread.Abort();
+                UpdateCheckThread.Abort();
                 UpdateCheckThread = null;
             }
             if (EncodeThread != null)
             {
                 EncodeThread.Join(100);
-                //EncodeThread.Abort();
+                EncodeThread.Abort();
                 EncodeThread = null;
             }
             if (LogThread != null)
             {
                 LogThreadStop = true;
                 LogThread.Join(100);
-                //LogThread.Abort();
+                LogThread.Abort();
                 LogThread = null;
             }
             if (Proxmark3 != null)
@@ -743,7 +743,7 @@ namespace TeddyBench
                 {
                     LogWindow.Log(LogWindow.eLogLevel.Error, "Failed to stop Analyze Thread");
                 }
-                //AnalyzeThread.Abort();
+                AnalyzeThread.Abort();
                 AnalyzeThread = null;
             }
         }
@@ -1138,7 +1138,7 @@ namespace TeddyBench
         {
             LogThreadStop = true;
             LogThread.Join(500);
-            //LogThread.Abort();
+            LogThread.Abort();
         }
 
         public static string ReverseUid(string uid)
@@ -1710,7 +1710,7 @@ namespace TeddyBench
                     Thread.Sleep(100);
                     if (opDlg.DialogResult == DialogResult.Cancel)
                     {
-                        //AsyncTagActionThread.Abort();
+                        AsyncTagActionThread.Abort();
                         AsyncTagActionThread = null;
                         return;
                     }
@@ -1847,7 +1847,7 @@ namespace TeddyBench
                     Thread.Sleep(100);
                     if (opDlg.DialogResult == DialogResult.Cancel)
                     {
-                        //AsyncTagActionThread.Abort();
+                        AsyncTagActionThread.Abort();
                         AsyncTagActionThread = null;
                         return;
                     }
@@ -1912,7 +1912,7 @@ namespace TeddyBench
                     Thread.Sleep(100);
                     if (opDlg.DialogResult == DialogResult.Cancel)
                     {
-                        //AsyncTagActionThread.Abort();
+                        AsyncTagActionThread.Abort();
                         AsyncTagActionThread = null;
                         return;
                     }

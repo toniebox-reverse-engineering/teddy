@@ -324,7 +324,7 @@ namespace TeddyBench
                 if (!ScanThread.Join(1000))
                 {
                     LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] Trying to abort thread");
-                    //ScanThread.Abort();
+                    ScanThread.Abort();
                 }
                 ScanThread = null;
             }
@@ -1427,7 +1427,7 @@ namespace TeddyBench
 
             if (!ConsoleThread.Join(2000))
             {
-                //ConsoleThread.Abort();
+                ConsoleThread.Abort();
             }
             ConsoleThread = null;
             StartThread();
