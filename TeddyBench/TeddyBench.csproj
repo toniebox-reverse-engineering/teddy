@@ -4,7 +4,7 @@
 		<PublishSingleFile>true</PublishSingleFile>
 	</PropertyGroup>
   <PropertyGroup>
-    <TargetFramework>net6.0-windows</TargetFramework>
+    <TargetFramework>net48</TargetFramework>
     <OutputType>WinExe</OutputType>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <UseWindowsForms>true</UseWindowsForms>
@@ -12,6 +12,7 @@
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DefineConstants></DefineConstants>
+    <NoWarn>1701;1702;168</NoWarn>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>dog.ico</ApplicationIcon>
@@ -19,11 +20,15 @@
   <PropertyGroup>
     <StartupObject>TeddyBench.Program</StartupObject>
     <DebugType>embedded</DebugType>
+    <AutoGenerateBindingRedirects>False</AutoGenerateBindingRedirects>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug %28Release settings%29|AnyCPU'">
     <OutputPath>bin\Debug %28Release settings%29\</OutputPath>
     <Optimize>true</Optimize>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <NoWarn>1701;1702;168</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\TonieAudio\TonieAudio.csproj" />
@@ -31,10 +36,12 @@
   <ItemGroup>
     <Content Include="dog.ico" />
     <Content Include="fragen.png" />
-    <None Include="Resources\Unknown.png" />
-    <None Include="Resources\UnknownTonie.bmp" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="Costura.Fody" Version="5.7.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
     <PackageReference Include="ELFSharp" Version="2.13.2" />
     <PackageReference Include="GitInfo" Version="2.2.0" />
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
@@ -44,8 +51,8 @@
     <PackageReference Include="NETStandard.Library" Version="2.0.3" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
     <PackageReference Include="Octokit" Version="0.50.0" />
-    <PackageReference Include="ScottPlot" Version="4.1.27" />
-    <PackageReference Include="ScottPlot.WinForms" Version="4.1.27" />
+    <PackageReference Include="ScottPlot" Version="4.1.28" />
+    <PackageReference Include="ScottPlot.WinForms" Version="4.1.28" />
     <PackageReference Include="Semver" Version="2.0.6" />
     <PackageReference Include="System.Collections" Version="4.3.0" />
     <PackageReference Include="System.Drawing.Common" Version="6.0.0" />
@@ -75,5 +82,8 @@
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Resources\" />
   </ItemGroup>
 </Project>

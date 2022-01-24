@@ -66,15 +66,15 @@ namespace TonieFile
             [JsonProperty("series")]
             public string Series;
             [JsonProperty("episodes")]
-            public string Episodes;
+            public string Episodes; // unused
             [JsonProperty("tracks")]
             public string[] Tracks;
             [JsonProperty("release")]
-            public string Release;
+            public string Release; // unused
             [JsonProperty("language")]
             public string Language;
             [JsonProperty("category")]
-            public string Category;
+            public string Category; // unused
             [JsonProperty("pic")]
             public string Pic;
         }

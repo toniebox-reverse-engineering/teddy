@@ -423,9 +423,13 @@ namespace TeddyBench
 
                 async Task DownloadFile(string url, string destinationFileName)
                 {
-                    using var stream = await client.GetStreamAsync(url);
-                    using var file = new FileStream(destinationFileName, FileMode.Create);
-                    stream.CopyTo(file);
+                    using (var stream = await client.GetStreamAsync(url))
+                    {
+                        using (var file = new FileStream(destinationFileName, FileMode.Create))
+                        {
+                            stream.CopyTo(file);
+                        }
+                    }
                 }
 
                 dynamic latestRelease = await GithubLastRelease("toniebox-reverse-engineering", "teddy");
@@ -2049,44 +2053,48 @@ namespace TeddyBench
                     {
                         TonieAudio dump = TonieAudio.FromFile(file);
 
-                        using var waveOut = new WaveOutEvent();
-                        using var reader = new OpusWaveStream(new MemoryStream(dump.Audio), 48000, 2);
-
-                        waveOut.Init(reader);
-                        waveOut.PlaybackStopped += WaveOut_PlaybackStopped;
-                        waveOut.Play();
-                        LogWindow.Log(LogWindow.eLogLevel.Debug, "Playback started");
-
-                        while (!PlayThreadStop)
+                        using (var waveOut = new WaveOutEvent())
                         {
-                            Thread.Sleep(100);
-                            int pos = (int)reader.OpusDecoder.CurrentTime.TotalSeconds;
-                            int len = (int)reader.OpusDecoder.TotalTime.TotalSeconds;
-
-                            string time = reader.OpusDecoder.CurrentTime.ToString(@"hh\:mm\:ss") + "/" + reader.OpusDecoder.TotalTime.ToString(@"hh\:mm\:ss");
-
-                            if (TrackNewPosition >= 0)
+                            using (var reader = new OpusWaveStream(new MemoryStream(dump.Audio), 48000, 2))
                             {
-                                TimeSpan newPos = new TimeSpan(0, 0, 0, TrackNewPosition);
-                                reader.SeekTo(newPos);
-                                TrackNewPosition = -1;
-                            }
 
-                            BeginInvoke(new Action(() =>
-                            {
-                                if (!TrackMouseDown)
+                                waveOut.Init(reader);
+                                waveOut.PlaybackStopped += WaveOut_PlaybackStopped;
+                                waveOut.Play();
+                                LogWindow.Log(LogWindow.eLogLevel.Debug, "Playback started");
+
+                                while (!PlayThreadStop)
                                 {
-                                    if (trackPlayPosition.Maximum != len)
+                                    Thread.Sleep(100);
+                                    int pos = (int)reader.OpusDecoder.CurrentTime.TotalSeconds;
+                                    int len = (int)reader.OpusDecoder.TotalTime.TotalSeconds;
+
+                                    string time = reader.OpusDecoder.CurrentTime.ToString(@"hh\:mm\:ss") + "/" + reader.OpusDecoder.TotalTime.ToString(@"hh\:mm\:ss");
+
+                                    if (TrackNewPosition >= 0)
                                     {
-                                        trackPlayPosition.Maximum = len;
-                                        trackPlayPosition.TickFrequency = 60;
+                                        TimeSpan newPos = new TimeSpan(0, 0, 0, TrackNewPosition);
+                                        reader.SeekTo(newPos);
+                                        TrackNewPosition = -1;
                                     }
-                                    trackPlayPosition.Value = pos;
+
+                                    BeginInvoke(new Action(() =>
+                                    {
+                                        if (!TrackMouseDown)
+                                        {
+                                            if (trackPlayPosition.Maximum != len)
+                                            {
+                                                trackPlayPosition.Maximum = len;
+                                                trackPlayPosition.TickFrequency = 60;
+                                            }
+                                            trackPlayPosition.Value = pos;
+                                        }
+                                        lblPlayTime.Text = time;
+                                    }));
                                 }
-                                lblPlayTime.Text = time;
-                            }));
+                                waveOut.Stop();
+                            }
                         }
-                        waveOut.Stop();
                     }
                     catch (Exception ex)
                     {
