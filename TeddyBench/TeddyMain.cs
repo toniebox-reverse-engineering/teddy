@@ -837,7 +837,8 @@ namespace TeddyBench
                                 LogWindow.Log(LogWindow.eLogLevel.DebugVerbose, "     Hash: " + tag.Hash);
                                 LogWindow.Log(LogWindow.eLogLevel.DebugVerbose, "     AudioId: " + tag.AudioId);
 
-                                string newText = tonieName;
+                                bool live = tag.FileInfo.Attributes.HasFlag(FileAttributes.Hidden);
+                                string newText = (live ? "[live] " : "") +  tonieName;
                                 string newImakeKey = image;
                                 string newToolTipText =
                                     "File:     " + tag.FileName + Environment.NewLine +
@@ -1560,6 +1561,25 @@ namespace TeddyBench
         private async void reportselectedFilesToolStripMenuItem_Click(object sender, EventArgs e)
         {
             await ReportSelected();
+        }
+
+        private void toggleLiveFlagToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            foreach (ListViewItem t in lstTonies.SelectedItems)
+            {
+                ListViewTag tag = t.Tag as ListViewTag;
+
+                if(tag.FileInfo.Attributes.HasFlag(FileAttributes.Hidden))
+                {
+                    tag.FileInfo.Attributes &= ~FileAttributes.Hidden;
+                }
+                else
+                {
+                    tag.FileInfo.Attributes |= FileAttributes.Hidden;
+                }
+            }
+
+            RefreshCardContent();
         }
 
         private async Task<bool> ReportSelected()

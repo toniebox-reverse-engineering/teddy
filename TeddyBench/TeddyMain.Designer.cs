@@ -66,7 +66,7 @@
             this.btnPlay = new System.Windows.Forms.Button();
             this.cmbSorting = new System.Windows.Forms.ComboBox();
             this.lstTonies = new System.Windows.Forms.ListView();
-            this.columnHeader1 = new System.Windows.Forms.ColumnHeader();
+            this.columnHeader1 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.btnSave = new System.Windows.Forms.Button();
             this.btnDelete = new System.Windows.Forms.Button();
             this.btnAdd = new System.Windows.Forms.Button();
@@ -82,6 +82,7 @@
             this.showInExplorerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.exportTooggToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.sendDiagnosticsReportToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toggleLiveFlagToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.grpCardContent.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
@@ -105,8 +106,7 @@
             this.helpToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
-            this.menuStrip1.Padding = new System.Windows.Forms.Padding(7, 2, 0, 2);
-            this.menuStrip1.Size = new System.Drawing.Size(933, 24);
+            this.menuStrip1.Size = new System.Drawing.Size(800, 24);
             this.menuStrip1.TabIndex = 0;
             this.menuStrip1.Text = "menuStrip1";
             // 
@@ -288,10 +288,10 @@
             this.grpCardContent.Controls.Add(this.splitContainer1);
             this.grpCardContent.Dock = System.Windows.Forms.DockStyle.Fill;
             this.grpCardContent.Location = new System.Drawing.Point(0, 24);
-            this.grpCardContent.Margin = new System.Windows.Forms.Padding(7);
+            this.grpCardContent.Margin = new System.Windows.Forms.Padding(6, 6, 6, 6);
             this.grpCardContent.Name = "grpCardContent";
-            this.grpCardContent.Padding = new System.Windows.Forms.Padding(7);
-            this.grpCardContent.Size = new System.Drawing.Size(933, 495);
+            this.grpCardContent.Padding = new System.Windows.Forms.Padding(6, 6, 6, 6);
+            this.grpCardContent.Size = new System.Drawing.Size(800, 426);
             this.grpCardContent.TabIndex = 1;
             this.grpCardContent.TabStop = false;
             this.grpCardContent.Text = "Card Content";
@@ -302,8 +302,7 @@
             this.splitContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.splitContainer1.FixedPanel = System.Windows.Forms.FixedPanel.Panel2;
             this.splitContainer1.IsSplitterFixed = true;
-            this.splitContainer1.Location = new System.Drawing.Point(7, 23);
-            this.splitContainer1.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            this.splitContainer1.Location = new System.Drawing.Point(6, 19);
             this.splitContainer1.Name = "splitContainer1";
             // 
             // splitContainer1.Panel1
@@ -315,8 +314,8 @@
             this.splitContainer1.Panel2.Controls.Add(this.btnSave);
             this.splitContainer1.Panel2.Controls.Add(this.btnDelete);
             this.splitContainer1.Panel2.Controls.Add(this.btnAdd);
-            this.splitContainer1.Size = new System.Drawing.Size(919, 465);
-            this.splitContainer1.SplitterDistance = 800;
+            this.splitContainer1.Size = new System.Drawing.Size(788, 401);
+            this.splitContainer1.SplitterDistance = 672;
             this.splitContainer1.SplitterWidth = 1;
             this.splitContainer1.TabIndex = 1;
             // 
@@ -326,7 +325,6 @@
             this.splitContainer2.FixedPanel = System.Windows.Forms.FixedPanel.Panel1;
             this.splitContainer2.IsSplitterFixed = true;
             this.splitContainer2.Location = new System.Drawing.Point(0, 0);
-            this.splitContainer2.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.splitContainer2.Name = "splitContainer2";
             this.splitContainer2.Orientation = System.Windows.Forms.Orientation.Horizontal;
             // 
@@ -341,7 +339,7 @@
             // splitContainer2.Panel2
             // 
             this.splitContainer2.Panel2.Controls.Add(this.lstTonies);
-            this.splitContainer2.Size = new System.Drawing.Size(800, 465);
+            this.splitContainer2.Size = new System.Drawing.Size(672, 401);
             this.splitContainer2.SplitterDistance = 36;
             this.splitContainer2.SplitterWidth = 1;
             this.splitContainer2.TabIndex = 1;
@@ -349,17 +347,17 @@
             // lblPlayTime
             // 
             this.lblPlayTime.AutoSize = true;
-            this.lblPlayTime.Location = new System.Drawing.Point(690, 7);
+            this.lblPlayTime.Location = new System.Drawing.Point(591, 6);
             this.lblPlayTime.Name = "lblPlayTime";
-            this.lblPlayTime.Size = new System.Drawing.Size(64, 15);
+            this.lblPlayTime.Size = new System.Drawing.Size(48, 13);
             this.lblPlayTime.TabIndex = 4;
             this.lblPlayTime.Text = "--:-- / --:--";
             // 
             // trackPlayPosition
             // 
-            this.trackPlayPosition.Location = new System.Drawing.Point(269, 0);
+            this.trackPlayPosition.Location = new System.Drawing.Point(231, 0);
             this.trackPlayPosition.Name = "trackPlayPosition";
-            this.trackPlayPosition.Size = new System.Drawing.Size(415, 45);
+            this.trackPlayPosition.Size = new System.Drawing.Size(356, 45);
             this.trackPlayPosition.TabIndex = 3;
             this.trackPlayPosition.Scroll += new System.EventHandler(this.trackPlayPosition_Scroll);
             this.trackPlayPosition.MouseDown += new System.Windows.Forms.MouseEventHandler(this.trackPlayPosition_MouseDown);
@@ -368,18 +366,17 @@
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(8, 7);
-            this.label1.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.label1.Location = new System.Drawing.Point(7, 6);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(44, 15);
+            this.label1.Size = new System.Drawing.Size(40, 13);
             this.label1.TabIndex = 1;
             this.label1.Text = "Sort by";
             // 
             // btnPlay
             // 
-            this.btnPlay.Location = new System.Drawing.Point(197, 2);
+            this.btnPlay.Location = new System.Drawing.Point(169, 2);
             this.btnPlay.Name = "btnPlay";
-            this.btnPlay.Size = new System.Drawing.Size(66, 24);
+            this.btnPlay.Size = new System.Drawing.Size(57, 21);
             this.btnPlay.TabIndex = 2;
             this.btnPlay.Text = "Play file";
             this.btnPlay.UseVisualStyleBackColor = true;
@@ -394,10 +391,9 @@
             "Product Number",
             "Date",
             "Type"});
-            this.cmbSorting.Location = new System.Drawing.Point(62, 3);
-            this.cmbSorting.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            this.cmbSorting.Location = new System.Drawing.Point(53, 3);
             this.cmbSorting.Name = "cmbSorting";
-            this.cmbSorting.Size = new System.Drawing.Size(128, 23);
+            this.cmbSorting.Size = new System.Drawing.Size(110, 21);
             this.cmbSorting.TabIndex = 0;
             this.cmbSorting.SelectedIndexChanged += new System.EventHandler(this.cmbSorting_SelectedIndexChanged);
             // 
@@ -412,6 +408,7 @@
             listViewGroup2.Name = "Custom";
             listViewGroup3.Header = "Retail";
             listViewGroup3.Name = "Retail";
+            listViewGroup4.Header = "";
             listViewGroup4.Name = "listViewGroup1";
             this.lstTonies.Groups.AddRange(new System.Windows.Forms.ListViewGroup[] {
             listViewGroup1,
@@ -419,12 +416,12 @@
             listViewGroup3,
             listViewGroup4});
             this.lstTonies.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.None;
+            this.lstTonies.HideSelection = false;
             this.lstTonies.LabelEdit = true;
             this.lstTonies.Location = new System.Drawing.Point(0, 0);
-            this.lstTonies.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.lstTonies.Name = "lstTonies";
             this.lstTonies.ShowItemToolTips = true;
-            this.lstTonies.Size = new System.Drawing.Size(800, 428);
+            this.lstTonies.Size = new System.Drawing.Size(672, 364);
             this.lstTonies.TabIndex = 0;
             this.lstTonies.TileSize = new System.Drawing.Size(64, 64);
             this.lstTonies.UseCompatibleStateImageBehavior = false;
@@ -440,10 +437,9 @@
             // 
             // btnSave
             // 
-            this.btnSave.Location = new System.Drawing.Point(5, 70);
-            this.btnSave.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            this.btnSave.Location = new System.Drawing.Point(4, 61);
             this.btnSave.Name = "btnSave";
-            this.btnSave.Size = new System.Drawing.Size(112, 27);
+            this.btnSave.Size = new System.Drawing.Size(96, 23);
             this.btnSave.TabIndex = 1;
             this.btnSave.Text = "Save as .ogg...";
             this.btnSave.UseVisualStyleBackColor = true;
@@ -451,10 +447,9 @@
             // 
             // btnDelete
             // 
-            this.btnDelete.Location = new System.Drawing.Point(5, 37);
-            this.btnDelete.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            this.btnDelete.Location = new System.Drawing.Point(4, 32);
             this.btnDelete.Name = "btnDelete";
-            this.btnDelete.Size = new System.Drawing.Size(112, 27);
+            this.btnDelete.Size = new System.Drawing.Size(96, 23);
             this.btnDelete.TabIndex = 0;
             this.btnDelete.Text = "Delete...";
             this.btnDelete.UseVisualStyleBackColor = true;
@@ -462,10 +457,9 @@
             // 
             // btnAdd
             // 
-            this.btnAdd.Location = new System.Drawing.Point(5, 3);
-            this.btnAdd.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            this.btnAdd.Location = new System.Drawing.Point(4, 3);
             this.btnAdd.Name = "btnAdd";
-            this.btnAdd.Size = new System.Drawing.Size(112, 27);
+            this.btnAdd.Size = new System.Drawing.Size(96, 23);
             this.btnAdd.TabIndex = 0;
             this.btnAdd.Text = "Add...";
             this.btnAdd.UseVisualStyleBackColor = true;
@@ -474,10 +468,9 @@
             // lblMessage
             // 
             this.lblMessage.AutoSize = true;
-            this.lblMessage.Location = new System.Drawing.Point(318, 196);
-            this.lblMessage.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.lblMessage.Location = new System.Drawing.Point(273, 170);
             this.lblMessage.Name = "lblMessage";
-            this.lblMessage.Size = new System.Drawing.Size(168, 15);
+            this.lblMessage.Size = new System.Drawing.Size(154, 13);
             this.lblMessage.TabIndex = 2;
             this.lblMessage.Text = "Please insert your box\' SD card";
             // 
@@ -485,10 +478,9 @@
             // 
             this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.statusLabel});
-            this.statusStrip1.Location = new System.Drawing.Point(0, 497);
+            this.statusStrip1.Location = new System.Drawing.Point(0, 431);
             this.statusStrip1.Name = "statusStrip1";
-            this.statusStrip1.Padding = new System.Windows.Forms.Padding(1, 0, 16, 0);
-            this.statusStrip1.Size = new System.Drawing.Size(933, 22);
+            this.statusStrip1.Size = new System.Drawing.Size(800, 19);
             this.statusStrip1.TabIndex = 2;
             this.statusStrip1.Text = "statusStrip1";
             this.statusStrip1.Visible = false;
@@ -496,26 +488,26 @@
             // statusLabel
             // 
             this.statusLabel.Name = "statusLabel";
-            this.statusLabel.Size = new System.Drawing.Size(23, 17);
+            this.statusLabel.Size = new System.Drawing.Size(23, 14);
             this.statusLabel.Text = "<>";
             // 
             // txtLog
             // 
             this.txtLog.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.txtLog.Font = new System.Drawing.Font("Courier New", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            this.txtLog.Font = new System.Drawing.Font("Courier New", 8.25F);
             this.txtLog.Location = new System.Drawing.Point(0, 24);
-            this.txtLog.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.txtLog.Multiline = true;
             this.txtLog.Name = "txtLog";
             this.txtLog.ReadOnly = true;
             this.txtLog.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.txtLog.Size = new System.Drawing.Size(933, 495);
+            this.txtLog.Size = new System.Drawing.Size(800, 426);
             this.txtLog.TabIndex = 1;
             this.txtLog.Visible = false;
             // 
             // TonieContextMenu
             // 
             this.TonieContextMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.toggleLiveFlagToolStripMenuItem,
             this.renameToolStripMenuItem,
             this.deleteToolStripMenuItem,
             this.assignNewUIDToolStripMenuItem,
@@ -524,7 +516,7 @@
             this.exportTooggToolStripMenuItem,
             this.sendDiagnosticsReportToolStripMenuItem});
             this.TonieContextMenu.Name = "contextMenuStrip1";
-            this.TonieContextMenu.Size = new System.Drawing.Size(199, 142);
+            this.TonieContextMenu.Size = new System.Drawing.Size(199, 186);
             // 
             // renameToolStripMenuItem
             // 
@@ -573,11 +565,18 @@
             this.sendDiagnosticsReportToolStripMenuItem.Text = "Send diagnostics report";
             this.sendDiagnosticsReportToolStripMenuItem.Click += new System.EventHandler(this.sendDiagnosticsReportToolStripMenuItem_Click);
             // 
+            // toggleLiveFlagToolStripMenuItem
+            // 
+            this.toggleLiveFlagToolStripMenuItem.Name = "toggleLiveFlagToolStripMenuItem";
+            this.toggleLiveFlagToolStripMenuItem.Size = new System.Drawing.Size(198, 22);
+            this.toggleLiveFlagToolStripMenuItem.Text = "Toggle live flag";
+            this.toggleLiveFlagToolStripMenuItem.Click += new System.EventHandler(this.toggleLiveFlagToolStripMenuItem_Click);
+            // 
             // TeddyMain
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(933, 519);
+            this.ClientSize = new System.Drawing.Size(800, 450);
             this.Controls.Add(this.lblMessage);
             this.Controls.Add(this.statusStrip1);
             this.Controls.Add(this.grpCardContent);
@@ -585,7 +584,6 @@
             this.Controls.Add(this.menuStrip1);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MainMenuStrip = this.menuStrip1;
-            this.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.Name = "TeddyMain";
             this.Text = "TeddyBench";
             this.menuStrip1.ResumeLayout(false);
@@ -659,6 +657,7 @@
         private System.Windows.Forms.TrackBar trackPlayPosition;
         private System.Windows.Forms.Label lblPlayTime;
         private System.Windows.Forms.ToolStripMenuItem reportNFCTagToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem toggleLiveFlagToolStripMenuItem;
     }
 }
 
