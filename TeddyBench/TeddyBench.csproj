@@ -13,6 +13,7 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DefineConstants></DefineConstants>
     <NoWarn>1701;1702;168</NoWarn>
+    <Optimize>True</Optimize>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>dog.ico</ApplicationIcon>
@@ -21,6 +22,7 @@
     <StartupObject>TeddyBench.Program</StartupObject>
     <DebugType>embedded</DebugType>
     <AutoGenerateBindingRedirects>False</AutoGenerateBindingRedirects>
+    <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug %28Release settings%29|AnyCPU'">
     <OutputPath>bin\Debug %28Release settings%29\</OutputPath>
@@ -29,6 +31,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <NoWarn>1701;1702;168</NoWarn>
+    <Optimize>False</Optimize>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\TonieAudio\TonieAudio.csproj" />

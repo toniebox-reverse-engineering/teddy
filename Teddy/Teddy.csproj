@@ -17,6 +17,7 @@
   <PropertyGroup>
     <StartupObject>Teddy.Program</StartupObject>
     <DebugType>embedded</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug %28Release Settings%29|AnyCPU'">
     <OutputPath>bin\Debug %28Release Settings%29\</OutputPath>
@@ -32,9 +33,11 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <NoWarn>1701;1702;168</NoWarn>
+    <Optimize>False</Optimize>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <NoWarn>1701;1702;168</NoWarn>
+    <Optimize>True</Optimize>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\TonieAudio\TonieAudio.csproj" />
