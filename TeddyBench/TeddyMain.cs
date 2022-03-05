@@ -1757,7 +1757,6 @@ namespace TeddyBench
                     {
                         AsyncTagActionThread.Abort();
                         AsyncTagActionThread = null;
-                        return;
                     }
                 }
                 Invoke(new Action(() => opDlg.Close()));
@@ -1894,7 +1893,6 @@ namespace TeddyBench
                     {
                         AsyncTagActionThread.Abort();
                         AsyncTagActionThread = null;
-                        return;
                     }
                 }
                 Invoke(new Action(() => opDlg.Close()));
@@ -1959,7 +1957,6 @@ namespace TeddyBench
                     {
                         AsyncTagActionThread.Abort();
                         AsyncTagActionThread = null;
-                        return;
                     }
                 }
                 Invoke(new Action(() => opDlg.Close()));
