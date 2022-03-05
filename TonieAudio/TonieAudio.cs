@@ -220,14 +220,84 @@ namespace TonieFile
             return positions.ToArray();
         }
 
+        public class EncodeCallback
+        {
+            protected string ShortName;
+            protected string DisplayName;
+
+            public virtual void Progress(decimal pct)
+            {
+                int lastPct = (int)(pct * 20);
+                if (lastPct % 5 == 0)
+                {
+                    if (lastPct != 20)
+                    {
+                        Console.Write("" + (lastPct * 5) + "%");
+                    }
+                }
+                else
+                {
+                    Console.Write(".");
+                }
+            }
+
+            public virtual void FileStart(int track, string sourceFile)
+            {
+                ParseName(track, sourceFile);
+                Console.Write(" Track " + track.ToString().PadLeft(3) + " - " + ShortName + "  [");
+            }
+
+            protected void ParseName(int track, string sourceFile)
+            {
+                int snipLen = 15;
+                DisplayName = new FileInfo(sourceFile).Name;
+                try
+                {
+                    var tag = new Mp3(sourceFile, Mp3Permissions.Read).GetAllTags().FirstOrDefault();
+                    if (tag != null && tag.Title.IsAssigned)
+                    {
+                        DisplayName = tag.Title.Value;
+                    }
+                }
+                catch (Exception ex)
+                {
+
+                }
+
+                ShortName = DisplayName.PadRight(snipLen).Substring(0, snipLen);
+            }
+
+            public virtual void FileDone()
+            {
+               Console.WriteLine("]");
+            }
+            public virtual void FileFailed(string message)
+            {
+                Console.WriteLine("]");
+                Console.WriteLine("File Failed: " + message);
+            }
+
+            public virtual void Failed(string message)
+            {
+                Console.WriteLine("]");
+                Console.WriteLine("Failed: " + message);
+            }
+
+            public virtual void Warning(string message)
+            {
+                Console.WriteLine("");
+                Console.WriteLine("Warning: " + message);
+            }
+        }
+
         public TonieAudio()
         {
         }
 
-        public TonieAudio(string[] sources, uint audioId, int bitRate = 96000, bool useVbr = false, string prefixLocation = null)
+        public TonieAudio(string[] sources, uint audioId, int bitRate = 96000, bool useVbr = false, string prefixLocation = null, EncodeCallback cbr = null)
         {
             BuildFileList(sources);
-            BuildFromFiles(FileList, audioId, bitRate, useVbr, prefixLocation);
+            BuildFromFiles(FileList, audioId, bitRate, useVbr, prefixLocation, cbr);
         }
 
         public static TonieAudio FromFile(string file, bool readAudio = true)
@@ -321,9 +391,9 @@ namespace TonieFile
             CalculateStatistics(out _, out _, out _, out _, out _, out _, out _);
         }
 
-        private void BuildFromFiles(List<string> sourceFiles, uint audioId, int bitRate, bool useVbr, string prefixLocation)
+        private void BuildFromFiles(List<string> sourceFiles, uint audioId, int bitRate, bool useVbr, string prefixLocation, EncodeCallback cbr)
         {
-            GenerateAudio(sourceFiles, audioId, bitRate, useVbr, prefixLocation);
+            GenerateAudio(sourceFiles, audioId, bitRate, useVbr, prefixLocation, cbr);
             FileContent = new byte[Audio.Length + 0x1000];
             Array.Copy(Audio, 0, FileContent, 0x1000, Audio.Length);
             WriteHeader();
@@ -341,27 +411,31 @@ namespace TonieFile
 
             /* first use one byte padding */
             Header.Padding = new byte[1];
-            var stream = new MemoryStream();
 
             var coder = new ProtoCoder();
-            byte[] dataPre = coder.Serialize<FileHeader>(Header);
+            byte[] dataPre = coder.Serialize(Header);
 
             /* then determine how many extra bytes to fill */
             long padding = expectedSize - dataPre.Length;
             Header.Padding = new byte[padding];
 
-            byte[] data = coder.Serialize<FileHeader>(Header);
+            byte[] data = coder.Serialize(Header);
 
             Array.Copy(data, 0, FileContent, 4, data.Length);
         }
 
-        private void GenerateAudio(List<string> sourceFiles, uint audioId, int bitRate, bool useVbr, string prefixLocation = null)
+        private void GenerateAudio(List<string> sourceFiles, uint audioId, int bitRate, bool useVbr, string prefixLocation = null, EncodeCallback cbr = null)
         {
             int channels = 2;
             int samplingRate = 48000;
             List<uint> chapters = new List<uint>();
 
             var outFormat = new WaveFormat(samplingRate, 2);
+
+            if(cbr == null)
+            {
+                cbr = new EncodeCallback();
+            }
 
             OpusEncoder encoder = OpusEncoder.Create(48000, 2, OpusApplication.OPUS_APPLICATION_AUDIO);
             encoder.Bitrate = bitRate;
@@ -394,7 +468,7 @@ namespace TonieFile
                 {
                     if ((outputData.Length + 0x1000) >= maxSize)
                     {
-                        Console.WriteLine("Error: Close to 2 GiB, aborting");
+                        cbr.Warning("Close to 2 GiB, stopping");
                         break;
                     }
 
@@ -407,24 +481,7 @@ namespace TonieFile
                         chapters.Add(lastIndex);
 
                         int lastPct = 0;
-                        int snipLen = 15;
-                        string displayName = new FileInfo(sourceFile).Name;
-                        try
-                        {
-                            var tag = new Mp3(sourceFile, Mp3Permissions.Read).GetAllTags().FirstOrDefault();
-                            if (tag != null && tag.Title.IsAssigned)
-                            {
-                                displayName = tag.Title.Value;
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-
-                        }
-
-                        string shortName = displayName.PadRight(snipLen).Substring(0, snipLen);
-
-                        Console.Write(" Track " + track.ToString().PadLeft(3) + " - " + shortName + "  [");
+                        cbr.FileStart(track, sourceFile);
 
 
                         /* prepend a audio file for e.g. chapter number */
@@ -485,22 +542,12 @@ namespace TonieFile
                             }
                             totalBytesRead += bytesReturned;
 
-                            float progress = (float)stream.Position / stream.Length;
+                            decimal progress = (decimal)stream.Position / stream.Length;
 
                             if ((int)(progress * 20) != lastPct)
                             {
                                 lastPct = (int)(progress * 20);
-                                if (lastPct % 5 == 0)
-                                {
-                                    if (lastPct != 20)
-                                    {
-                                        Console.Write("" + (lastPct * 5) + "%");
-                                    }
-                                }
-                                else
-                                {
-                                    Console.Write(".");
-                                }
+                                cbr.Progress(progress);
                             }
 
                             bool isEmpty = (buffer.Where(v => v != 0).Count() == 0);
@@ -513,33 +560,36 @@ namespace TonieFile
                             lastIndex = (uint)oggOut.PageCounter;
                         }
 
-                        Console.WriteLine("]");
+                        cbr.FileDone();
                         stream.Close();
                     }
                     catch (OpusOggWriteStream.PaddingException e)
                     {
-                        Console.WriteLine();
-                        throw new EncodingException("Failed to pad opus data properly. Please try CBR with bitrates a multiple of 24 kbps");
+                        string msg = "Failed to pad opus data properly. Please try CBR with bitrates a multiple of 24 kbps";
+                        cbr.Failed(msg);
+                        throw new EncodingException(msg);
                     }
                     catch (FileNotFoundException e)
                     {
-                        Console.WriteLine();
+                        cbr.Failed(e.Message);
                         throw new FileNotFoundException(e.Message);
                     }
                     catch (InvalidDataException e)
                     {
-                        Console.WriteLine();
-                        throw new Exception("Failed processing " + sourceFile);
+                        string msg = "Failed processing " + sourceFile;
+                        cbr.Failed(msg);
+                        throw new Exception(msg);
                     }
                     catch (Exception e)
                     {
-                        Console.WriteLine();
-                        throw new Exception("Failed processing " + sourceFile);
+                        string msg = "Failed processing " + sourceFile;
+                        cbr.Failed(msg);
+                        throw new Exception(msg);
                     }
 
                     if (!warned && outputData.Length >= maxSize / 2)
                     {
-                        Console.WriteLine("Warning: Approaching 2 GiB, please reduce the bitrate");
+                        cbr.Warning("Approaching 2 GiB, please reduce the bitrate");
                         warned = true;
                     }
                 }

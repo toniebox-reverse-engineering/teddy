@@ -41,7 +41,6 @@ namespace TeddyBench
         private string CurrentDirectory = null;
         private bool AutoOpenDrive = true;
         private Dictionary<ListViewTag, ListViewItem> RegisteredItems = new Dictionary<ListViewTag, ListViewItem>();
-        private TextWriter ConsoleWriter = null;
         private static TonieTools.TonieData[] TonieInfos;
         private static Dictionary<string, string> CustomTonies = new Dictionary<string, string>();
         private Dictionary<string, Tuple<TonieAudio, DateTime>> CachedAudios = new Dictionary<string, Tuple<TonieAudio, DateTime>>();
@@ -162,6 +161,10 @@ namespace TeddyBench
                 try
                 {
                     CustomTonies = JsonConvert.DeserializeObject<Dictionary<string, string>>(File.ReadAllText("customTonies.json"));
+                }
+                catch(FileNotFoundException e)
+                {
+                    CustomTonies = new Dictionary<string, string>();
                 }
                 catch (Exception e)
                 {
@@ -1059,6 +1062,59 @@ namespace TeddyBench
             EncodeThread.Start();
         }
 
+        public class EncodeCallback : TonieAudio.EncodeCallback
+        {
+            private readonly TeddyMain Main;
+            private int LastPct = 0;
+
+            public EncodeCallback(TeddyMain main)
+            {
+                Main = main;
+            }
+
+            public override void FileStart(int track, string sourceFile)
+            {
+                ParseName(track, sourceFile);
+                Main.BeginInvoke(new Action(() => { Main.txtLog.Text += " File: " + ShortName; }));
+            }
+
+            public override void FileDone()
+            {
+                Main.BeginInvoke(new Action(() => { Main.txtLog.Text += "]" + Environment.NewLine; }));
+            }
+
+            public override void FileFailed(string message)
+            {
+                Main.BeginInvoke(new Action(() => { Main.txtLog.Text += "] FAILED" + Environment.NewLine; }));
+            }
+
+            public override void Progress(decimal pct)
+            {
+                LastPct = (int)(pct * 20);
+                if (LastPct % 5 == 0)
+                {
+                    if (LastPct != 20)
+                    {
+                        Main.BeginInvoke(new Action(() => { Main.txtLog.Text += "" + (LastPct * 5) + "%"; }));
+                    }
+                }
+                else
+                {
+                    Main.BeginInvoke(new Action(() => { Main.txtLog.Text += "."; }));
+                }
+            }
+
+            public override void Failed(string message)
+            {
+                Main.BeginInvoke(new Action(() => { Main.txtLog.Text += "] FAILED" + Environment.NewLine; }));
+            }
+
+            public override void Warning(string message)
+            {
+                Main.BeginInvoke(new Action(() => { Main.txtLog.Text += Environment.NewLine + "Warning" + Environment.NewLine; }));
+            }
+        }
+
         private void EncodeFile(string uid, string[] v)
         {
             btnAdd.Enabled = false;
@@ -1075,12 +1131,10 @@ namespace TeddyBench
 
                 TonieAudio audio = null;
 
-                StartLog();
-
                 try
                 {
                     uint id = (uint)DateTimeOffset.Now.ToUnixTimeSeconds() - 0x50000000;
-                    audio = new TonieAudio(v, id);
+                    audio = new TonieAudio(v, id, cbr: new EncodeCallback(this));
                 }
                 catch (Exception ex)
                 {
@@ -1107,40 +1161,11 @@ namespace TeddyBench
                     return;
                 }
 
-                StopLog();
                 RefreshCardContent();
             });
             EncodeThread.Start();
         }
 
-        private void StartLog()
-        {
-            ConsoleWriter = new StringWriter(new StringBuilder());
-            Console.SetOut(ConsoleWriter);
-
-            LogThreadStop = false;
-            LogThread = new Thread(LogMain);
-            LogThread.Start();
-        }
-
-        private void LogMain()
-        {
-            while (!LogThreadStop)
-            {
-                Thread.Sleep(50);
-                Invoke(new Action(() =>
-                {
-                    txtLog.Text = ConsoleWriter.ToString();
-                }));
-            }
-        }
-
-        private void StopLog()
-        {
-            LogThreadStop = true;
-            LogThread.Join(500);
-            LogThread.Abort();
-        }
 
         public static string ReverseUid(string uid)
         {
