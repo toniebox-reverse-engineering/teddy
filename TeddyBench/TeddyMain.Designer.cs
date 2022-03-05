@@ -75,6 +75,7 @@
             this.statusLabel = new System.Windows.Forms.ToolStripStatusLabel();
             this.txtLog = new System.Windows.Forms.TextBox();
             this.TonieContextMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.toggleLiveFlagToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.renameToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.deleteToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.assignNewUIDToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -82,7 +83,7 @@
             this.showInExplorerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.exportTooggToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.sendDiagnosticsReportToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.toggleLiveFlagToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.exportToToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.grpCardContent.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
@@ -288,9 +289,9 @@
             this.grpCardContent.Controls.Add(this.splitContainer1);
             this.grpCardContent.Dock = System.Windows.Forms.DockStyle.Fill;
             this.grpCardContent.Location = new System.Drawing.Point(0, 24);
-            this.grpCardContent.Margin = new System.Windows.Forms.Padding(6, 6, 6, 6);
+            this.grpCardContent.Margin = new System.Windows.Forms.Padding(6);
             this.grpCardContent.Name = "grpCardContent";
-            this.grpCardContent.Padding = new System.Windows.Forms.Padding(6, 6, 6, 6);
+            this.grpCardContent.Padding = new System.Windows.Forms.Padding(6);
             this.grpCardContent.Size = new System.Drawing.Size(800, 426);
             this.grpCardContent.TabIndex = 1;
             this.grpCardContent.TabStop = false;
@@ -315,7 +316,7 @@
             this.splitContainer1.Panel2.Controls.Add(this.btnDelete);
             this.splitContainer1.Panel2.Controls.Add(this.btnAdd);
             this.splitContainer1.Size = new System.Drawing.Size(788, 401);
-            this.splitContainer1.SplitterDistance = 672;
+            this.splitContainer1.SplitterDistance = 675;
             this.splitContainer1.SplitterWidth = 1;
             this.splitContainer1.TabIndex = 1;
             // 
@@ -339,7 +340,7 @@
             // splitContainer2.Panel2
             // 
             this.splitContainer2.Panel2.Controls.Add(this.lstTonies);
-            this.splitContainer2.Size = new System.Drawing.Size(672, 401);
+            this.splitContainer2.Size = new System.Drawing.Size(675, 401);
             this.splitContainer2.SplitterDistance = 36;
             this.splitContainer2.SplitterWidth = 1;
             this.splitContainer2.TabIndex = 1;
@@ -421,7 +422,7 @@
             this.lstTonies.Location = new System.Drawing.Point(0, 0);
             this.lstTonies.Name = "lstTonies";
             this.lstTonies.ShowItemToolTips = true;
-            this.lstTonies.Size = new System.Drawing.Size(672, 364);
+            this.lstTonies.Size = new System.Drawing.Size(675, 364);
             this.lstTonies.TabIndex = 0;
             this.lstTonies.TileSize = new System.Drawing.Size(64, 64);
             this.lstTonies.UseCompatibleStateImageBehavior = false;
@@ -514,9 +515,17 @@
             this.toolStripMenuItem2,
             this.showInExplorerToolStripMenuItem,
             this.exportTooggToolStripMenuItem,
+            this.exportToToolStripMenuItem,
             this.sendDiagnosticsReportToolStripMenuItem});
             this.TonieContextMenu.Name = "contextMenuStrip1";
-            this.TonieContextMenu.Size = new System.Drawing.Size(199, 186);
+            this.TonieContextMenu.Size = new System.Drawing.Size(199, 208);
+            // 
+            // toggleLiveFlagToolStripMenuItem
+            // 
+            this.toggleLiveFlagToolStripMenuItem.Name = "toggleLiveFlagToolStripMenuItem";
+            this.toggleLiveFlagToolStripMenuItem.Size = new System.Drawing.Size(198, 22);
+            this.toggleLiveFlagToolStripMenuItem.Text = "Toggle live flag";
+            this.toggleLiveFlagToolStripMenuItem.Click += new System.EventHandler(this.toggleLiveFlagToolStripMenuItem_Click);
             // 
             // renameToolStripMenuItem
             // 
@@ -565,12 +574,12 @@
             this.sendDiagnosticsReportToolStripMenuItem.Text = "Send diagnostics report";
             this.sendDiagnosticsReportToolStripMenuItem.Click += new System.EventHandler(this.sendDiagnosticsReportToolStripMenuItem_Click);
             // 
-            // toggleLiveFlagToolStripMenuItem
+            // exportToToolStripMenuItem
             // 
-            this.toggleLiveFlagToolStripMenuItem.Name = "toggleLiveFlagToolStripMenuItem";
-            this.toggleLiveFlagToolStripMenuItem.Size = new System.Drawing.Size(198, 22);
-            this.toggleLiveFlagToolStripMenuItem.Text = "Toggle live flag";
-            this.toggleLiveFlagToolStripMenuItem.Click += new System.EventHandler(this.toggleLiveFlagToolStripMenuItem_Click);
+            this.exportToToolStripMenuItem.Name = "exportToToolStripMenuItem";
+            this.exportToToolStripMenuItem.Size = new System.Drawing.Size(198, 22);
+            this.exportToToolStripMenuItem.Text = "Export to...";
+            this.exportToToolStripMenuItem.Click += new System.EventHandler(this.exportToToolStripMenuItem_Click);
             // 
             // TeddyMain
             // 
@@ -658,6 +667,7 @@
         private System.Windows.Forms.Label lblPlayTime;
         private System.Windows.Forms.ToolStripMenuItem reportNFCTagToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem toggleLiveFlagToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem exportToToolStripMenuItem;
     }
 }
 

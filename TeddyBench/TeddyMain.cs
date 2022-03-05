@@ -1209,6 +1209,11 @@ namespace TeddyBench
             SaveSelected();
         }
 
+        private void exportToToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ExportSelected();
+        }
+
         private void assignNewUIDToolStripMenuItem_Click(object sender, EventArgs e)
         {
             ReassignSelected();
@@ -1521,6 +1526,34 @@ namespace TeddyBench
                     catch (Exception ex)
                     {
                         MessageBox.Show("Failed to save file '" + tag.FileName + "'");
+                        return;
+                    }
+                }
+            }
+        }
+
+        private void ExportSelected()
+        {
+            FolderBrowserDialog dlg = new FolderBrowserDialog();
+
+            if (dlg.ShowDialog() == DialogResult.OK)
+            {
+                string outputLocation = dlg.SelectedPath;
+
+                foreach (ListViewItem item in lstTonies.SelectedItems)
+                {
+                    ListViewTag tag = item.Tag as ListViewTag;
+                    string current = item.Text;
+
+                    try
+                    {
+                        string destName = Path.Combine(outputLocation, tag.Info.Model + " - " + tag.AudioId.ToString("X8") + " - " + RemoveInvalidChars(tag.Info.Title).Trim());
+                        File.Copy(tag.FileName, destName, false);
+
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show("Failed to save file '" + tag.FileName + "': " + ex.Message);
                         return;
                     }
                 }
