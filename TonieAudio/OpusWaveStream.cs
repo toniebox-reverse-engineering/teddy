@@ -3,7 +3,7 @@ using NAudio.Wave;
 using System;
 using System.IO;
 
-namespace TeddyBench
+namespace TonieFile
 {
     public class OpusWaveStream : WaveStream
     {
@@ -35,9 +35,9 @@ namespace TeddyBench
             OpusDecoder = new OpusOggReadStream(Concentus.Structs.OpusDecoder.Create(Rate, Channels), stream);
         }
 
-        internal void SeekTo(TimeSpan newPos)
+        public void SeekTo(TimeSpan newPos)
         {
-            lock(OpusDecoder)
+            lock (OpusDecoder)
             {
                 OpusDecoder.SeekTo(newPos);
             }

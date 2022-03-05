@@ -294,7 +294,7 @@ namespace TonieFile
         {
         }
 
-        public TonieAudio(string[] sources, uint audioId, int bitRate = 96000, bool useVbr = false, string prefixLocation = null, EncodeCallback cbr = null)
+        public TonieAudio(string[] sources, uint audioId, int bitRate = 48000, bool useVbr = false, string prefixLocation = null, EncodeCallback cbr = null)
         {
             BuildFileList(sources);
             BuildFromFiles(FileList, audioId, bitRate, useVbr, prefixLocation, cbr);
@@ -316,7 +316,7 @@ namespace TonieFile
 
                 if (Directory.Exists(item))
                 {
-                    var filesInDir = Directory.GetFiles(item, "*.mp3").OrderBy(n => n).ToArray();
+                    var filesInDir = Directory.GetFiles(item, "*.mp3").Concat(Directory.GetFiles(item, "*.ogg")).OrderBy(n => n).ToArray();
                     string[] sourceFiles = filesInDir;
                     bool failed = false;
 
@@ -351,9 +351,9 @@ namespace TonieFile
                 }
                 else if (File.Exists(item))
                 {
-                    if (!item.ToLower().EndsWith(".mp3"))
+                    if (!(item.ToLower().EndsWith(".mp3") || item.ToLower().EndsWith(".ogg")))
                     {
-                        throw new InvalidDataException("Specified item '" + item + "' is no MP3");
+                        throw new InvalidDataException("Specified item '" + item + "' is no MP3/Ogg");
                     }
                     FileList.Add(item);
                 }
@@ -529,7 +529,26 @@ namespace TonieFile
                         }
 
                         /* then the real audio file */
-                        var stream = new Mp3FileReader(sourceFile);
+                        string type = sourceFile.Split('.').Last().ToLower();
+                        WaveStream stream = null;
+
+                        switch (type)
+                        {
+                            case "mp3":
+                                stream = new Mp3FileReader(sourceFile);
+                                break;
+
+                            case "ogg":
+                                stream = new OpusWaveStream(File.OpenRead(sourceFile), bitRate, channels);
+                                break;
+                        }
+
+                        if(stream == null)
+                        {
+                            cbr.FileFailed("Unknown file type");
+                            continue;
+                        }
+
                         var streamResampled = new MediaFoundationResampler(stream, outFormat);
 
                         while (true)
@@ -559,9 +578,9 @@ namespace TonieFile
                             }
                             lastIndex = (uint)oggOut.PageCounter;
                         }
+                        stream.Close();
 
                         cbr.FileDone();
-                        stream.Close();
                     }
                     catch (OpusOggWriteStream.PaddingException e)
                     {

@@ -27,7 +27,7 @@
 #endregion
 
 
-namespace TeddyBench
+namespace TonieFile
 {
     /// <summary>
     /// Defines a class that represents a resizable circular byte queue.

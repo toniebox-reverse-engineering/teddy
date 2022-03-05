@@ -753,6 +753,7 @@ namespace TeddyBench
 
         private void AnalyzeMain()
         {
+        ByteQueue ByteBuffer = new ByteQueue();
             while (!AnalyzeThreadStop)
             {
                 Thread.Sleep(100);
@@ -984,9 +985,9 @@ namespace TeddyBench
                 {
                     string fileName = fileNames[0];
 
-                    if (fileName.ToLower().EndsWith(".mp3"))
+                    if (fileName.ToLower().EndsWith(".mp3") || fileName.ToLower().EndsWith(".ogg"))
                     {
-                        switch (MessageBox.Show("You are about to encode a single MP3, is this right?", "Encode a MP3 file", MessageBoxButtons.YesNo))
+                        switch (MessageBox.Show("You are about to encode a single MP3/Ogg, is this right?", "Encode a file", MessageBoxButtons.YesNo))
                         {
                             case DialogResult.No:
                                 return;
@@ -1015,9 +1016,9 @@ namespace TeddyBench
                 }
                 else
                 {
-                    if (fileNames.Where(f => !f.ToLower().EndsWith(".mp3")).Count() > 0)
+                    if (fileNames.Where(f => !(f.ToLower().EndsWith(".mp3") || f.ToLower().EndsWith(".ogg"))).Count() > 0)
                     {
-                        MessageBox.Show("Please select MP3 files only.", "Add file...");
+                        MessageBox.Show("Please select MP3/Ogg files only.", "Add file...");
                         return;
                     }
 
@@ -1536,26 +1537,27 @@ namespace TeddyBench
         {
             FolderBrowserDialog dlg = new FolderBrowserDialog();
 
-            if (dlg.ShowDialog() == DialogResult.OK)
+            if (dlg.ShowDialog() != DialogResult.OK)
             {
-                string outputLocation = dlg.SelectedPath;
+                return;
+            }
+            string outputLocation = dlg.SelectedPath;
 
-                foreach (ListViewItem item in lstTonies.SelectedItems)
+            foreach (ListViewItem item in lstTonies.SelectedItems)
+            {
+                ListViewTag tag = item.Tag as ListViewTag;
+                string current = item.Text;
+
+                try
                 {
-                    ListViewTag tag = item.Tag as ListViewTag;
-                    string current = item.Text;
+                    string destName = Path.Combine(outputLocation, tag.Info.Model + " - " + tag.AudioId.ToString("X8") + " - " + RemoveInvalidChars(tag.Info.Title).Trim());
+                    File.Copy(tag.FileName, destName, false);
 
-                    try
-                    {
-                        string destName = Path.Combine(outputLocation, tag.Info.Model + " - " + tag.AudioId.ToString("X8") + " - " + RemoveInvalidChars(tag.Info.Title).Trim());
-                        File.Copy(tag.FileName, destName, false);
-
-                    }
-                    catch (Exception ex)
-                    {
-                        MessageBox.Show("Failed to save file '" + tag.FileName + "': " + ex.Message);
-                        return;
-                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("Failed to save file '" + tag.FileName + "': " + ex.Message);
+                    return;
                 }
             }
         }
