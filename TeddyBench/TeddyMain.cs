@@ -220,7 +220,7 @@ namespace TeddyBench
 
             if (Settings.DebugWindow)
             {
-                LogWindow.LogLevel = LogWindow.eLogLevel.Debug;
+                LogWindow.LogLevel = LogWindow.eLogLevel.DebugVerbose;
                 enableDebugModeToolStripMenuItem.Checked = true;
             }
 
@@ -700,6 +700,7 @@ namespace TeddyBench
 
                 try
                 {
+                    /* scan card content */
                     foreach (var dir in new DirectoryInfo(CurrentDirectory).GetDirectories())
                     {
                         var file = dir.GetFiles("*0304E0").FirstOrDefault();
@@ -711,6 +712,27 @@ namespace TeddyBench
 
                             item.Tag = tag;
                             item.Text = tag.Uid;
+                            item.ImageKey = "unknown";
+                            item.Group = lstTonies.Groups[3];
+
+                            lstTonies.Items.Add(item);
+
+                            RegisteredItems.Add(item.Tag as ListViewTag, item);
+                        }
+                    }
+
+                    /* scan local directory */
+                    foreach(var file in new DirectoryInfo(CurrentDirectory).GetFiles())
+                    {
+                        Regex reg = new Regex("(?<prod>[0-9]{8}|[0-9]{2}-[0-9]{4}) - [0-9A-F]{8} - (?<name>.*)");
+                        var match = reg.Match(file.Name);
+                        if (match.Success)
+                        {
+                            ListViewItem item = new ListViewItem();
+                            ListViewTag tag = new ListViewTag(file.FullName);
+
+                            item.Tag = tag;
+                            item.Text = match.Groups["prod"].Value + " - " + match.Groups["name"].Value;
                             item.ImageKey = "unknown";
                             item.Group = lstTonies.Groups[3];
 
@@ -771,7 +793,9 @@ namespace TeddyBench
                         {
                             try
                             {
+                                LogWindow.Log(LogWindow.eLogLevel.DebugVerbose, "GetTonieAudio...");
                                 TonieAudio dumpFile = GetTonieAudio(tag.FileName);
+                                LogWindow.Log(LogWindow.eLogLevel.DebugVerbose, "GetTonieAudio... done");
                                 string image = "";
                                 string hash = BitConverter.ToString(dumpFile.Header.Hash).Replace("-", "");
                                 var found = TonieInfos.Where(t => t.Hash.Where(h => h == hash).Count() > 0);
@@ -2043,7 +2067,7 @@ namespace TeddyBench
 
             if (Settings.DebugWindow)
             {
-                LogWindow.LogLevel = LogWindow.eLogLevel.Debug;
+                LogWindow.LogLevel = LogWindow.eLogLevel.DebugVerbose;
                 Log.Show();
             }
             else
