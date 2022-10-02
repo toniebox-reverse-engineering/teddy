@@ -485,8 +485,24 @@ namespace TeddyBench
 
             if (drop != null)
             {
-                AddFiles(drop);
+                AddFiles(drop, GetAudioID());
             }
+        }
+
+        private uint GetAudioID()
+        {
+            if(MessageBox.Show("Do you want to set a specific Audio-ID? If you don't know, just say 'No'.", "Set specific Audio ID", MessageBoxButtons.YesNo) == DialogResult.No)
+            {
+                return uint.MaxValue;
+            }
+
+            AskHexForm form = new AskHexForm();
+            if(form.ShowDialog() != DialogResult.OK)
+            {
+                return uint.MaxValue;
+            }
+
+            return form.Value;
         }
 
         protected override void OnFormClosing(FormClosingEventArgs e)
@@ -1006,11 +1022,11 @@ namespace TeddyBench
 
             if (dlg.ShowDialog() == DialogResult.OK)
             {
-                AddFiles(dlg.FileNames);
+                AddFiles(dlg.FileNames, GetAudioID());
             }
         }
 
-        private void AddFiles(string[] fileNames)
+        private void AddFiles(string[] fileNames, uint id = uint.MaxValue)
         {
             AskUIDForm ask = new AskUIDForm(Proxmark3);
 
@@ -1027,7 +1043,7 @@ namespace TeddyBench
                             case DialogResult.No:
                                 return;
                             case DialogResult.Yes:
-                                EncodeFile(ask.Uid, new[] { fileName });
+                                EncodeFile(ask.Uid, new[] { fileName }, id);
                                 return;
                         }
                     }
@@ -1057,7 +1073,7 @@ namespace TeddyBench
                         return;
                     }
 
-                    EncodeFile(ask.Uid, fileNames);
+                    EncodeFile(ask.Uid, fileNames, id);
                 }
             }
         }
@@ -1151,7 +1167,7 @@ namespace TeddyBench
             }
         }
 
-        private void EncodeFile(string uid, string[] v)
+        private void EncodeFile(string uid, string[] v, uint id = uint.MaxValue)
         {
             btnAdd.Enabled = false;
             btnDelete.Enabled = false;
@@ -1169,7 +1185,10 @@ namespace TeddyBench
 
                 try
                 {
-                    uint id = (uint)DateTimeOffset.Now.ToUnixTimeSeconds() - 0x50000000;
+                    if (id == uint.MaxValue)
+                    {
+                        id = (uint)(DateTimeOffset.Now.ToUnixTimeSeconds() - 0x50000000);
+                    }
                     audio = new TonieAudio(v, id, cbr: new EncodeCallback(this));
                 }
                 catch (Exception ex)
