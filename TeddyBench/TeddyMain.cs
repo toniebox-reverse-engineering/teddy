@@ -775,7 +775,7 @@ namespace TeddyBench
 
         private void AnalyzeMain()
         {
-        ByteQueue ByteBuffer = new ByteQueue();
+            ByteQueue ByteBuffer = new ByteQueue();
             while (!AnalyzeThreadStop)
             {
                 Thread.Sleep(100);
@@ -965,7 +965,17 @@ namespace TeddyBench
 
         public static Bitmap ResizeImage(Image image, int width, int height)
         {
-            var destRect = new Rectangle(0, 0, width, height);
+            double srcRatio = (double)image.Width / image.Height;
+            int dstWidth = width;
+            int dstHeight = (int)(dstWidth / srcRatio);
+
+            if(dstHeight > image.Height)
+            {
+                dstHeight = height;
+                dstWidth = (int)(dstHeight * srcRatio);
+            }
+
+            var destRect = new Rectangle(0, 0, dstWidth, dstHeight);
             var destImage = new Bitmap(width, height);
 
             destImage.SetResolution(image.HorizontalResolution, image.VerticalResolution);
