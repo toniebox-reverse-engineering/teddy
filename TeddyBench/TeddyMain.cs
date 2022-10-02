@@ -202,6 +202,7 @@ namespace TeddyBench
             lstTonies.LargeImageList.Images.Add("unknown", ResizeImage(Resources.unknown, 128, 128));
             lstTonies.LargeImageList.Images.Add("custom", ResizeImage(Resources.custom, 128, 128));
             lstTonies.ListViewItemSorter = new ListViewItemComparer(2);
+            lstTonies.DoubleBuffered(true);
             cmbSorting.SelectedIndex = 2;
             Text = TitleString;
 
