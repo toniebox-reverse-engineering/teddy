@@ -29,14 +29,14 @@ namespace TeddyBench
 {
     public partial class TeddyMain : Form
     {
-        private Thread ScanCardThread = null;
+        private SafeThread ScanCardThread = null;
         private bool ScanCardThreadStop = false;
-        private Thread AnalyzeThread = null;
+        private SafeThread AnalyzeThread = null;
         private bool AnalyzeThreadStop = false;
-        private Thread EncodeThread = null;
-        private Thread LogThread;
+        private SafeThread EncodeThread = null;
+        private SafeThread LogThread;
         private bool LogThreadStop;
-        private Thread UpdateCheckThread = null;
+        private SafeThread UpdateCheckThread = null;
 
         private string CurrentDirectory = null;
         private bool AutoOpenDrive = true;
@@ -50,12 +50,12 @@ namespace TeddyBench
         private Settings Settings = null;
         internal LogWindow Log;
         private string LastFoundUid = null;
-        private Thread AsyncTagActionThread = null;
+        private SafeThread AsyncTagActionThread = null;
         private System.Windows.Forms.Timer StatusBarTimer = null;
 
         private string TitleString => "TeddyBench - " + GetVersion();
 
-        private Thread PlayThread = null;
+        private SafeThread PlayThread = null;
         private bool PlayThreadStop = true;
         private bool TrackMouseDown = false;
         private int TrackNewPosition = -1;
@@ -210,7 +210,7 @@ namespace TeddyBench
             StartThreads();
 
 
-            UpdateCheckThread = new Thread(UpdateCheck);
+            UpdateCheckThread = new SafeThread(UpdateCheck, "UpdateCheckThread");
             UpdateCheckThread.Start();
 
             autodetectionEnabledToolStripMenuItem.Checked = Settings.NfcEnabled;
@@ -558,7 +558,7 @@ namespace TeddyBench
         private void StartThreads()
         {
             ScanCardThreadStop = false;
-            ScanCardThread = new Thread(ScanCardMain);
+            ScanCardThread = new SafeThread(ScanCardMain, "ScanCardThread");
             ScanCardThread.Start();
         }
 
@@ -772,7 +772,7 @@ namespace TeddyBench
         private void StartAnalyzeThread()
         {
             AnalyzeThreadStop = false;
-            AnalyzeThread = new Thread(AnalyzeMain);
+            AnalyzeThread = new SafeThread(AnalyzeMain, "AnalyzeThread");
             AnalyzeThread.Start();
         }
 
@@ -1084,7 +1084,7 @@ namespace TeddyBench
             btnDelete.Enabled = false;
             btnSave.Enabled = false;
 
-            EncodeThread = new Thread(() =>
+            EncodeThread = new SafeThread(() =>
             {
                 string newDir = Path.Combine(CurrentDirectory, ReverseUid(uid).Substring(0, 8));
                 string newFile = Path.Combine(newDir, ReverseUid(uid).Substring(8, 8));
@@ -1110,7 +1110,7 @@ namespace TeddyBench
                 }
 
                 RefreshCardContent();
-            });
+            }, "EncodeThread");
             EncodeThread.Start();
         }
 
@@ -1176,7 +1176,7 @@ namespace TeddyBench
             grpCardContent.Visible = false;
             txtLog.Visible = true;
 
-            EncodeThread = new Thread(() =>
+            EncodeThread = new SafeThread(() =>
             {
                 string newDir = Path.Combine(CurrentDirectory, ReverseUid(uid).Substring(0, 8));
                 string newFile = Path.Combine(newDir, ReverseUid(uid).Substring(8, 8));
@@ -1217,7 +1217,7 @@ namespace TeddyBench
                 }
 
                 RefreshCardContent();
-            });
+            }, "EncodeThread");
             EncodeThread.Start();
         }
 
@@ -1785,7 +1785,7 @@ namespace TeddyBench
                 return;
             }
 
-            AsyncTagActionThread = new Thread(() =>
+            AsyncTagActionThread = new SafeThread(() =>
             {
                 try
                 {
@@ -1831,7 +1831,7 @@ namespace TeddyBench
                 {
                 }
                 AsyncTagActionThread = null;
-            });
+            }, "AsyncTagActionThread");
             AsyncTagActionThread.Start();
             TagOperationDialog opDlg = new TagOperationDialog(true);
 
@@ -1944,7 +1944,7 @@ namespace TeddyBench
                 return;
             }
 
-            AsyncTagActionThread = new Thread(() =>
+            AsyncTagActionThread = new SafeThread(() =>
             {
                 try
                 {
@@ -1967,7 +1967,7 @@ namespace TeddyBench
                 {
                 }
                 AsyncTagActionThread = null;
-            });
+            }, "AsyncTagActionThread");
             AsyncTagActionThread.Start();
             TagOperationDialog opDlg = new TagOperationDialog(true);
 
@@ -2017,7 +2017,7 @@ namespace TeddyBench
                         continue;
                     }
 
-                    AsyncTagActionThread = new Thread(() =>
+                    AsyncTagActionThread = new SafeThread(() =>
                     {
                         try
                         {
@@ -2027,7 +2027,7 @@ namespace TeddyBench
                         {
                         }
                         AsyncTagActionThread = null;
-                    });
+                    }, "AsyncTagActionThread");
                     AsyncTagActionThread.Start();
                 }
                 break;
@@ -2178,7 +2178,7 @@ namespace TeddyBench
                 ListViewTag tag = selected.Tag as ListViewTag;
                 string file = tag.FileName;
 
-                PlayThread = new Thread(() =>
+                PlayThread = new SafeThread(() =>
                 {
                     try
                     {
@@ -2231,7 +2231,7 @@ namespace TeddyBench
                     {
                         MessageBox.Show("Failed to play file '" + tag.FileName + "': " + ex.Message);
                     }
-                });
+                }, "PlayThread");
 
                 btnPlay.Text = "Stop";
                 PlayThreadStop = false;
@@ -2268,6 +2268,53 @@ namespace TeddyBench
         private void trackPlayPosition_MouseUp(object sender, MouseEventArgs e)
         {
             TrackMouseDown = false;
+        }
+
+        internal void ReportException(string name, Exception e)
+        {
+            if (MessageBox.Show("Sorry, there was an exception in '" + name + "'. Do you want to report that crash?", "Some Exception happened", MessageBoxButtons.YesNo) == DialogResult.No)
+            {
+                return;
+            }
+
+            StringBuilder str = new StringBuilder();
+
+            str.AppendLine(" Reporting an unhandled eception");
+            str.AppendLine("-----------------------------------");
+
+            str.AppendLine("Thread: '" + name + "'");
+            str.AppendLine("");
+            str.AppendLine("-----------------------------------");
+            str.AppendLine("");
+            str.AppendLine("Message:");
+            str.AppendLine(e.Message);
+            str.AppendLine("");
+            str.AppendLine("-----------------------------------");
+            str.AppendLine("");
+            str.AppendLine("StackTrace:");
+            str.AppendLine(e.StackTrace);
+            str.AppendLine("");
+            str.AppendLine("-----------------------------------");
+            str.AppendLine("");
+
+
+            ReportForm form = new ReportForm(str.ToString());
+
+            if (form.ShowDialog() == DialogResult.OK)
+            {
+                Settings.Username = form.Username;
+                SaveSettings();
+
+                bool success = DiagnosticsSendInfo(str.ToString(), form.Username, form.Message, "Exception.txt").Result;
+                if (success)
+                {
+                    MessageBox.Show("Success", "Report sent");
+                }
+                else
+                {
+                    MessageBox.Show("Error sending the report", "Report failure");
+                }
+            }
         }
     }
 }
