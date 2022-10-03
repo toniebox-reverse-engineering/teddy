@@ -21,7 +21,10 @@ namespace TeddyBench
             {
                 ThreadStart.Invoke();
             }
-            catch(Exception ex)
+            catch (ThreadAbortException ex)
+            {
+            }
+            catch (Exception ex)
             {
                 Program.MainClass.ReportException(Thread.Name, ex);
             }
