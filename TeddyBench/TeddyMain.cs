@@ -1332,6 +1332,13 @@ namespace TeddyBench
                     lstTonies.SelectedItems[0].BeginEdit();
                 }
             }
+            if (e.Control && e.KeyCode == Keys.A)
+            {
+                foreach (ListViewItem item in lstTonies.Items)
+                {
+                    item.Selected = true;
+                }
+            }
         }
 
         private void lstTonies_ItemSelectionChanged(object sender, ListViewItemSelectionChangedEventArgs e)
@@ -1679,11 +1686,13 @@ namespace TeddyBench
 
         private void toggleLiveFlagToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            bool bUnhideAll = (lstTonies.SelectedItems.Count > 1);
+
             foreach (ListViewItem t in lstTonies.SelectedItems)
             {
                 ListViewTag tag = t.Tag as ListViewTag;
 
-                if(tag.FileInfo.Attributes.HasFlag(FileAttributes.Hidden))
+                if(bUnhideAll || tag.FileInfo.Attributes.HasFlag(FileAttributes.Hidden))
                 {
                     tag.FileInfo.Attributes &= ~FileAttributes.Hidden;
                 }
