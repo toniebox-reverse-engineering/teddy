@@ -267,9 +267,9 @@ namespace TeddyBench
         public event EventHandler<FlashRequestContext> FlashRequest;
         public event EventHandler<bool> FlashResult;
         public string CurrentUidString = null;
-        private Thread ScanThread = null;
+        private SafeThread ScanThread = null;
         private bool ExitScanThread = false;
-        private Thread ConsoleThread = null;
+        private SafeThread ConsoleThread = null;
         private bool ExitConsoleThread = false;
         private object ReaderLock = new object();
 
@@ -299,8 +299,7 @@ namespace TeddyBench
             if (ScanThread == null)
             {
                 ExitScanThread = false;
-                ScanThread = new Thread(ScanThreadFunc);
-                ScanThread.Name = "PM3 Scan Thread";
+                ScanThread = new SafeThread(ScanThreadFunc, "PM3 Scan Thread");
                 ScanThread.Start();
             }
         }
@@ -1371,7 +1370,7 @@ namespace TeddyBench
             StopThread();
 
             ExitConsoleThread = false;
-            ConsoleThread = new Thread(() =>
+            ConsoleThread = new SafeThread(() =>
             {
                 LogWindow.Log(LogWindow.eLogLevel.Debug, "");
                 LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] Console mode. If you have no clue what this is for, then you clicked the wrong menu entry.");
@@ -1415,7 +1414,7 @@ namespace TeddyBench
                     {
                     }
                 }
-            });
+            }, "ConsoleThread");
             ConsoleThread.Start();
             return;
 
