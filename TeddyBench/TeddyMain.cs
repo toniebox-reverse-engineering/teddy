@@ -418,51 +418,55 @@ namespace TeddyBench
         {
             try
             {
-                Thread.Sleep(2000);
-
-                HttpClient client = new HttpClient();
-                client.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (compatible; TeddyBench/1.0)");
-                async Task<JObject> GithubApiGet(string path) => JObject.Parse(await client.GetStringAsync($"https://api.github.com/{path}"));
-                async Task<JObject> GithubLastRelease(string user, string repo) => await GithubApiGet($"repos/{user}/{repo}/releases/latest");
-
-                async Task DownloadFile(string url, string destinationFileName)
+                string thisVersion = ThisAssembly.Git.BaseTag;
+                if (!string.IsNullOrEmpty(thisVersion))
                 {
-                    using (var stream = await client.GetStreamAsync(url))
+                    Thread.Sleep(2000);
+
+                    HttpClient client = new HttpClient();
+                    client.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (compatible; TeddyBench/1.0)");
+                    async Task<JObject> GithubApiGet(string path) => JObject.Parse(await client.GetStringAsync($"https://api.github.com/{path}"));
+                    async Task<JObject> GithubLastRelease(string user, string repo) => await GithubApiGet($"repos/{user}/{repo}/releases/latest");
+
+                    async Task DownloadFile(string url, string destinationFileName)
                     {
-                        using (var file = new FileStream(destinationFileName, FileMode.Create))
+                        using (var stream = await client.GetStreamAsync(url))
                         {
-                            stream.CopyTo(file);
+                            using (var file = new FileStream(destinationFileName, FileMode.Create))
+                            {
+                                stream.CopyTo(file);
+                            }
                         }
                     }
-                }
 
-                dynamic latestRelease = await GithubLastRelease("toniebox-reverse-engineering", "teddy");
-                string latestVersion = latestRelease.tag_name;
+                    dynamic latestRelease = await GithubLastRelease("toniebox-reverse-engineering", "teddy");
+                    string latestVersion = latestRelease.tag_name;
 
-                if (latestVersion != ThisAssembly.Git.BaseTag)
-                {
-                    string destPath = new FileInfo(Assembly.GetExecutingAssembly().Location).DirectoryName;
-                    string zipName = Path.Combine(destPath, "TeddyBench.zip");
-
-                    if (latestRelease.assets[0].name == "TeddyBench.zip")
+                    if (latestVersion != thisVersion)
                     {
-                        string url = latestRelease.assets[0].browser_download_url;
+                        string destPath = new FileInfo(Assembly.GetExecutingAssembly().Location).DirectoryName;
+                        string zipName = Path.Combine(destPath, "TeddyBench.zip");
 
-                        BeginInvoke(new Action(async () =>
+                        if (latestRelease.assets[0].name == "TeddyBench.zip")
                         {
-                            UpdateNotifyDialog dlg = new UpdateNotifyDialog(latestVersion, (string)latestRelease.name);
-                            if (dlg.ShowDialog() == DialogResult.Yes)
-                            {
-                                await DownloadFile(url, zipName);
-                                ProcessStartInfo startInfo = new ProcessStartInfo
-                                {
-                                    Arguments = zipName,
-                                    FileName = "explorer.exe"
-                                };
+                            string url = latestRelease.assets[0].browser_download_url;
 
-                                Process.Start(startInfo);
-                            }
-                        }));
+                            BeginInvoke(new Action(async () =>
+                            {
+                                UpdateNotifyDialog dlg = new UpdateNotifyDialog(latestVersion, (string)latestRelease.name);
+                                if (dlg.ShowDialog() == DialogResult.Yes)
+                                {
+                                    await DownloadFile(url, zipName);
+                                    ProcessStartInfo startInfo = new ProcessStartInfo
+                                    {
+                                        Arguments = zipName,
+                                        FileName = "explorer.exe"
+                                    };
+
+                                    Process.Start(startInfo);
+                                }
+                            }));
+                        }
                     }
                 }
             }
