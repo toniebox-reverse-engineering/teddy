@@ -2,7 +2,7 @@
 # Diese .gitignore-Datei wurde von Microsoft(R) Visual Studio automatisch erstellt.
 ################################################################################
 
-/.vs/Tonie
+/.vs
 /*/bin
 /*/obj
 /packages
