@@ -853,7 +853,8 @@ namespace TonieFile
             {
                 for (int chapter = 0; chapter < Header.AudioChapters.Length; chapter++)
                 {
-                    string fileName = Path.Combine(outDirectory, outFileName + " - Track #" + (chapter + 1) + ".ogg");
+                    int trackNum = chapter + 1;
+                    string fileName = Path.Combine(outDirectory, outFileName + " - Track #" + trackNum.ToString("00") + ".ogg");
                     FileStream outFile = File.Open(fileName, FileMode.Create, FileAccess.Write);
                     OggPage[] metaPagesTrack = metaPages.Select(p => new OggPage(p)).ToArray();
 
