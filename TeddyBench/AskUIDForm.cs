@@ -10,27 +10,27 @@ namespace TeddyBench
     public partial class AskUIDForm : Form
     {
         internal string Uid;
-        private Proxmark3 Proxmark3;
+        private RfidReaderBase RfidReader;
 
-        public AskUIDForm(Proxmark3 pm3)
+        public AskUIDForm(RfidReaderBase rfidReader)
         {
-            Proxmark3 = pm3;
+            RfidReader = rfidReader;
             InitializeComponent();
             txtUid.Select();
             txtUid.Select(6, 10);
             txtUid_TextChanged(null, null);
 
-            if (Proxmark3 != null)
+            if (RfidReader != null)
             {
-                Proxmark3.UidFound += Proxmark3_UidFound;
+                RfidReader.UidFound += RfidReaderBase_UidFound;
             }
         }
 
-        private void Proxmark3_UidFound(object sender, string e)
+        private void RfidReaderBase_UidFound(object sender, string e)
         {
             if (InvokeRequired)
             {
-                BeginInvoke(new Action(() => Proxmark3_UidFound(sender, e)));
+                BeginInvoke(new Action(() => RfidReaderBase_UidFound(sender, e)));
                 return;
             }
 
@@ -53,9 +53,9 @@ namespace TeddyBench
 
         protected override void OnClosing(CancelEventArgs e)
         {
-            if (Proxmark3 != null)
+            if (RfidReader != null)
             {
-                Proxmark3.UidFound -= Proxmark3_UidFound;
+                RfidReader.UidFound -= RfidReaderBase_UidFound;
             }
             Uid = txtUid.Text.ToUpper();
 
