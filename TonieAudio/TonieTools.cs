@@ -185,7 +185,7 @@ namespace TonieFile
                             if (granule != ulong.MaxValue)
                             {
                                 TimeSpan trackOffset = TimeSpan.FromSeconds(granule / 48000.0f);
-                                lengthString = (trackOffset - prevTime).ToString(@"mm\:ss\.ff");
+                                lengthString = (trackOffset - prevTime).ToString(@"hh\:mm\:ss\.ff");
                                 prevTime = trackOffset;
                             }
 
