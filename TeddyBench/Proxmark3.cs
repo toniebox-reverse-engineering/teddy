@@ -16,7 +16,7 @@ using System.Windows.Forms;
 
 namespace TeddyBench
 {
-    public class Proxmark3
+    public class Proxmark3 : RfidReaderBase
     {
         public class Pm3UsbCommand
         {
@@ -242,45 +242,13 @@ namespace TeddyBench
             Marshal.FreeHGlobal(i);
         }
 
-        [Flags]
-        public enum eDeviceInfo
-        {
-            None = 0,
-            BootromPresent = 1,
-            OsImagePresent = 2,
-            ModeBootrom = 4,
-            ModeOs = 8,
-            UnderstandStartFlash = 16
-        }
-
         public class FlashRequestContext
         {
             public bool Proceed;
             public bool Bootloader;
             public string FlashFile;
         }
-
-        public string CurrentPort { get; private set; }
-        public SerialPort Port { get; private set; }
-        public event EventHandler<string> UidFound;
-        public event EventHandler<string> DeviceFound;
-        public event EventHandler<FlashRequestContext> FlashRequest;
-        public event EventHandler<bool> FlashResult;
-        public string CurrentUidString = null;
-        private SafeThread ScanThread = null;
-        private bool ExitScanThread = false;
-        private SafeThread ConsoleThread = null;
-        private bool ExitConsoleThread = false;
-        private object ReaderLock = new object();
-
-        private Dictionary<string, DateTime> PortsFailed = new Dictionary<string, DateTime>();
-        private Dictionary<string, DateTime> PortsAppeared = new Dictionary<string, DateTime>();
-        public string HardwareType = "";
-        public bool UnlockSupported = false;
-        public float AntennaVoltage = 0.0f;
-        public bool Connected = false;
-
-        public eDeviceInfo DeviceInfo = eDeviceInfo.None;
+        
         private string Flashfile = "fullimage.elf";
 
         public Proxmark3()
@@ -288,48 +256,7 @@ namespace TeddyBench
             LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] new instance");
         }
 
-
-        public void Start()
-        {
-            StartThread();
-        }
-
-        private void StartThread()
-        {
-            if (ScanThread == null)
-            {
-                ExitScanThread = false;
-                ScanThread = new SafeThread(ScanThreadFunc, "PM3 Scan Thread");
-                ScanThread.Start();
-            }
-        }
-
-        public void Stop()
-        {
-            StopThread();
-
-            Close();
-
-            DeviceFound?.Invoke(this, null);
-        }
-
-        public void StopThread()
-        {
-            if (ScanThread != null)
-            {
-                LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] Trying to stop thread");
-                ExitScanThread = true;
-
-                if (!ScanThread.Join(1000))
-                {
-                    LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] Trying to abort thread");
-                    ScanThread.Abort();
-                }
-                ScanThread = null;
-            }
-        }
-
-        private void ScanThreadFunc()
+        internal override void ScanThreadFunc()
         {
             lock (ReaderLock)
             {
@@ -376,7 +303,7 @@ namespace TeddyBench
                                 if (CurrentUidString != null)
                                 {
                                     CurrentUidString = null;
-                                    UidFound?.Invoke(this, null);
+                                    OnUidFound(null);
                                 }
 
                                 Thread.Sleep(100);
@@ -454,8 +381,7 @@ namespace TeddyBench
                             CurrentUidString = uidString;
 
                             /* notify listeners about currently detected UID */
-                            UidFound?.Invoke(this, uidString);
-
+                            OnUidFound(uidString);
 
                             while (GetRandom(uid) != null)
                             {
@@ -500,36 +426,6 @@ namespace TeddyBench
             MeasurementResult result = new MeasurementResult();
             MeasureAntennaInternal(result, eMeasurementType.HFAntenna);
             AntennaVoltage = result.vHF;
-        }
-
-        private void Close()
-        {
-            lock (this)
-            {
-                if (Port != null)
-                {
-                    try
-                    {
-                        Flush(Port);
-                    }
-                    catch (Exception ex)
-                    {
-                    }
-
-                    try
-                    {
-                        Port.Close();
-                    }
-                    catch (Exception ex)
-                    {
-                    }
-                    Port.Dispose();
-                    Port = null;
-                    CurrentPort = null;
-                }
-                Connected = false;
-                DeviceFound?.Invoke(this, CurrentPort);
-            }
         }
 
         private bool UnlockTag(uint pass)
@@ -848,18 +744,6 @@ namespace TeddyBench
             }
         }
 
-        private void Flush(SerialPort p)
-        {
-            if (p.BytesToRead > 0)
-            {
-                LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] Flush: " + p.BytesToRead + " bytes to flush");
-            }
-            while (p.BytesToRead > 0)
-            {
-                p.ReadByte();
-            }
-        }
-
         public bool Detect()
         {
             string[] ports = SerialPort.GetPortNames();
@@ -981,12 +865,12 @@ namespace TeddyBench
                         ctx.FlashFile = Flashfile;
                         ctx.Proceed = false;
 
-                        FlashRequest?.Invoke(this, ctx);
+                        OnFlashRequest(ctx);
 
                         if (ctx.Proceed)
                         {
                             bool success = Flash(segs, bootloader);
-                            FlashResult?.Invoke(this, success);
+                            OnFlashResult(success);
                         }
                     }
 
@@ -1056,7 +940,7 @@ namespace TeddyBench
                 UnlockSupported = reason > 0;
                 LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] Device does " + (UnlockSupported ? "" : "*NOT*") + " support SLIX-L unlock command");
 
-                DeviceFound?.Invoke(this, CurrentPort);
+                OnDeviceFound(CurrentPort);
                 LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] TryOpen: " + port + " successfully opened");
 
                 Connected = true;
@@ -1118,7 +1002,7 @@ namespace TeddyBench
             }
         }
 
-        public void EnterBootloader(string fileName)
+        public override void EnterBootloader(string fileName)
         {
             if((DeviceInfo & eDeviceInfo.BootromPresent) == 0)
             {
@@ -1295,7 +1179,7 @@ namespace TeddyBench
             return data;
         }
 
-        internal byte[] ReadMemory()
+        internal override byte[] ReadMemory()
         {
             if (Port == null)
             {
@@ -1322,7 +1206,7 @@ namespace TeddyBench
             return ret;
         }
 
-        internal void EmulateTag(byte[] data)
+        internal override void EmulateTag(byte[] data)
         {
             if (Port == null)
             {
@@ -1360,7 +1244,7 @@ namespace TeddyBench
             return AntennaVoltage;
         }
 
-        internal void EnterConsole()
+        internal override void EnterConsole()
         {
             if (Port == null)
             {
@@ -1420,7 +1304,7 @@ namespace TeddyBench
 
         }
 
-        internal void ExitConsole()
+        internal override void ExitConsole()
         {
             ExitConsoleThread = true;
 

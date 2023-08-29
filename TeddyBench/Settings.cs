@@ -12,6 +12,7 @@ namespace TeddyBench
     {
         public string Username = "";
         public bool NfcEnabled = false;
+        public string NfcType = "Proxmark3";
         public bool DebugWindow = false;
 
         public static Settings FromFile(string file)
