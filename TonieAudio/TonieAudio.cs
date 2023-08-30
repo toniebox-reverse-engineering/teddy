@@ -51,7 +51,7 @@ namespace TonieFile
         {
             public byte[] Hash;
             public int AudioLength;
-            public int AudioId;
+            public uint AudioId;
             public uint[] AudioChapters;
             public byte[] Padding;
             [SkipEncode]
@@ -163,6 +163,11 @@ namespace TonieFile
 
                 if (lastPos >= 0x2000 && curPos < file.Length)
                 {
+                    if(lastGranule > granule)
+                    {
+                        Console.WriteLine("[ERROR] granule at 0x" + curPos.ToString("X8") + " is lower than last.");
+                        break;
+                    }
                     ulong granuleDelta = granule - lastGranule;
 
                     minSegs = Math.Min(minSegs, segmentsCount);
@@ -614,7 +619,7 @@ namespace TonieFile
                 }
 
                 oggOut.Finish();
-                Header.AudioId = oggOut.LogicalStreamId;
+                Header.AudioId = (uint) oggOut.LogicalStreamId;
             }
 
             Audio = File.ReadAllBytes(tempName);

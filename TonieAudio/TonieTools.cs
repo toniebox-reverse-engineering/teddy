@@ -89,7 +89,7 @@ namespace TonieFile
             string uid = string.Join("", groups.ToArray());
 
             string dateExtra = "";
-            int id = dumpFile.Header.AudioId;
+            uint id = dumpFile.Header.AudioId;
 
             if (id < 0x50000000)
             {
