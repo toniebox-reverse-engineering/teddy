@@ -45,7 +45,7 @@ namespace TeddyBench
         private static Dictionary<string, string> CustomTonies = new Dictionary<string, string>();
         private Dictionary<string, Tuple<TonieAudio, DateTime>> CachedAudios = new Dictionary<string, Tuple<TonieAudio, DateTime>>();
         private ListViewItem LastSelectediItem = null;
-        private Proxmark3 Proxmark3;
+        private RfidReaderBase RfidReader;
         private bool AutoSelected;
         private Settings Settings = null;
         internal LogWindow Log;
@@ -332,25 +332,25 @@ namespace TeddyBench
             else
             {
                 UpdateStatusBar();
-                advancedActionsToolStripMenuItem.Enabled = Proxmark3.UnlockSupported;
+                advancedActionsToolStripMenuItem.Enabled = RfidReader.UnlockSupported;
                 reportProxmarkAnToolStripMenuItem.Enabled = true;
                 reportNFCTagToolStripMenuItem.Enabled = true;
 
-                flashBootloaderToolStripMenuItem.Enabled = (Proxmark3.DeviceInfo & Proxmark3.eDeviceInfo.BootromPresent) != 0;
-                flashFirmwareToolStripMenuItem.Enabled = (Proxmark3.DeviceInfo & Proxmark3.eDeviceInfo.BootromPresent) != 0;
+                flashBootloaderToolStripMenuItem.Enabled = (RfidReader.DeviceInfo & RfidReaderBase.eDeviceInfo.BootromPresent) != 0;
+                flashFirmwareToolStripMenuItem.Enabled = (RfidReader.DeviceInfo & RfidReaderBase.eDeviceInfo.BootromPresent) != 0;
             }
         }
 
         private void UpdateStatusBar()
         {
-            if (Proxmark3 != null && Proxmark3.Connected)
+            if (RfidReader != null && RfidReader.Connected)
             {
                 if (!statusStrip1.Visible)
                 {
                     statusStrip1.Show();
                 }
-                string voltageString = Settings.DebugWindow ? ", " + Proxmark3.AntennaVoltage.ToString("0.00", CultureInfo.InvariantCulture) + " V" : "";
-                statusLabel.Text = Proxmark3.HardwareType + " (FW: " + (Proxmark3.UnlockSupported ? "SLIX-L enabled" : "stock") + voltageString + ") found at " + Proxmark3.CurrentPort + ". The UID of the tag will be automatically used where applicable.";
+                string voltageString = Settings.DebugWindow ? ", " + RfidReader.AntennaVoltage.ToString("0.00", CultureInfo.InvariantCulture) + " V" : "";
+                statusLabel.Text = RfidReader.HardwareType + " (FW: " + (RfidReader.UnlockSupported ? "SLIX-L enabled" : "stock") + voltageString + ") found at " + RfidReader.CurrentPort + ". The UID of the tag will be automatically used where applicable.";
             }
             else
             {
@@ -552,10 +552,10 @@ namespace TeddyBench
                 LogThread.Abort();
                 LogThread = null;
             }
-            if (Proxmark3 != null)
+            if (RfidReader != null)
             {
-                Proxmark3.Stop();
-                Proxmark3 = null;
+                RfidReader.Stop();
+                RfidReader = null;
             }
         }
 
@@ -1032,7 +1032,7 @@ namespace TeddyBench
 
         private void AddFiles(string[] fileNames, uint id = uint.MaxValue)
         {
-            AskUIDForm ask = new AskUIDForm(Proxmark3);
+            AskUIDForm ask = new AskUIDForm(RfidReader);
 
             if (ask.ShowDialog() == DialogResult.OK)
             {
@@ -1388,7 +1388,7 @@ namespace TeddyBench
                 var fi = new FileInfo(tag.FileName);
                 string oldUid = ReverseUid(fi.Directory.Name + fi.Name);
 
-                AskUIDForm dlg = new AskUIDForm(Proxmark3);
+                AskUIDForm dlg = new AskUIDForm(RfidReader);
                 dlg.Uid = oldUid;
 
                 if (dlg.ShowDialog() == DialogResult.OK)
@@ -1793,7 +1793,7 @@ namespace TeddyBench
 
         private async void reportNFCTagToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (Proxmark3 == null || AsyncTagActionThread != null)
+            if (RfidReader == null || AsyncTagActionThread != null)
             {
                 return;
             }
@@ -1802,7 +1802,7 @@ namespace TeddyBench
             {
                 try
                 {
-                    byte[] data = Proxmark3.ReadMemory();
+                    byte[] data = RfidReader.ReadMemory();
 
                     Invoke(new Action(async () =>
                     {
@@ -1870,7 +1870,7 @@ namespace TeddyBench
             TagOperationDialog opDlg = new TagOperationDialog();
 
             opDlg.Show();
-            Proxmark3.MeasurementResult result = Proxmark3.MeasureAntenna();
+            Proxmark3.MeasurementResult result = RfidReader.MeasureAntenna();
 
             opDlg.Close();
 
@@ -1952,7 +1952,7 @@ namespace TeddyBench
 
         private async void readContentToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (Proxmark3 == null || AsyncTagActionThread != null)
+            if (RfidReader == null || AsyncTagActionThread != null)
             {
                 return;
             }
@@ -1961,7 +1961,7 @@ namespace TeddyBench
             {
                 try
                 {
-                    byte[] data = Proxmark3.ReadMemory();
+                    byte[] data = RfidReader.ReadMemory();
 
                     Invoke(new Action(() =>
                     {
@@ -2003,7 +2003,7 @@ namespace TeddyBench
 
         private async void emulateTagToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (Proxmark3 == null || AsyncTagActionThread != null)
+            if (RfidReader == null || AsyncTagActionThread != null)
             {
                 return;
             }
@@ -2034,7 +2034,7 @@ namespace TeddyBench
                     {
                         try
                         {
-                            Proxmark3.EmulateTag(data);
+                            RfidReader.EmulateTag(data);
                         }
                         catch (Exception ex)
                         {
@@ -2076,22 +2076,32 @@ namespace TeddyBench
         {
             if (Settings.NfcEnabled)
             {
-                if (Proxmark3 == null)
+                if (RfidReader == null)
                 {
-                    Proxmark3 = new Proxmark3();
-                    Proxmark3.UidFound += Proxmark3_UidFound;
-                    Proxmark3.DeviceFound += Proxmark3_DeviceFound;
-                    Proxmark3.FlashRequest += Proxmark3_FlashRequest;
-                    Proxmark3.FlashResult += Proxmark3_FlashResult;
-                    Proxmark3.Start();
+                    if (Settings.NfcType == "Proxmark3")
+                    {
+                        RfidReader = new Proxmark3();
+                        RfidReader.UidFound += Proxmark3_UidFound;
+                        RfidReader.DeviceFound += Proxmark3_DeviceFound;
+                        RfidReader.FlashRequest += Proxmark3_FlashRequest;
+                        RfidReader.FlashResult += Proxmark3_FlashResult;
+                        RfidReader.Start();
+                    }
+                    else if (Settings.NfcType == "Pn5180Esp")
+                    {
+                        RfidReader = new Pn5180Esp();
+                        RfidReader.UidFound += Proxmark3_UidFound;
+                        RfidReader.DeviceFound += Proxmark3_DeviceFound;
+                        RfidReader.Start();
+                    }
                 }
             }
             else
             {
-                if (Proxmark3 != null)
+                if (RfidReader != null)
                 {
-                    Proxmark3.Stop();
-                    Proxmark3 = null;
+                    RfidReader.Stop();
+                    RfidReader = null;
                 }
             }
         }
@@ -2125,7 +2135,7 @@ namespace TeddyBench
             TagOperationDialog opDlg = new TagOperationDialog();
 
             opDlg.Show();
-            Proxmark3.MeasurementResult result = Proxmark3.MeasureAntenna();
+            Proxmark3.MeasurementResult result = RfidReader.MeasureAntenna();
 
             opDlg.Close();
 
@@ -2148,7 +2158,7 @@ namespace TeddyBench
             dlg.Filter = "Firmware ELF files (*.elf)|*.elf|All files (*.*)|*.*";
             if (dlg.ShowDialog() == DialogResult.OK)
             {
-                Proxmark3.EnterBootloader(dlg.FileName);
+                RfidReader.EnterBootloader(dlg.FileName);
             }
         }
 
@@ -2160,7 +2170,7 @@ namespace TeddyBench
             dlg.Filter = "Bootloader ELF files (*.elf)|*.elf|All files (*.*)|*.*";
             if (dlg.ShowDialog() == DialogResult.OK)
             {
-                Proxmark3.EnterBootloader(dlg.FileName);
+                RfidReader.EnterBootloader(dlg.FileName);
             }
         }
 
@@ -2169,12 +2179,12 @@ namespace TeddyBench
             if (!consoleModeToolStripMenuItem.Checked)
             {
                 consoleModeToolStripMenuItem.Checked = true;
-                Proxmark3.EnterConsole();
+                RfidReader.EnterConsole();
             }
             else
             {
                 consoleModeToolStripMenuItem.Checked = false;
-                Proxmark3.ExitConsole();
+                RfidReader.ExitConsole();
             }
         }
 
