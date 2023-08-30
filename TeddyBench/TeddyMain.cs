@@ -67,7 +67,7 @@ namespace TeddyBench
             public string Hash;
             public TonieTools.TonieData Info;
             public string Uid;
-            public int AudioId;
+            public uint AudioId;
 
             public ListViewTag(string filename)
             {
