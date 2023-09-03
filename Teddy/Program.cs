@@ -149,7 +149,7 @@ namespace Teddy
         {
             using (var sha = SHA1.Create())
             {
-                using (var stream = File.OpenRead(filename))
+                using (var stream = File.Open(filename, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
                 {
                     return BitConverter.ToString(sha.ComputeHash(stream)).Replace("-", "").ToLowerInvariant();
                 }

@@ -112,7 +112,7 @@ namespace TonieFile
             minGranule = long.MaxValue;
             maxGranule = 0;
             highestGranule = 0;
-            var file = File.OpenRead(Filename);
+            var file = File.Open(Filename, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
             long lastPos = 0x1000;
             long curPos = 0x1000;
             ulong lastGranule = 0;
@@ -185,7 +185,7 @@ namespace TonieFile
         public ulong[] ParsePositions()
         {
             List<ulong> positions = new List<ulong>();
-            var file = File.OpenRead(Filename);
+            var file = File.Open(Filename, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
 
             int curChapter = 0;
             long curPos = 0x1000;
@@ -372,7 +372,7 @@ namespace TonieFile
         public void ReadFile(string fileName, bool readAudio = true)
         {
             Filename = fileName;
-            var file = File.OpenRead(fileName);
+            var file = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
             if (file.Length < 0x2000)
             {
                 throw new InvalidDataException();
@@ -544,7 +544,7 @@ namespace TonieFile
                                 break;
 
                             case "ogg":
-                                stream = new OpusWaveStream(File.OpenRead(sourceFile), bitRate, channels);
+                                stream = new OpusWaveStream(File.Open(sourceFile, FileMode.Open, FileAccess.Read, FileShare.ReadWrite), bitRate, channels);
                                 break;
                         }
 
