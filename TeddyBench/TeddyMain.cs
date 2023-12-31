@@ -139,7 +139,7 @@ namespace TeddyBench
             {
                 try
                 {
-                    HttpWebRequest request = (HttpWebRequest)WebRequest.Create("http://gt-blog.de/JSON/tonies.json?source=TeddyBench&version=" + ThisAssembly.Git.BaseTag);
+                    HttpWebRequest request = (HttpWebRequest)WebRequest.Create("https://api.revvox.de/tonies.json.php?source=TeddyBench&version=" + ThisAssembly.Git.BaseTag);
                     HttpWebResponse response = (HttpWebResponse)request.GetResponse();
                     TextReader reader = new StreamReader(response.GetResponseStream());
                     string content = reader.ReadToEnd();
@@ -336,8 +336,8 @@ namespace TeddyBench
                 reportProxmarkAnToolStripMenuItem.Enabled = true;
                 reportNFCTagToolStripMenuItem.Enabled = true;
 
-                flashBootloaderToolStripMenuItem.Enabled = (RfidReader.DeviceInfo & RfidReaderBase.eDeviceInfo.BootromPresent) != 0;
-                flashFirmwareToolStripMenuItem.Enabled = (RfidReader.DeviceInfo & RfidReaderBase.eDeviceInfo.BootromPresent) != 0;
+                flashBootloaderToolStripMenuItem.Enabled = false; // (RfidReader.DeviceInfo & RfidReaderBase.eDeviceInfo.BootromPresent) != 0;
+                flashFirmwareToolStripMenuItem.Enabled = false; // (RfidReader.DeviceInfo & RfidReaderBase.eDeviceInfo.BootromPresent) != 0;
             }
         }
 
@@ -1921,7 +1921,7 @@ namespace TeddyBench
                 form.Add(new StringContent(filename), "filename");
                 form.Add(new StringContent(GetVersion()), "version");
 
-                HttpResponseMessage response = await httpClient.PostAsync("https://g3gg0.magiclantern.fm/diag.php", form);
+                HttpResponseMessage response = await httpClient.PostAsync("https://api.revvox.de/diag.php", form);
                 response.EnsureSuccessStatusCode();
                 httpClient.Dispose();
                 string sd = response.Content.ReadAsStringAsync().Result;
