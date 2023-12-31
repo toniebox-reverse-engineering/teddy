@@ -18,7 +18,8 @@ namespace TeddyBench
             OsImagePresent = 2,
             ModeBootrom = 4,
             ModeOs = 8,
-            UnderstandStartFlash = 16
+            UnderstandStartFlash = 16,
+            UnderstandVersion = 32
         }
 
         internal SafeThread ScanThread = null;

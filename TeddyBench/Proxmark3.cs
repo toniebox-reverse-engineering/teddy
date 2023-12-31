@@ -1,44 +1,138 @@
 ﻿using ELFSharp.ELF;
 using System;
 using System.Collections.Generic;
-using System.Drawing.Drawing2D;
 using System.IO;
 using System.IO.Ports;
 using System.Linq;
-using System.Linq.Expressions;
-using System.Reflection;
 using System.Runtime.InteropServices;
-using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
-using System.Windows.Forms;
+using static TeddyBench.Proxmark3;
 
 namespace TeddyBench
 {
     public class Proxmark3 : RfidReaderBase
     {
+        const int Pm3a_Magic = 0x61334d50;
+        const int Pm3a_MagicCRC = 0x3361;
+        const int Pm3b_Magic = 0x62334d50;
+
+        public enum eStatusCode : int
+        {
+            EUNDEF = -1,
+            EINVARG = -2,
+            EDEVNOTSUPP = -3,
+            ETIMEOUT = -4,
+            EOPABORTED = -5,
+            ENOTIMPL = -6,
+            ERFTRANS = -7,
+            EIO = -8,
+            EOVFLOW = -9,
+            ESOFT = -10,
+            EFLASH = -11,
+            EMALLOC = -12,
+            EFILE = -13,
+            ENOTTY = -14,
+            EINIT = -15,
+            EWRONGANSWER = -16,
+            EOUTOFBOUND = -17,
+            ECARDEXCHANGE = -18,
+            EAPDU_ENCODEFAIL = -19,
+            EAPDU_FAIL = -20,
+            EFAILED = -21,
+            EPARTIAL = -22,
+            ETEAROFF = -23,
+            ECRC = -24,
+            ESTATIC_NONCE = -25,
+            ENODATA = -98,
+            EFATAL = -99,
+
+            Success = 0,
+            SNonces = 1,
+            SQuit = 2
+        }
+
+        public enum eCommandType : short
+        {
+            Partial = 0x7FFD,
+            NoData = 0x7FFE,
+            Timeout = 0x7FFF,
+
+            DeviceInfo = 0x0000,
+            SetupWrite = 0x001,
+            FinishWrite = 0x003,
+            HardwareReset = 0x004,
+            StartFlash = 0x005,
+
+            DebugString = 0x100,
+            DebugInteger = 0x101,
+            DebugBytes = 0x102,
+
+            VersionInfo = 0x0107,
+            Ping = 0x0109,
+
+            ISO15693_READER = 0x0310,
+            ISO15693_SIMULATE = 0x0311,
+            ISO15693_SNIFF = 0x0312,
+            ISO15693_COMMAND = 0x0313,
+            ISO15693_FINDAFI = 0x0315,
+            ISO15693_CSETUID = 0x0316,
+            ISO15693_SLIX_ENABLE_PRIVACY = 0x0867,
+            ISO15693_SLIX_DISABLE_PRIVACY = 0x0317,
+            ISO15693_SLIX_DISABLE_EAS = 0x0318,
+            ISO15693_SLIX_ENABLE_EAS = 0x0862,
+            ISO15693_SLIX_PASS_PROTECT_AFI = 0x0863,
+            ISO15693_SLIX_PASS_PROTECT_EAS = 0x0864,
+            ISO15693_SLIX_WRITE_PWD = 0x0865,
+            ISO15693_WRITE_AFI = 0x0866,
+            ISO15693_EML_CLEAR = 0x0330,
+            ISO15693_EML_SETMEM = 0x0331,
+
+            MeasureAntennaTuning = 0x400,
+            WTX = 0x116
+        }
+
+        public struct OldArgs
+        {
+            public ulong arg0;
+            public ulong arg1;
+            public ulong arg2;
+        };
+
         public class Pm3UsbCommand
         {
-            public enum eCommandType : ulong
-            {
-                SetupWrite = 0x001,
-                FinishWrite = 0x003,
-                HardwareReset = 0x004,
-                StartFlash = 0x005,
-            }
-            public Pm3UsbCommandStruct data = new Pm3UsbCommandStruct();
+            public Pm3UsbCommandStructLegacy data = new Pm3UsbCommandStructLegacy();
 
-            public Pm3UsbCommand(ulong cmd = 0, ulong arg0 = 0, ulong arg1 = 0, ulong arg2 = 0, byte[] payload = null)
+
+            public Pm3UsbCommand(eCommandType cmd, ulong arg0 = 0, ulong arg1 = 0, ulong arg2 = 0, byte[] payload = null)
             {
-                data = new Pm3UsbCommandStruct();
-                data.arg = new ulong[3];
+                data = new Pm3UsbCommandStructLegacy();
                 data.d = new byte[512];
 
-                data.cmd = cmd;
+                data.arg = new ulong[3];
                 data.arg[0] = arg0;
                 data.arg[1] = arg1;
                 data.arg[2] = arg2;
+
+                data.cmd = (ulong)cmd;
+
+                SetData(payload);
+            }
+
+            public Pm3UsbCommand(ulong cmd = 0, ulong arg0 = 0, ulong arg1 = 0, ulong arg2 = 0, byte[] payload = null)
+            {
+                data = new Pm3UsbCommandStructLegacy();
+                data.d = new byte[512];
+
+                OldArgs a = new OldArgs();
+                a.arg0 = arg0;
+                a.arg1 = arg1;
+                a.arg2 = arg2;
+
+                byte[] buf = StructureToByteArray(a);
+                Array.Copy(buf, data.d, buf.Length);
+
+                data.cmd = cmd;
                 SetData(payload);
             }
 
@@ -63,42 +157,108 @@ namespace TeddyBench
                 //LogWindow.Log(LogWindow.eLogLevel.Debug, "[Serial] Dump: '" + BitConverter.ToString(buf).Replace("-", " ") + "'");
             }
         }
+        public class Pm3UsbCommandNG
+        {
+            public byte[] Data = null;
+
+            public Pm3UsbCommandNG(eCommandType cmd, byte[] payload = null)
+            {
+                Pm3UsbCommandStructNGPre dataPre = new Pm3UsbCommandStructNGPre();
+                dataPre.magic = Pm3a_Magic;
+                dataPre.length = (ushort)(payload.Length | 0x8000);
+                dataPre.cmd = (ushort)cmd;
+
+                byte[] dataPreBuf = StructureToByteArray(dataPre);
+
+                Pm3UsbCommandStructNGPost dataPost = new Pm3UsbCommandStructNGPost();
+                dataPost.crc = Pm3a_MagicCRC;
+
+                byte[] dataPostBuf = StructureToByteArray(dataPost);
+
+                Data = Combine(new[] { dataPreBuf, payload, dataPostBuf });
+            }
+
+            public static byte[] Combine(params byte[][] arrays)
+            {
+                byte[] ret = new byte[arrays.Sum(x => x.Length)];
+                int offset = 0;
+                foreach (byte[] data in arrays)
+                {
+                    Buffer.BlockCopy(data, 0, ret, offset, data.Length);
+                    offset += data.Length;
+                }
+                return ret;
+            }
+
+            int crc16k(int crc, byte[] mem)
+            {
+                for(int pos = 0; pos < mem.Length; pos++)
+                {
+                    crc ^= mem[pos];
+                    for (int k = 0; k < 8; k++)
+                    {
+                        crc = ((crc & 1) != 0) ? (crc >> 1) ^ 0x8408 : crc >> 1;
+                    }
+                }
+
+                return crc;
+            }
+
+            public byte[] ToByteArray()
+            {
+                return Data;
+            }
+
+
+            internal void Write(SerialPort p)
+            {
+                byte[] buf = ToByteArray();
+                p.Write(buf, 0, buf.Length);
+            }
+        }
 
         public class Pm3UsbResponse
         {
-            public enum eResponseType
-            {
-                DeviceInfo = 0,
-                NACK = 0xFE,
-                ACK = 0xFF,
-                DebugString = 0x100,
-                DebugInteger = 0x101,
-                DebugBytes = 0x102,
-                MeasuredAntennaTuning = 0x410,
-                Partial = 0x7FFD,
-                NoData = 0x7FFE,
-                Timeout = 0x7FFF
-            }
+            public Pm3UsbResponseStructLegacy respLegacy;
+            private Pm3UsbResponseStructNG respNG;
 
-            public Pm3UsbResponseStruct data;
-            public Pm3UsbCommandStruct dataLegacy;
-            public bool VarSize => (data.cmd & 0x8000) != 0;
-            public eResponseType Cmd => (eResponseType)(data.cmd & ~0x8000);
             public int Length => (16 + ReceivedPayloadLength);
             public int ReceivedPayloadLength = 0;
-            public int ExpectedPayloadLength = 0;
             public byte[] ReceivedData = new byte[512 + 16 + 16];
 
+            public bool Success = false;
+            public bool ResponseLegacy = false;
+            private eCommandType FailType;
 
-            public Pm3UsbResponse(byte[] buf, int offset, int length)
+            internal int DataLength => Success ? (respNG.dataLen & 0x7FFF) : 0;
+            internal eCommandType Cmd => Success ? (eCommandType)respNG.cmd : FailType;
+            internal int Status => Success ? respNG.status : (int) FailType;
+            internal byte[] DataPtr => Success ? (ResponseLegacy ? respLegacy.d : respNG.d) : null;
+
+            internal uint DataUInt32(int index)
             {
-                ByteArrayToStructure(buf, offset, ref data);
+                if (!Success)
+                {
+                    return 0;
+                }
+
+                return BitConverter.ToUInt32(respNG.d, index * 4);
+            }
+            internal ushort DataUInt16(int index)
+            {
+                if (!Success)
+                {
+                    return 0;
+                }
+
+                return BitConverter.ToUInt16(respNG.d, index * 2);
             }
 
             private int BlockingRead(SerialPort p, byte[] receivedData, int start, int readCount, int waitTime)
             {
-                int readTotal = 0;
+                int readTotal = start;
                 DateTime startTime = DateTime.Now;
+                readCount -= start;
 
                 while (readCount > 0 && (DateTime.Now - startTime).TotalMilliseconds < waitTime)
                 {
@@ -127,82 +287,77 @@ namespace TeddyBench
 
             public Pm3UsbResponse(SerialPort p, int waitTime = 1000)
             {
+                Success = false;
                 try
                 {
-                    int read = BlockingRead(p, ReceivedData, 0, 16, waitTime);
-                    if (read != 16)
+                    int read = BlockingRead(p, ReceivedData, 0, 10, waitTime);
+                    if (read != 10)
                     {
                         LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] Pm3UsbResponse: " + p.PortName + " did not reply with header, " + read + "/" + 16 + " bytes)");
                         LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] Dump: '" + BitConverter.ToString(ReceivedData, 0, read).Replace("-", " ") + "'");
 
-                        data.cmd = (int)eResponseType.NoData;
+                        FailType = eCommandType.NoData;
                         return;
                     }
 
-                    ExpectedPayloadLength = 0;
+                    int readOffset = read;
+                    int expectedPayloadLength = 0;
 
-                    ByteArrayToStructure(ReceivedData, 0, ref data);
+                    ByteArrayToStructure(ReceivedData, 0, ref respNG);
 
-                    if (VarSize)
+                    if (respNG.magic == Pm3b_Magic)
                     {
-                        ExpectedPayloadLength = data.dataLen;
+                        ResponseLegacy = false;
+                        expectedPayloadLength = 10 + (respNG.dataLen & 0x7FFF) + 2;
 
-                        if (ExpectedPayloadLength > 0)
+                        if (expectedPayloadLength > 0)
                         {
-                            int readOffset = 16;
-                            int readCount = ExpectedPayloadLength;
-
-                            read = BlockingRead(p, ReceivedData, readOffset, readCount, waitTime);
-                            if (read != readCount)
+                            read = BlockingRead(p, ReceivedData, readOffset, expectedPayloadLength, waitTime);
+                            if (read != expectedPayloadLength)
                             {
-                                LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] Pm3UsbResponse: " + p.PortName + " did not reply with payload, " + read + "/" + readCount + " bytes)");
+                                LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] Pm3UsbResponse: " + p.PortName + " did not reply with payload, " + read + "/" + expectedPayloadLength + " bytes)");
                                 LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] Dump: '" + BitConverter.ToString(ReceivedData, readOffset, read).Replace("-", " ") + "'");
 
-                                data.cmd = (int)eResponseType.Partial;
+                                FailType = eCommandType.Partial;
                                 return;
                             }
 
                             ReceivedPayloadLength = read;
                         }
-                        ByteArrayToStructure(ReceivedData, 0, ref data);
+                        ByteArrayToStructure(ReceivedData, 0, ref respNG);
                     }
                     else
                     {
-                        /* the ugly legacy format. lets convert. */
-                        ExpectedPayloadLength = 512 + 4 * 8 - 16;
-                        int readOffset = 16;
-                        int readCount = ExpectedPayloadLength;
+                        ResponseLegacy = true;
 
-                        read = BlockingRead(p, ReceivedData, readOffset, readCount, waitTime);
-                        if (read != readCount)
+                        /* the ugly legacy format. lets convert later. */
+                        expectedPayloadLength = 512 + 4 * 8;
+
+                        read = BlockingRead(p, ReceivedData, readOffset, expectedPayloadLength, waitTime);
+                        if (read != expectedPayloadLength)
                         {
-                            LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] Pm3UsbResponse: " + p.PortName + " did not reply with payload, " + read + "/" + readCount + " bytes)");
+                            LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] Pm3UsbResponse: " + p.PortName + " did not reply with payload, " + read + "/" + expectedPayloadLength + " bytes)");
                             LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] Dump: '" + BitConverter.ToString(ReceivedData, readOffset, read).Replace("-", " ") + "'");
 
-                            data.cmd = (int)eResponseType.Partial;
+                            FailType = eCommandType.Partial;
                             return;
                         }
 
                         ReceivedPayloadLength = read;
-                        ByteArrayToStructure(ReceivedData, 0, ref dataLegacy);
-
-                        data.arg[0] = (uint)dataLegacy.arg[0];
-                        data.arg[1] = (uint)dataLegacy.arg[1];
-                        data.arg[2] = (uint)dataLegacy.arg[2];
-                        data.cmd = (ushort)dataLegacy.cmd;
-                        data.dataLen = 512;
-                        Array.Copy(dataLegacy.d, data.d, data.d.Length);
+                        ByteArrayToStructure(ReceivedData, 0, ref respLegacy);
                     }
+
+                    Success = true;
                 }
                 catch (TimeoutException ex)
                 {
-                    data.cmd = (int)eResponseType.Timeout;
+                    FailType = eCommandType.Timeout;
                     return;
                 }
             }
         }
 
-        public struct Pm3UsbCommandStruct
+        public struct Pm3UsbCommandStructLegacy
         {
             public ulong cmd;
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3)]
@@ -211,15 +366,50 @@ namespace TeddyBench
             public byte[] d;
         };
 
-        public struct Pm3UsbResponseStruct
+        public struct Pm3UsbResponseStructLegacy
         {
-            public ushort cmd;
-            public ushort dataLen;
+            public int cmd;
+            public int dataLen;
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3)]
-            public uint[] arg;
+            public long[] arg;
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 512)]
             public byte[] d;
         };
+
+        public struct Pm3UsbCommandStructNGPre
+        {
+            public uint magic;
+            public ushort length; /* highest bit: ng format */
+            public ushort cmd;
+        };
+        public struct Pm3UsbCommandStructNGPost
+        {
+            public ushort crc;
+        };
+
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct Pm3UsbResponseStructNG
+        {
+            public uint magic;
+            public ushort dataLen; /* highest bit: ng format */
+            public short status;
+            public ushort cmd;
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 512)]
+            public byte[] d;
+            public ushort crc;
+        };
+
+
+        public struct Pm3VersionInfoStruct
+        {
+            public uint id;
+            public uint section_size;
+            public uint versionstr_len;
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 512-12)]
+            public char[] versionstr;
+        };
+
 
         private static byte[] StructureToByteArray(object obj)
         {
@@ -293,7 +483,7 @@ namespace TeddyBench
                             }
                             Flush(Port);
 
-                            ReadVoltage();
+                            //ReadVoltage();
 
                             byte[] rnd = GetRandom();
 
@@ -392,7 +582,7 @@ namespace TeddyBench
                                     Flush(Port);
                                     return;
                                 }
-                                ReadVoltage();
+                                //ReadVoltage();
                                 Thread.Sleep(100);
                             }
                             LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] MainFunc: Tag disappeared");
@@ -444,7 +634,8 @@ namespace TeddyBench
             {
                 return false;
             }
-            Pm3UsbCommand cmd = new Pm3UsbCommand(0x319, pass);
+            bool supported = false;
+            Pm3UsbCommand cmd = new Pm3UsbCommand(eCommandType.ISO15693_SLIX_DISABLE_PRIVACY, pass);
 
             LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] UnlockTag: Send request for pass 0x" + pass.ToString("X8"));
             cmd.Write(Port);
@@ -455,33 +646,46 @@ namespace TeddyBench
 
                 switch (response.Cmd)
                 {
-                    case Pm3UsbResponse.eResponseType.DebugString:
+                    case eCommandType.DebugString:
                         {
-                            string debugStr = Encoding.UTF8.GetString(response.data.d, 0, response.data.dataLen).TrimEnd('\0');
+                            string debugStr = Encoding.UTF8.GetString(response.DataPtr, 0, response.DataLength).TrimEnd('\0');
                             LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] UnlockTag:   String '" + debugStr + "'");
                             break;
                         }
 
-                    case Pm3UsbResponse.eResponseType.ACK:
-                        reason = 0;
-                        LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] UnlockTag: ACK");
-                        return true;
+                    case eCommandType.ISO15693_SLIX_DISABLE_PRIVACY:
+                        supported = true;
+                        if (response.Status == 0)
+                        {
+                            reason = 0;
+                            LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] UnlockTag: ACK");
+                            return true;
+                        }
+                        else
+                        {
+                            reason = response.Status;
+                            LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] UnlockTag: NACK (reason: " + reason + ")");
+                            return false;
+                        }
 
-                    case Pm3UsbResponse.eResponseType.NACK:
-                        reason = 1 + (int)response.data.arg[0];
-                        LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] UnlockTag: NACK (reason: " + reason + ")");
-                        return false;
-
-                    case Pm3UsbResponse.eResponseType.NoData:
-                    case Pm3UsbResponse.eResponseType.Timeout:
+                    case eCommandType.NoData:
+                    case eCommandType.Timeout:
                         reason = -1;
-                        LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] UnlockTag: timeout, returning");
-                        return false;
+                        LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] UnlockTag: timeout");
+                        break;
+
+                    case eCommandType.WTX:
+                        LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] WTX received: " + response.DataUInt16(0));
+                        break;
 
                     default:
                         LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] UnlockTag: Unhandled: " + response.Cmd);
                         break;
                 }
+            }
+            if(!supported)
+            {
+                throw new NotSupportedException();
             }
         }
 
@@ -501,7 +705,7 @@ namespace TeddyBench
                 return null;
             }
 
-            Pm3UsbCommand cmd = new Pm3UsbCommand(0x313, (byte)command.Length, 1, 1, command);
+            Pm3UsbCommand cmd = new Pm3UsbCommand(eCommandType.ISO15693_COMMAND, (byte)command.Length, 1, 1, command);
 
             LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] GetResponse: Send " + BitConverter.ToString(command).Replace("-", ""));
             cmd.Write(Port);
@@ -512,23 +716,24 @@ namespace TeddyBench
 
                 switch (response.Cmd)
                 {
-                    case Pm3UsbResponse.eResponseType.DebugString:
+                    case eCommandType.DebugString:
                         {
-                            string debugStr = Encoding.UTF8.GetString(response.data.d, 0, response.data.dataLen).TrimEnd('\0');
+                            string debugStr = Encoding.UTF8.GetString(response.DataPtr, 0, response.DataLength).TrimEnd('\0');
                             LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] GetResponse: DebugMessage '" + debugStr + "'");
                             break;
                         }
 
-                    case Pm3UsbResponse.eResponseType.NoData:
-                    case Pm3UsbResponse.eResponseType.Timeout:
+                    case eCommandType.NoData:
+                    case eCommandType.Timeout:
                         LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] GetResponse: timeout, returning");
                         return null;
 
-                    case Pm3UsbResponse.eResponseType.ACK:
-                        if (response.data.arg[0] > 0 && response.data.arg[0] < response.data.d.Length)
+                    case eCommandType.ISO15693_COMMAND:
+                        if (response.DataLength > 0)
                         {
-                            byte[] ret = new byte[response.data.arg[0]];
-                            Array.Copy(response.data.d, ret, response.data.arg[0]);
+                            byte[] ret = new byte[response.DataLength];
+                            
+                            Array.Copy(response.DataPtr, ret, response.DataLength);
 
                             if (!ISO15693.CheckChecksum(ret))
                             {
@@ -537,6 +742,7 @@ namespace TeddyBench
                             }
 
                             LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] GetResponse: ACK, returning data");
+                            
                             return ret;
                         }
                         else
@@ -544,6 +750,10 @@ namespace TeddyBench
                             LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] GetResponse: no tag answered, returning");
                             return null;
                         }
+
+                    case eCommandType.WTX:
+                        LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] WTX received: " + response.DataUInt16(0));
+                        break;
 
                     default:
                         LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] GetResponse: Unhandled: " + response.Cmd);
@@ -625,7 +835,7 @@ namespace TeddyBench
             {
                 return;
             }
-            Pm3UsbCommand cmd = new Pm3UsbCommand(0x311, 0, 0, 0, data);
+            Pm3UsbCommandNG cmd = new Pm3UsbCommandNG(eCommandType.ISO15693_SIMULATE, data);
 
             LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] Emulate: Start");
             cmd.Write(Port);
@@ -636,20 +846,21 @@ namespace TeddyBench
 
                 switch (response.Cmd)
                 {
-                    case Pm3UsbResponse.eResponseType.DebugString:
+                    case eCommandType.DebugString:
                         {
-                            string debugStr = Encoding.UTF8.GetString(response.data.d, 0, response.data.dataLen).TrimEnd('\0');
-                            LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] Emulate: DebugMessage '" + debugStr + "'");
+                            ushort flags = response.DataUInt16(0);
+                            string debugStr = Encoding.UTF8.GetString(response.DataPtr, 2, response.DataLength - 2).TrimEnd('\0');
+                            LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] Emulate: DebugMessage(" + flags + ") '" + debugStr + "'");
                             break;
                         }
 
-                    case Pm3UsbResponse.eResponseType.NoData:
-                    case Pm3UsbResponse.eResponseType.Timeout:
+                    case eCommandType.NoData:
+                    case eCommandType.Timeout:
                         //LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] Emulate: timeout, returning");
                         //return;
                         continue;
 
-                    case Pm3UsbResponse.eResponseType.ACK:
+                    case eCommandType.ISO15693_SIMULATE:
                         LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] Emulate: Done");
                         return;
 
@@ -675,6 +886,7 @@ namespace TeddyBench
             public uint peakF;
             public float peakV;
             public byte[] amplitudes = new byte[256];
+            public uint divisor;
 
             internal double[] GetFrequencieskHz()
             {
@@ -704,7 +916,7 @@ namespace TeddyBench
             {
                 return false;
             }
-            Pm3UsbCommand cmd = new Pm3UsbCommand(0x400, (ulong)type);
+            Pm3UsbCommand cmd = new Pm3UsbCommand(eCommandType.MeasureAntennaTuning, (ulong)type);
 
             LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] MeasureAntenna: Start");
             cmd.Write(Port);
@@ -715,26 +927,30 @@ namespace TeddyBench
 
                 switch (response.Cmd)
                 {
-                    case Pm3UsbResponse.eResponseType.DebugString:
+                    case eCommandType.DebugString:
                         {
-                            string debugStr = Encoding.UTF8.GetString(response.data.d, 0, response.data.dataLen).TrimEnd('\0');
+                            string debugStr = Encoding.UTF8.GetString(response.DataPtr, 0, response.DataLength).TrimEnd('\0');
                             LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] MeasureAntenna: DebugMessage '" + debugStr + "'");
                             break;
                         }
 
-                    case Pm3UsbResponse.eResponseType.NoData:
-                    case Pm3UsbResponse.eResponseType.Timeout:
+                    case eCommandType.WTX:
+                        LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] WTX received: " + response.DataUInt16(0));
+                        continue;
+
+                    case eCommandType.NoData:
+                    case eCommandType.Timeout:
                         LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] MeasureAntenna: timeout");
                         continue;
 
-                    case Pm3UsbResponse.eResponseType.MeasuredAntennaTuning:
-                        result.vLF125 = (response.data.arg[0] & 0xFFFF) * 0.002f;
-                        result.vLF134 = ((response.data.arg[0] >> 16) & 0xFFFF) * 0.002f;
-                        result.vHF = (response.data.arg[1] & 0xFFFF) / 1000.0f;
-                        result.peakF = (response.data.arg[2] & 0xFFFF);
-                        result.peakV = ((response.data.arg[0] >> 16) & 0xFFFF) * 0.002f;
-                        Array.Copy(response.data.d, result.amplitudes, 256);
-
+                    case eCommandType.MeasureAntennaTuning:
+                        result.vLF134 = response.DataUInt32(0) * 0.002f;
+                        result.vLF125 = response.DataUInt32(1) * 0.002f;
+                        result.vHF = response.DataUInt32(3) / 1000.0f;
+                        result.peakV = response.DataUInt32(4) * 0.002f;
+                        result.peakF = response.DataUInt32(5);
+                        result.divisor = response.DataUInt32(6);
+                        Array.Copy(response.DataPtr, 4*7, result.amplitudes, 0, 256);
                         return true;
 
                     default:
@@ -824,18 +1040,21 @@ namespace TeddyBench
                 //Thread.Sleep(500);
                 Flush(p);
 
+                Pm3UsbResponse dummy = new Pm3UsbResponse(p);
+
                 /* read version */
-                Pm3UsbCommand cmdDevInfo = new Pm3UsbCommand(0);
+                Pm3UsbCommand cmdDevInfo = new Pm3UsbCommand(eCommandType.DeviceInfo);
+                
                 cmdDevInfo.Write(p);
                 Pm3UsbResponse resDevInfo = new Pm3UsbResponse(p);
-                if (resDevInfo.Cmd != Pm3UsbResponse.eResponseType.DeviceInfo)
+                if (resDevInfo.respLegacy.cmd != (int)eCommandType.DeviceInfo)
                 {
                     LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] TryOpen: " + port + " did not reply to a device info");
                     p.Close();
                     return false;
                 }
 
-                DeviceInfo = (eDeviceInfo)resDevInfo.data.arg[0];
+                DeviceInfo = (eDeviceInfo)resDevInfo.respLegacy.arg[0];
 
                 LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] Device info: ");
                 LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3]   BOOTROM_PRESENT         " + ((DeviceInfo & eDeviceInfo.BootromPresent) != 0 ? "Y" : "N"));
@@ -843,10 +1062,11 @@ namespace TeddyBench
                 LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3]   MODE_BOOTROM            " + ((DeviceInfo & eDeviceInfo.ModeBootrom) != 0 ? "Y" : "N"));
                 LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3]   MODE_OS                 " + ((DeviceInfo & eDeviceInfo.ModeOs) != 0 ? "Y" : "N"));
                 LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3]   UNDERSTANDS_START_FLASH " + ((DeviceInfo & eDeviceInfo.UnderstandStartFlash) != 0 ? "Y" : "N"));
+                LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3]   UNDERSTANDS_VERSION     " + ((DeviceInfo & eDeviceInfo.UnderstandVersion) != 0 ? "Y" : "N"));
 
                 if ((DeviceInfo & eDeviceInfo.ModeBootrom) != 0)
                 {
-                    Pm3UsbCommand cmdReset = new Pm3UsbCommand((ulong)Pm3UsbCommand.eCommandType.HardwareReset);
+                    Pm3UsbCommand cmdReset = new Pm3UsbCommand(eCommandType.HardwareReset);
                     CurrentPort = port;
                     Port = p;
 
@@ -880,11 +1100,11 @@ namespace TeddyBench
                     return false;
                 }
 
-                Pm3UsbCommand cmdPing = new Pm3UsbCommand(0x109);
+                Pm3UsbCommand cmdPing = new Pm3UsbCommand(eCommandType.Ping);
                 cmdPing.Write(p);
                 Pm3UsbResponse resPing = new Pm3UsbResponse(p);
 
-                if (resPing.Cmd != Pm3UsbResponse.eResponseType.ACK)
+                if (resPing.Cmd != eCommandType.Ping)
                 {
                     LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] TryOpen: " + port + " did not reply to a ping");
                     p.Close();
@@ -892,10 +1112,10 @@ namespace TeddyBench
                 }
 
                 /* read version */
-                Pm3UsbCommand cmdVers = new Pm3UsbCommand(0x107);
+                Pm3UsbCommand cmdVers = new Pm3UsbCommand(eCommandType.VersionInfo);
                 cmdVers.Write(p);
                 Pm3UsbResponse resVers = new Pm3UsbResponse(p);
-                if (resVers.Cmd != Pm3UsbResponse.eResponseType.ACK)
+                if (resVers.Cmd != eCommandType.VersionInfo)
                 {
                     LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] TryOpen: " + port + " did not reply to a version info");
                     p.Close();
@@ -904,23 +1124,31 @@ namespace TeddyBench
                 Thread.Sleep(500);
                 Flush(p);
 
-                LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] Chip ID: 0x" + resVers.data.arg[0].ToString("X8"));
-                LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] Flash:   0x" + resVers.data.arg[1].ToString("X8"));
-                LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] Caps:    0x" + resVers.data.arg[2].ToString("X8"));
+                Pm3VersionInfoStruct ver = new Pm3VersionInfoStruct();
 
-                string versionString = Encoding.UTF8.GetString(resVers.data.d, 0, resVers.data.dataLen - 1);
+                ByteArrayToStructure<Pm3VersionInfoStruct>(resVers.DataPtr, 0, ref ver);
+
+                LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] Chip ID: 0x" + ver.id.ToString("X8"));
+                LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] Section: 0x" + ver.section_size.ToString("X8"));
+
+                uint len = (ver.versionstr_len >> 24) | ((ver.versionstr_len >> 16) & 0xFF);
+
+                string versionString = Encoding.UTF8.GetString(resVers.DataPtr, 12, (int)ver.versionstr_len - 1);
                 LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] Version:");
                 foreach (string line in versionString.Split('\n'))
                 {
                     LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3]     " + line);
                 }
 
-                switch (resVers.data.arg[0])
+                switch (ver.id)
                 {
                     case 0x00063660:
                         HardwareType = versionString;
                         break;
-                    case 0x270B0A4F:
+                    case 0xbb3d270b:
+                        HardwareType = "Proxmark3 (SAM7S)";
+                        break;
+                    case 0x270b0a4f:
                         HardwareType = "Proxmark3 (SAM7S)";
                         break;
                     default:
@@ -934,10 +1162,17 @@ namespace TeddyBench
                 /* does it support the unlock command? */
                 int reason = 0;
                 UnlockSupported = true;
-                UnlockTag(0xDEADBEEF, ref reason);
+                try
+                {
+                    UnlockTag(0xDEADBEEF, ref reason);
+                }
+                catch(NotSupportedException ex)
+                {
+                    UnlockSupported = false;
+                }
 
-                /* if not supported, the command will simply time out */
-                UnlockSupported = reason > 0;
+                ReadVoltage();
+
                 LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] Device does " + (UnlockSupported ? "" : "*NOT*") + " support SLIX-L unlock command");
 
                 OnDeviceFound(CurrentPort);
@@ -1010,7 +1245,7 @@ namespace TeddyBench
                 return;
             }
             Flashfile = fileName;
-            Pm3UsbCommand cmdStart = new Pm3UsbCommand((ulong)Pm3UsbCommand.eCommandType.StartFlash);
+            Pm3UsbCommand cmdStart = new Pm3UsbCommand(eCommandType.StartFlash);
             cmdStart.Write(Port);
         }
 
@@ -1062,7 +1297,7 @@ namespace TeddyBench
             }
             else
             {
-                Pm3UsbCommand cmdStart = new Pm3UsbCommand((ulong)Pm3UsbCommand.eCommandType.StartFlash, bootloader ? FlashStart : BootloaderEnd, FlashEnd, bootloader ? 0x54494f44UL : 0UL);
+                Pm3UsbCommand cmdStart = new Pm3UsbCommand(eCommandType.StartFlash, bootloader ? FlashStart : BootloaderEnd, FlashEnd, bootloader ? 0x54494f44UL : 0UL);
                 cmdStart.Write(Port);
 
                 foreach (var seg in segments)
@@ -1108,7 +1343,7 @@ namespace TeddyBench
 
             //LogWindow.Log(LogWindow.eLogLevel.Debug, "[Flash]   Block 0x" + address.ToString("X8") + "..." );
 
-            Pm3UsbCommand finish = new Pm3UsbCommand((ulong)Pm3UsbCommand.eCommandType.FinishWrite, address);
+            Pm3UsbCommand finish = new Pm3UsbCommand(eCommandType.FinishWrite, address);
             Array.Copy(memBuf, finish.data.d, memBuf.Length);
             finish.Write(Port);
             if (!ReadAck())
@@ -1123,7 +1358,7 @@ namespace TeddyBench
         {
             Pm3UsbResponse res = new Pm3UsbResponse(Port);
 
-            if (res.Cmd != Pm3UsbResponse.eResponseType.ACK)
+            if (res.Cmd != 0)
             {
                 LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] ReadAck: did not reply with ACK");
                 return false;
@@ -1221,7 +1456,7 @@ namespace TeddyBench
             StartThread();
         }
 
-        internal MeasurementResult MeasureAntenna(eMeasurementType type = eMeasurementType.Both)
+        internal override MeasurementResult MeasureAntenna(eMeasurementType type = eMeasurementType.Both)
         {
             MeasurementResult result = new MeasurementResult();
             if (Port == null)
@@ -1269,23 +1504,15 @@ namespace TeddyBench
 
                             switch (response.Cmd)
                             {
-                                case Pm3UsbResponse.eResponseType.DebugString:
+                                case eCommandType.DebugString:
                                     {
-                                        string debugStr = Encoding.UTF8.GetString(response.data.d, 0, response.data.dataLen).TrimEnd('\0');
+                                        string debugStr = Encoding.UTF8.GetString(response.DataPtr, 0, response.DataLength).TrimEnd('\0');
                                         LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] GetResponse: DebugMessage '" + debugStr + "'");
                                         break;
                                     }
 
-                                case Pm3UsbResponse.eResponseType.NoData:
-                                case Pm3UsbResponse.eResponseType.Timeout:
-                                    break;
-
-                                case Pm3UsbResponse.eResponseType.ACK:
-                                    LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] GetResponse: ACK");
-                                    break;
-
-                                case Pm3UsbResponse.eResponseType.NACK:
-                                    LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] GetResponse: NACK");
+                                case eCommandType.NoData:
+                                case eCommandType.Timeout:
                                     break;
 
                                 default:
