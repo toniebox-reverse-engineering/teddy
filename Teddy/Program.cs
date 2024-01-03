@@ -170,7 +170,7 @@ namespace Teddy
             string prefixLocation = null;
             string audioId = "";
             string writeJson = null;
-            string jsonFile = "http://gt-blog.de/JSON/tonies.json?source=Teddy&version=" + ThisAssembly.Git.BaseTag;
+            string jsonFile = "https://api.revvox.de/tonies.json?source=Teddy&version=" + ThisAssembly.Git.BaseTag;
 
             int bitRate = 96;
 
@@ -845,7 +845,7 @@ limitations under the License.
             Console.WriteLine("  real track audio data. These are meant to add the track number in front of the file so the");
             Console.WriteLine("  kids know which track number is played right now.");
             Console.WriteLine("");
-            Console.WriteLine("  As JSON file you could specify also a link like e.g. http://gt-blog.de/JSON/tonies.json");
+            Console.WriteLine("  As JSON file you could specify also a link like e.g. https://api.revvox.de/tonies.json");
         }
 
         private static string GetVersion()
