@@ -14,6 +14,7 @@ namespace TeddyBench
         public bool NfcEnabled = false;
         public string NfcType = "Proxmark3";
         public bool DebugWindow = false;
+        public bool DownloadJson = true;
 
         public static Settings FromFile(string file)
         {

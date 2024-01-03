@@ -133,20 +133,23 @@ namespace TeddyBench
             }
         }
 
-        public static void LoadJson()
+        public void LoadJson()
         {
             try
             {
-                try
+                if (Settings.DownloadJson)
                 {
-                    HttpWebRequest request = (HttpWebRequest)WebRequest.Create("https://api.revvox.de/tonies.json.php?source=TeddyBench&version=" + ThisAssembly.Git.BaseTag);
-                    HttpWebResponse response = (HttpWebResponse)request.GetResponse();
-                    TextReader reader = new StreamReader(response.GetResponseStream());
-                    string content = reader.ReadToEnd();
-                    File.WriteAllText("tonies.json", content);
-                }
-                catch (Exception e)
-                {
+                    try
+                    {
+                        HttpWebRequest request = (HttpWebRequest)WebRequest.Create("https://api.revvox.de/tonies.json.php?source=TeddyBench&version=" + ThisAssembly.Git.BaseTag);
+                        HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+                        TextReader reader = new StreamReader(response.GetResponseStream());
+                        string content = reader.ReadToEnd();
+                        File.WriteAllText("tonies.json", content);
+                    }
+                    catch (Exception e)
+                    {
+                    }
                 }
 
                 try
@@ -223,6 +226,10 @@ namespace TeddyBench
             {
                 LogWindow.LogLevel = LogWindow.eLogLevel.DebugVerbose;
                 enableDebugModeToolStripMenuItem.Checked = true;
+            }
+            if (Settings.DownloadJson)
+            {
+                downloadToniesjsonOnStartupToolStripMenuItem.Checked = true;
             }
 
             StatusBarTimer = new System.Windows.Forms.Timer();
@@ -1735,15 +1742,15 @@ namespace TeddyBench
                 Settings.Username = form.Username;
                 SaveSettings();
 
-                bool success = await DiagnosticsSendInfo(str.ToString(), form.Username, form.Message, "Audio Report.txt");
-                if (success)
+                DiagStatus ret = await DiagnosticsSendInfo(str.ToString(), form.Username, form.Message, "Audio Report.txt");
+                if (ret.Success)
                 {
-                    MessageBox.Show("Success", "Report sent");
+                    MessageBox.Show("Report Successfully sent." + Environment.NewLine + "Server response:" + Environment.NewLine + ret.Message + "", "Report sent", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     return true;
                 }
                 else
                 {
-                    MessageBox.Show("Error sending the report", "Report failure");
+                    MessageBox.Show("Error sending the report." + Environment.NewLine + "Server response:" + Environment.NewLine + ret.Message + "", "Report sent", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
 
@@ -1779,15 +1786,16 @@ namespace TeddyBench
                 Settings.Username = form.Username;
                 SaveSettings();
 
-                bool success = await DiagnosticsSendInfo(str.ToString(), form.Username, form.Message, "All Audio Report.txt");
-                if (success)
+                DiagStatus ret = await DiagnosticsSendInfo(str.ToString(), form.Username, form.Message, "All Audio Report.txt");
+                if (ret.Success)
                 {
-                    MessageBox.Show("Success", "Report sent");
+                    MessageBox.Show("Report Successfully sent." + Environment.NewLine + "Server response:" + Environment.NewLine + ret.Message + "", "Report sent", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
                 else
                 {
-                    MessageBox.Show("Error sending the report", "Report failure");
+                    MessageBox.Show("Error sending the report." + Environment.NewLine + "Server response:" + Environment.NewLine + ret.Message + "", "Report sent", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
+
             }
         }
 
@@ -1823,15 +1831,16 @@ namespace TeddyBench
                                 Settings.Username = form.Username;
                                 SaveSettings();
 
-                                bool success = await DiagnosticsSendInfo(str.ToString(), form.Username, form.Message, "Tag Dump.txt");
-                                if (success)
+                                DiagStatus ret= await DiagnosticsSendInfo(str.ToString(), form.Username, form.Message, "Tag Dump.txt");
+                                if (ret.Success)
                                 {
-                                    MessageBox.Show("Success", "Report sent");
+                                    MessageBox.Show("Report Successfully sent." + Environment.NewLine + "Server response:" + Environment.NewLine + ret.Message + "", "Report sent", MessageBoxButtons.OK, MessageBoxIcon.Information);
                                 }
                                 else
                                 {
-                                    MessageBox.Show("Error sending the report", "Report failure");
+                                    MessageBox.Show("Error sending the report." + Environment.NewLine + "Server response:" + Environment.NewLine + ret.Message + "", "Report sent", MessageBoxButtons.OK, MessageBoxIcon.Error);
                                 }
+
                             }
                         }
                         else
@@ -1896,20 +1905,32 @@ namespace TeddyBench
                 Settings.Username = form.Username;
                 SaveSettings();
 
-                bool success = await DiagnosticsSendInfo(content, form.Username, form.Message, "Antenna Report.txt");
-                if (success)
+                DiagStatus ret = await DiagnosticsSendInfo(content, form.Username, form.Message, "Antenna Report.txt");
+                if (ret.Success)
                 {
-                    MessageBox.Show("Success", "Report sent");
+                    MessageBox.Show("Report Successfully sent." + Environment.NewLine + "Server response:" + Environment.NewLine + ret.Message + "", "Report sent", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
                 else
                 {
-                    MessageBox.Show("Error sending the report", "Report failure");
+                    MessageBox.Show("Error sending the report." + Environment.NewLine + "Server response:" + Environment.NewLine + ret.Message + "", "Report sent", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
+
             }
         }
 
-        private async Task<bool> DiagnosticsSendInfo(string payload, string sender, string message, string filename)
+        public class DiagStatus
         {
+            public bool Success;
+            public string Message;
+        }
+
+        private async Task<DiagStatus> DiagnosticsSendInfo(string payload, string sender, string message, string filename)
+        {
+            DiagStatus ret = new DiagStatus();
+
+            ret.Success = false;
+            ret.Message = "";
+
             try
             {
                 HttpClient httpClient = new HttpClient();
@@ -1928,16 +1949,14 @@ namespace TeddyBench
 
                 LogWindow.Log(LogWindow.eLogLevel.Debug, sd);
 
-                if (sd != "")
-                {
-                    return true;
-                }
-                return false;
+                ret.Success = (response.StatusCode == HttpStatusCode.OK);
+                ret.Message = sd;
+                return ret;
             }
             catch (Exception ee)
             {
             }
-            return false;
+            return ret;
         }
 
         private void AddInfo(StringBuilder str, ListViewTag tag)
@@ -2328,16 +2347,23 @@ namespace TeddyBench
                 Settings.Username = form.Username;
                 SaveSettings();
 
-                bool success = DiagnosticsSendInfo(str.ToString(), form.Username, form.Message, "Exception.txt").Result;
-                if (success)
+                DiagStatus ret = DiagnosticsSendInfo(str.ToString(), form.Username, form.Message, "Exception.txt").Result;
+                if (ret.Success)
                 {
-                    MessageBox.Show("Success", "Report sent");
+                    MessageBox.Show("Report Successfully sent." + Environment.NewLine + "Server response:" + Environment.NewLine + ret.Message + "", "Report sent", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
                 else
                 {
-                    MessageBox.Show("Error sending the report", "Report failure");
+                    MessageBox.Show("Error sending the report." + Environment.NewLine + "Server response:" + Environment.NewLine + ret.Message + "", "Report sent", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
+
             }
+        }
+
+        private void downloadToniesjsonOnStartupToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Settings.DownloadJson = downloadToniesjsonOnStartupToolStripMenuItem.Checked;
+            SaveSettings();
         }
     }
 }
