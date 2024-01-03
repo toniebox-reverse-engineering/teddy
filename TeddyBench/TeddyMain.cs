@@ -141,7 +141,7 @@ namespace TeddyBench
                 {
                     try
                     {
-                        HttpWebRequest request = (HttpWebRequest)WebRequest.Create("https://api.revvox.de/tonies.json.php?source=TeddyBench&version=" + ThisAssembly.Git.BaseTag);
+                        HttpWebRequest request = (HttpWebRequest)WebRequest.Create("https://api.revvox.de/tonies.json?source=TeddyBench&version=" + ThisAssembly.Git.BaseTag);
                         HttpWebResponse response = (HttpWebResponse)request.GetResponse();
                         TextReader reader = new StreamReader(response.GetResponseStream());
                         string content = reader.ReadToEnd();
@@ -1962,7 +1962,7 @@ namespace TeddyBench
                 form.Add(new StringContent(filename), "filename");
                 form.Add(new StringContent(GetVersion()), "version");
 
-                HttpResponseMessage response = await httpClient.PostAsync("https://api.revvox.de/diag.php", form);
+                HttpResponseMessage response = await httpClient.PostAsync("https://api.revvox.de/diag", form);
                 response.EnsureSuccessStatusCode();
                 httpClient.Dispose();
                 string sd = response.Content.ReadAsStringAsync().Result;
