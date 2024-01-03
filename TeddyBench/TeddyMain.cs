@@ -133,11 +133,11 @@ namespace TeddyBench
             }
         }
 
-        public void LoadJson()
+        public void LoadJson(bool force = false)
         {
             try
             {
-                if (Settings.DownloadJson)
+                if (Settings.DownloadJson || force)
                 {
                     try
                     {
@@ -211,7 +211,6 @@ namespace TeddyBench
 
             LoadJson();
             StartThreads();
-
 
             UpdateCheckThread = new SafeThread(UpdateCheck, "UpdateCheckThread");
             UpdateCheckThread.Start();
@@ -350,6 +349,8 @@ namespace TeddyBench
 
         private void UpdateStatusBar()
         {
+            string text = "";
+
             if (RfidReader != null && RfidReader.Connected)
             {
                 if (!statusStrip1.Visible)
@@ -357,14 +358,33 @@ namespace TeddyBench
                     statusStrip1.Show();
                 }
                 string voltageString = Settings.DebugWindow ? ", " + RfidReader.AntennaVoltage.ToString("0.00", CultureInfo.InvariantCulture) + " V" : "";
-                statusLabel.Text = RfidReader.HardwareType + " (FW: " + (RfidReader.UnlockSupported ? "SLIX-L enabled" : "stock") + voltageString + ") found at " + RfidReader.CurrentPort + ". The UID of the tag will be automatically used where applicable.";
+
+                text += " | " + RfidReader.HardwareType + " (FW: " + (RfidReader.UnlockSupported ? "SLIX-L enabled" : "stock") + voltageString + ") found at " + RfidReader.CurrentPort + ". The UID of the tag will be automatically used where applicable.";
+            }
+
+            if(TonieInfos.Length == 0)
+            {
+                text += " | No tonies.json, consider downloading it";
             }
             else
+            {
+                text += " | tonies.json has " + TonieInfos.Length + " entries";
+            }
+
+            if (text == "")
             {
                 if (statusStrip1.Visible)
                 {
                     statusStrip1.Hide();
                 }
+            }
+            else
+            {
+                if (!statusStrip1.Visible)
+                {
+                    statusStrip1.Show();
+                }
+                statusLabel.Text = text.Trim().Trim('|').Trim();
             }
         }
 
@@ -2364,6 +2384,11 @@ namespace TeddyBench
         {
             Settings.DownloadJson = downloadToniesjsonOnStartupToolStripMenuItem.Checked;
             SaveSettings();
+        }
+
+        private void downloadToniesjsonNowToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            LoadJson(true);
         }
     }
 }
