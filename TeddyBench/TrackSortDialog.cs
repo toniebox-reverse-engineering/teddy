@@ -30,7 +30,7 @@ namespace TeddyBench
         {
             base.OnLoad(e);
 
-            var fileTuples = FileNames.Select(f => new Tuple<string, Id3Tag>(f, new Mp3(f, Mp3Permissions.Read).GetAllTags().Where(t => t.Track.IsAssigned).FirstOrDefault()));
+            var fileTuples = FileNames.Select(f => new Tuple<string, Id3Tag>(f, GetTag(f)));
 
             foreach (Tuple<string, Id3Tag> item in fileTuples.OrderBy(i => (i.Item2 == null) ? int.MaxValue : i.Item2.Track.Value))
             {
@@ -38,6 +38,22 @@ namespace TeddyBench
             }
 
             UpdateView();
+        }
+
+        private Id3Tag GetTag(string f)
+        {
+            try
+            {
+                Mp3 mp3 = new Mp3(f, Mp3Permissions.Read);
+
+                Id3Tag ret = mp3.GetAllTags().Where(t => t.Track.IsAssigned).FirstOrDefault();
+
+                return ret;
+            }
+            catch(Exception ex)
+            {
+                return null;
+            }
         }
 
         private void UpdateView()
