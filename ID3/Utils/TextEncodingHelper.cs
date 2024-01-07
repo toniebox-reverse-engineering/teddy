@@ -41,6 +41,8 @@ namespace Id3
                 return Encoding.GetEncoding("iso-8859-1");
             if (encodingType == Id3TextEncoding.Unicode)
                 return Encoding.Unicode;
+            if (encodingType == Id3TextEncoding.UnicodeBE)
+                return Encoding.BigEndianUnicode;
             if (encodingType == Id3TextEncoding.UTF8)
                 return Encoding.UTF8;
             Debug.Assert(false, "Invalid Encoding type specified");
@@ -52,7 +54,7 @@ namespace Id3
             Encoding encoding = GetEncoding(encodingType);
             string str = encoding.GetString(bytes, start, count);
 
-            if (encodingType == Id3TextEncoding.Unicode)
+            if (encodingType == Id3TextEncoding.Unicode || encodingType == Id3TextEncoding.UnicodeBE)
             {
                 if (str[0] == '\xFFFE' || str[0] == '\xFEFF')
                     str = str.Remove(0, 1);
@@ -86,6 +88,8 @@ namespace Id3
             if (encodingType == Id3TextEncoding.UTF8)
                 return 1;
             if (encodingType == Id3TextEncoding.Unicode)
+                return 2;
+            if (encodingType == Id3TextEncoding.UnicodeBE)
                 return 2;
             Debug.Assert(false, "Invalid encoding type specified");
             return -1;

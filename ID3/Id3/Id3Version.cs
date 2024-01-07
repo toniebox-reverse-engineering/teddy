@@ -23,5 +23,6 @@ namespace Id3
     {
         V1X = 1,
         V23 = 3,
+        V24 = 4,
     }
 }

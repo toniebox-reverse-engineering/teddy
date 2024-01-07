@@ -24,7 +24,7 @@ using Id3.Frames;
 
 namespace Id3.v2
 {
-    internal sealed partial class Id3V23Handler
+    internal sealed partial class Id3V24Handler
     {
         private static TFrame DecodeText<TFrame>(byte[] data)
             where TFrame : TextFrameBase, new()
@@ -33,17 +33,15 @@ namespace Id3.v2
 
             byte encodingByte = data[0];
             string value;
-            if (encodingByte == 0 || encodingByte == 1 || encodingByte == 2 || encodingByte == 3)
+            if (encodingByte == 0 || encodingByte == 1 || encodingByte == 3)
             {
                 frame.EncodingType = (Id3TextEncoding) encodingByte;
                 Encoding encoding = TextEncodingHelper.GetEncoding(frame.EncodingType);
                 value = encoding.GetString(data, 1, data.Length - 1);
-                if (value.Length > 0 && 
-                    (frame.EncodingType == Id3TextEncoding.Unicode || frame.EncodingType == Id3TextEncoding.UnicodeBE) &&
+                if (value.Length > 0 && frame.EncodingType == Id3TextEncoding.Unicode &&
                     (value[0] == '\xFFFE' || value[0] == '\xFEFF'))
                     value = value.Remove(0, 1);
-            }
-            else
+            } else
             {
                 frame.EncodingType = Id3TextEncoding.Iso8859_1;
                 Encoding encoding = TextEncodingHelper.GetEncoding(frame.EncodingType);

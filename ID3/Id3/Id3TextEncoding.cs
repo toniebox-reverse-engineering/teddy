@@ -23,6 +23,7 @@ namespace Id3
     {
         Iso8859_1 = 0,
         Unicode = 1,
+        UnicodeBE = 2,
         UTF8 = 3
     }
 }

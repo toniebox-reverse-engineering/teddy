@@ -25,7 +25,7 @@ using Id3.Frames;
 
 namespace Id3.v2
 {
-    internal sealed partial class Id3V23Handler : Id3V2Handler
+    internal sealed partial class Id3V24Handler : Id3V2Handler
     {
         internal override void DeleteTag(Stream stream)
         {
@@ -76,7 +76,7 @@ namespace Id3.v2
             stream.Read(headerBytes, 0, 5);
 
             string magic = Encoding.ASCII.GetString(headerBytes, 0, 3);
-            return magic == "ID3" && headerBytes[3] == 3;
+            return magic == "ID3" && headerBytes[3] == 4;
         }
 
         internal override Id3Tag ReadTag(Stream stream, out object additionalData)
@@ -131,10 +131,10 @@ namespace Id3.v2
 
             while (currentPos < tagSize && tagData[currentPos] != 0x00)
             {
-                string frameId = Encoding.UTF8.GetString(tagData, currentPos, 4);
+                string frameId = Encoding.ASCII.GetString(tagData, currentPos, 4);
                 currentPos += 4;
 
-                int frameSize = SyncSafeNumber.DecodeNormal(tagData, currentPos, 4);
+                int frameSize = SyncSafeNumber.DecodeSafe(tagData, currentPos, 4);
                 currentPos += 4;
 
                 var frameFlags = (ushort)((tagData[currentPos] << 0x08) + tagData[currentPos + 1]);
@@ -142,6 +142,12 @@ namespace Id3.v2
 
                 var frameData = new byte[frameSize];
                 Array.Copy(tagData, currentPos, frameData, 0, frameSize);
+
+                /* check for unsynchronization */
+                if((frameFlags & 0x80) != 0)
+                {
+                    DeUnsync(ref frameData);
+                }
 
                 FrameHandler mapping = FrameHandlers[frameId];
                 if (mapping != null)
@@ -154,6 +160,33 @@ namespace Id3.v2
             }
 
             return tag;
+        }
+
+        private void DeUnsync(ref byte[] frameData)
+        {
+            byte[] outData = new byte[frameData.Length];
+            int outPos = 0;
+            bool mark = false;
+
+            for (int i = 0; i < frameData.Length; i++)
+            {
+                if(frameData[i] == 0xFF)
+                {
+                    mark = true;
+                }
+                else if(mark)
+                {
+                    mark = false;
+                    if (frameData[i] == 0x00)
+                    {
+                        continue;
+                    }
+                }
+
+                outData[outPos++] = frameData[i];
+            }
+
+            Array.Resize(ref outData, outPos);
         }
 
         internal override bool WriteTag(Stream stream, Id3Tag tag)
