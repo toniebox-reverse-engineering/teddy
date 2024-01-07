@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(AskPassForm));
             this.label1 = new System.Windows.Forms.Label();
             this.btnOk = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
@@ -63,12 +64,12 @@
             this.btnCancel.Text = "Cancel";
             this.btnCancel.UseVisualStyleBackColor = true;
             // 
-            // txtUid
+            // txtPass
             // 
             this.txtPass.Font = new System.Drawing.Font("Courier New", 10F);
             this.txtPass.Location = new System.Drawing.Point(16, 33);
             this.txtPass.MaxLength = 8;
-            this.txtPass.Name = "txtUid";
+            this.txtPass.Name = "txtPass";
             this.txtPass.Size = new System.Drawing.Size(171, 23);
             this.txtPass.TabIndex = 1;
             this.txtPass.Text = "0F0F0F0F";
@@ -87,6 +88,7 @@
             this.Controls.Add(this.btnOk);
             this.Controls.Add(this.label1);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedToolWindow;
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "AskPassForm";
             this.Text = "Enter tag password";
             this.ResumeLayout(false);

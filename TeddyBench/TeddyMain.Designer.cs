@@ -346,7 +346,7 @@
             this.splitContainer1.Panel2.Controls.Add(this.btnDelete);
             this.splitContainer1.Panel2.Controls.Add(this.btnAdd);
             this.splitContainer1.Size = new System.Drawing.Size(788, 401);
-            this.splitContainer1.SplitterDistance = 687;
+            this.splitContainer1.SplitterDistance = 690;
             this.splitContainer1.SplitterWidth = 1;
             this.splitContainer1.TabIndex = 1;
             // 
@@ -370,7 +370,7 @@
             // splitContainer2.Panel2
             // 
             this.splitContainer2.Panel2.Controls.Add(this.lstTonies);
-            this.splitContainer2.Size = new System.Drawing.Size(687, 401);
+            this.splitContainer2.Size = new System.Drawing.Size(690, 401);
             this.splitContainer2.SplitterDistance = 36;
             this.splitContainer2.SplitterWidth = 1;
             this.splitContainer2.TabIndex = 1;
@@ -452,7 +452,7 @@
             this.lstTonies.Location = new System.Drawing.Point(0, 0);
             this.lstTonies.Name = "lstTonies";
             this.lstTonies.ShowItemToolTips = true;
-            this.lstTonies.Size = new System.Drawing.Size(687, 364);
+            this.lstTonies.Size = new System.Drawing.Size(690, 364);
             this.lstTonies.TabIndex = 0;
             this.lstTonies.TileSize = new System.Drawing.Size(64, 64);
             this.lstTonies.UseCompatibleStateImageBehavior = false;
@@ -470,7 +470,7 @@
             // 
             this.btnSave.Location = new System.Drawing.Point(4, 61);
             this.btnSave.Name = "btnSave";
-            this.btnSave.Size = new System.Drawing.Size(96, 23);
+            this.btnSave.Size = new System.Drawing.Size(87, 23);
             this.btnSave.TabIndex = 1;
             this.btnSave.Text = "Save as .ogg...";
             this.btnSave.UseVisualStyleBackColor = true;
@@ -480,7 +480,7 @@
             // 
             this.btnDelete.Location = new System.Drawing.Point(4, 32);
             this.btnDelete.Name = "btnDelete";
-            this.btnDelete.Size = new System.Drawing.Size(96, 23);
+            this.btnDelete.Size = new System.Drawing.Size(87, 23);
             this.btnDelete.TabIndex = 0;
             this.btnDelete.Text = "Delete...";
             this.btnDelete.UseVisualStyleBackColor = true;
@@ -490,7 +490,7 @@
             // 
             this.btnAdd.Location = new System.Drawing.Point(4, 3);
             this.btnAdd.Name = "btnAdd";
-            this.btnAdd.Size = new System.Drawing.Size(96, 23);
+            this.btnAdd.Size = new System.Drawing.Size(87, 23);
             this.btnAdd.TabIndex = 0;
             this.btnAdd.Text = "Add...";
             this.btnAdd.UseVisualStyleBackColor = true;

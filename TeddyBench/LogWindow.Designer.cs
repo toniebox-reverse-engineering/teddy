@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(LogWindow));
             this.txtLog = new System.Windows.Forms.TextBox();
             this.SuspendLayout();
             // 
@@ -51,6 +52,7 @@
             this.ClientSize = new System.Drawing.Size(835, 450);
             this.Controls.Add(this.txtLog);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.SizableToolWindow;
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "LogWindow";
             this.Text = "LogWindow";
             this.ResumeLayout(false);

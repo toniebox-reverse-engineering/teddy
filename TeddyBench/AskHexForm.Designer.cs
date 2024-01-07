@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(AskHexForm));
             this.label1 = new System.Windows.Forms.Label();
             this.btnOk = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
@@ -63,12 +64,12 @@
             this.btnCancel.Text = "Cancel";
             this.btnCancel.UseVisualStyleBackColor = true;
             // 
-            // txtPass
+            // txtValue
             // 
             this.txtValue.Font = new System.Drawing.Font("Courier New", 10F);
             this.txtValue.Location = new System.Drawing.Point(16, 33);
             this.txtValue.MaxLength = 8;
-            this.txtValue.Name = "txtPass";
+            this.txtValue.Name = "txtValue";
             this.txtValue.Size = new System.Drawing.Size(171, 23);
             this.txtValue.TabIndex = 1;
             this.txtValue.Text = "50000000";
@@ -87,6 +88,7 @@
             this.Controls.Add(this.btnOk);
             this.Controls.Add(this.label1);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedToolWindow;
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "AskHexForm";
             this.Text = "Enter value";
             this.ResumeLayout(false);
