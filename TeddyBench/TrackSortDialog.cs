@@ -125,6 +125,7 @@ namespace TeddyBench
             }
 
             RebuildFileList();
+            lstTracks.Select();
         }
 
         private void btnDown_Click(object sender, EventArgs e)
@@ -166,6 +167,7 @@ namespace TeddyBench
             }
 
             RebuildFileList();
+            lstTracks.Select();
         }
 
         private void RebuildFileList()
