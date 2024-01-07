@@ -1104,7 +1104,16 @@ namespace TeddyBench
                         return;
                     }
 
-                    EncodeFile(ask.Uid, fileNames, id);
+                    TrackSortDialog sorter = new TrackSortDialog(fileNames);
+
+                    if(sorter.ShowDialog() == DialogResult.Cancel)
+                    {
+                        return;
+                    }
+
+                    string[] sorted = sorter.SortedFiles;
+
+                    EncodeFile(ask.Uid, sorted, id);
                 }
             }
         }
@@ -1198,7 +1207,7 @@ namespace TeddyBench
             }
         }
 
-        private void EncodeFile(string uid, string[] v, uint id = uint.MaxValue)
+        private void EncodeFile(string uid, string[] filenames, uint id = uint.MaxValue)
         {
             btnAdd.Enabled = false;
             btnDelete.Enabled = false;
@@ -1220,7 +1229,7 @@ namespace TeddyBench
                     {
                         id = (uint)(DateTimeOffset.Now.ToUnixTimeSeconds() - 0x50000000);
                     }
-                    audio = new TonieAudio(v, id, cbr: new EncodeCallback(this));
+                    audio = new TonieAudio(filenames, id, cbr: new EncodeCallback(this));
                 }
                 catch (Exception ex)
                 {
