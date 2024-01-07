@@ -134,7 +134,7 @@ namespace Id3.v2
                 string frameId = Encoding.UTF8.GetString(tagData, currentPos, 4);
                 currentPos += 4;
 
-                int frameSize = SyncSafeNumber.DecodeSafe(tagData, currentPos, 4);
+                int frameSize = SyncSafeNumber.DecodeNormal(tagData, currentPos, 4);
                 currentPos += 4;
 
                 var frameFlags = (ushort)((tagData[currentPos] << 0x08) + tagData[currentPos + 1]);
