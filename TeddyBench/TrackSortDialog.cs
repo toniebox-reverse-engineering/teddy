@@ -88,6 +88,10 @@ namespace TeddyBench
             {
                 return;
             }
+            if (lstTracks.SelectedIndices[0] == 0)
+            {
+                return;
+            }
 
             int numberOfItems = lstTracks.Items.Count;
             List<object> selectedItems = new List<object>();
@@ -97,6 +101,7 @@ namespace TeddyBench
                 selectedItems.Add(item);
             }
 
+            lstTracks.BeginUpdate();
             for (int i = 0; i < lstTracks.Items.Count; i++)
             {
                 if (lstTracks.SelectedIndices.Contains(i))
@@ -112,6 +117,8 @@ namespace TeddyBench
             }
 
             lstTracks.SelectedItems.Clear();
+            lstTracks.EndUpdate();
+
             foreach (ListViewItem item in selectedItems)
             {
                 item.Selected = true;
@@ -127,6 +134,10 @@ namespace TeddyBench
                 return;
             }
 
+            if (lstTracks.SelectedIndices[lstTracks.SelectedIndices.Count-1] == lstTracks.Items.Count - 1)
+            {
+                return;
+            }
             int numberOfItems = lstTracks.Items.Count;
             List<object> selectedItems = new List<object>();
 
@@ -135,6 +146,7 @@ namespace TeddyBench
                 selectedItems.Add(item);
             }
 
+            lstTracks.BeginUpdate();
             for (int i = numberOfItems - 2; i >= 0; i--)
             {
                 if (lstTracks.SelectedIndices.Contains(i))
@@ -146,6 +158,8 @@ namespace TeddyBench
             }
 
             lstTracks.SelectedItems.Clear();
+            lstTracks.EndUpdate();
+
             foreach (ListViewItem item in selectedItems)
             {
                 item.Selected = true;
