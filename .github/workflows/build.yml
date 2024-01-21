@@ -1,0 +1,52 @@
+name: TeddyBench Windows
+
+on:
+  push:
+    branches: [ "*" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+
+  build:
+
+    strategy:
+      matrix:
+        configuration: [Debug, Release]
+
+    runs-on: windows-latest
+
+    env:
+      Solution_Name: Teddy.sln
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Install .NET Core
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 6.0.x
+
+    - name: Setup MSBuild.exe
+      uses: microsoft/setup-msbuild@v1
+      with:
+        msbuild-architecture: x64
+
+    - name: Nuget restore
+      run: nuget restore $env:Solution_Name
+
+    - name: Build the application
+      run: msbuild $env:Solution_Name -t:rebuild -property:Configuration=$env:Configuration
+      env:
+        Configuration: ${{ matrix.configuration }}
+
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: TeddyBench-${{ matrix.configuration }}
+        path: TeddyBench/bin/${{ matrix.configuration }}/net48/win10-x64/TeddyBench.exe
+      env:
+        Configuration: ${{ matrix.configuration }}
