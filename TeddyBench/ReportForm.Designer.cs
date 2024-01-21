@@ -42,59 +42,55 @@
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(10, 17);
-            this.label1.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.label1.Location = new System.Drawing.Point(9, 15);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(67, 15);
+            this.label1.Size = new System.Drawing.Size(61, 13);
             this.label1.TabIndex = 0;
             this.label1.Text = "Your name:";
             // 
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(10, 53);
-            this.label2.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.label2.Location = new System.Drawing.Point(9, 46);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(64, 15);
+            this.label2.Size = new System.Drawing.Size(54, 13);
             this.label2.TabIndex = 1;
             this.label2.Text = "Comment:";
             // 
             // txtUser
             // 
-            this.txtUser.Location = new System.Drawing.Point(90, 14);
-            this.txtUser.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            this.txtUser.Location = new System.Drawing.Point(77, 12);
             this.txtUser.MaxLength = 128;
             this.txtUser.Name = "txtUser";
-            this.txtUser.Size = new System.Drawing.Size(392, 23);
+            this.txtUser.Size = new System.Drawing.Size(337, 20);
             this.txtUser.TabIndex = 1;
             // 
             // txtMessage
             // 
-            this.txtMessage.Location = new System.Drawing.Point(90, 50);
-            this.txtMessage.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
-            this.txtMessage.MaxLength = 128;
+            this.txtMessage.Font = new System.Drawing.Font("Lucida Console", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.txtMessage.Location = new System.Drawing.Point(77, 43);
+            this.txtMessage.MaxLength = 512;
             this.txtMessage.Multiline = true;
             this.txtMessage.Name = "txtMessage";
-            this.txtMessage.Size = new System.Drawing.Size(392, 78);
+            this.txtMessage.Size = new System.Drawing.Size(337, 68);
             this.txtMessage.TabIndex = 2;
+            this.txtMessage.Text = "<please provide information for every file>";
             // 
             // btnCancel
             // 
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Location = new System.Drawing.Point(394, 349);
-            this.btnCancel.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            this.btnCancel.Location = new System.Drawing.Point(338, 302);
             this.btnCancel.Name = "btnCancel";
-            this.btnCancel.Size = new System.Drawing.Size(88, 27);
+            this.btnCancel.Size = new System.Drawing.Size(75, 23);
             this.btnCancel.TabIndex = 4;
             this.btnCancel.Text = "Cancel";
             this.btnCancel.UseVisualStyleBackColor = true;
             // 
             // btnOk
             // 
-            this.btnOk.Location = new System.Drawing.Point(300, 349);
-            this.btnOk.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            this.btnOk.Location = new System.Drawing.Point(257, 302);
             this.btnOk.Name = "btnOk";
-            this.btnOk.Size = new System.Drawing.Size(88, 27);
+            this.btnOk.Size = new System.Drawing.Size(75, 23);
             this.btnOk.TabIndex = 3;
             this.btnOk.Text = "Send";
             this.btnOk.UseVisualStyleBackColor = true;
@@ -102,30 +98,29 @@
             // 
             // txtContent
             // 
-            this.txtContent.Location = new System.Drawing.Point(90, 135);
+            this.txtContent.Location = new System.Drawing.Point(77, 117);
             this.txtContent.Multiline = true;
             this.txtContent.Name = "txtContent";
             this.txtContent.ReadOnly = true;
             this.txtContent.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.txtContent.Size = new System.Drawing.Size(392, 208);
+            this.txtContent.Size = new System.Drawing.Size(337, 181);
             this.txtContent.TabIndex = 5;
             // 
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(10, 138);
-            this.label3.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.label3.Location = new System.Drawing.Point(9, 120);
             this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(53, 15);
+            this.label3.Size = new System.Drawing.Size(47, 13);
             this.label3.TabIndex = 6;
             this.label3.Text = "Content:";
             // 
             // ReportForm
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
-            this.ClientSize = new System.Drawing.Size(495, 388);
+            this.ClientSize = new System.Drawing.Size(424, 336);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.txtContent);
             this.Controls.Add(this.btnOk);
@@ -136,7 +131,6 @@
             this.Controls.Add(this.label1);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedToolWindow;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
-            this.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.Name = "ReportForm";
             this.Text = "Report to RevvoX";
             this.ResumeLayout(false);

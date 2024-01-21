@@ -13,7 +13,7 @@ namespace TeddyBench
     public partial class ReportForm : Form
     {
         public static string DefaultUsername = "";
-        public static string DefaultMessage = "";
+        public static string DefaultMessage = "<please provide information for every file>";
         public string Username = "";
         public string Message = "";
 

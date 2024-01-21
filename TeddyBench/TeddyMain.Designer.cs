@@ -56,7 +56,6 @@
             this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripSeparator();
             this.diagnosticsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.reportallFilesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.reportselectedFilesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.reportProxmarkAnToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.reportNFCTagToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -257,7 +256,6 @@
             this.aboutToolStripMenuItem,
             this.toolStripMenuItem1,
             this.diagnosticsToolStripMenuItem,
-            this.reportallFilesToolStripMenuItem,
             this.reportselectedFilesToolStripMenuItem,
             this.reportProxmarkAnToolStripMenuItem,
             this.reportNFCTagToolStripMenuItem});
@@ -283,13 +281,6 @@
             this.diagnosticsToolStripMenuItem.Name = "diagnosticsToolStripMenuItem";
             this.diagnosticsToolStripMenuItem.Size = new System.Drawing.Size(291, 22);
             this.diagnosticsToolStripMenuItem.Text = "Diagnostics";
-            // 
-            // reportallFilesToolStripMenuItem
-            // 
-            this.reportallFilesToolStripMenuItem.Name = "reportallFilesToolStripMenuItem";
-            this.reportallFilesToolStripMenuItem.Size = new System.Drawing.Size(291, 22);
-            this.reportallFilesToolStripMenuItem.Text = "Report *all unknown* files";
-            this.reportallFilesToolStripMenuItem.Click += new System.EventHandler(this.reportallFilesToolStripMenuItem_Click);
             // 
             // reportselectedFilesToolStripMenuItem
             // 
@@ -346,7 +337,7 @@
             this.splitContainer1.Panel2.Controls.Add(this.btnDelete);
             this.splitContainer1.Panel2.Controls.Add(this.btnAdd);
             this.splitContainer1.Size = new System.Drawing.Size(788, 401);
-            this.splitContainer1.SplitterDistance = 690;
+            this.splitContainer1.SplitterDistance = 693;
             this.splitContainer1.SplitterWidth = 1;
             this.splitContainer1.TabIndex = 1;
             // 
@@ -370,7 +361,7 @@
             // splitContainer2.Panel2
             // 
             this.splitContainer2.Panel2.Controls.Add(this.lstTonies);
-            this.splitContainer2.Size = new System.Drawing.Size(690, 401);
+            this.splitContainer2.Size = new System.Drawing.Size(693, 401);
             this.splitContainer2.SplitterDistance = 36;
             this.splitContainer2.SplitterWidth = 1;
             this.splitContainer2.TabIndex = 1;
@@ -452,7 +443,7 @@
             this.lstTonies.Location = new System.Drawing.Point(0, 0);
             this.lstTonies.Name = "lstTonies";
             this.lstTonies.ShowItemToolTips = true;
-            this.lstTonies.Size = new System.Drawing.Size(690, 364);
+            this.lstTonies.Size = new System.Drawing.Size(693, 364);
             this.lstTonies.TabIndex = 0;
             this.lstTonies.TileSize = new System.Drawing.Size(64, 64);
             this.lstTonies.UseCompatibleStateImageBehavior = false;
@@ -672,7 +663,6 @@
         private System.Windows.Forms.ToolStripMenuItem autodetectionEnabledToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem advancedActionsToolStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripMenuItem1;
-        private System.Windows.Forms.ToolStripMenuItem reportallFilesToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem reportselectedFilesToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem diagnosticsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem readContentToolStripMenuItem;

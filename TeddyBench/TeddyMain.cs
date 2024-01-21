@@ -1786,47 +1786,6 @@ namespace TeddyBench
             return false;
         }
 
-        private async void reportallFilesToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            if (lstTonies.Items.Count == 0)
-            {
-                return;
-            }
-
-            StringBuilder str = new StringBuilder();
-
-            str.AppendLine(" Reporting " + lstTonies.Items.Count + " files");
-            str.AppendLine("-----------------------------------");
-
-            foreach (ListViewItem t in lstTonies.Items)
-            {
-                ListViewTag tag = t.Tag as ListViewTag;
-
-                if ((tag.Info == null || tag.Info.Model == null) && tag.AudioId > 0x50000000)
-                {
-                    AddInfo(str, tag);
-                }
-            }
-
-            ReportForm form = new ReportForm(str.ToString());
-
-            if (form.ShowDialog() == DialogResult.OK)
-            {
-                Settings.Username = form.Username;
-                SaveSettings();
-
-                DiagStatus ret = await DiagnosticsSendInfo(str.ToString(), form.Username, form.Message, "All Audio Report.txt");
-                if (ret.Success)
-                {
-                    MessageBox.Show("Report Successfully sent." + Environment.NewLine + "Server response:" + Environment.NewLine + ret.Message + "", "Report sent", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                }
-                else
-                {
-                    MessageBox.Show("Error sending the report." + Environment.NewLine + "Server response:" + Environment.NewLine + ret.Message + "", "Report sent", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
-
-            }
-        }
 
         private async void reportNFCTagToolStripMenuItem_Click(object sender, EventArgs e)
         {
