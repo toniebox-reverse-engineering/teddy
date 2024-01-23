@@ -480,7 +480,7 @@ namespace TeddyBench
 
                             BeginInvoke(new Action(async () =>
                             {
-                                UpdateNotifyDialog dlg = new UpdateNotifyDialog(latestVersion, (string)latestRelease.name);
+                                UpdateNotifyDialog dlg = new UpdateNotifyDialog(latestVersion + " (yours: " + thisVersion + ")", (string)latestRelease.name);
                                 if (dlg.ShowDialog() == DialogResult.Yes)
                                 {
                                     await DownloadFile(url, zipName);

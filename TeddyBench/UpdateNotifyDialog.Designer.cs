@@ -38,7 +38,7 @@ namespace TeddyBench
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(11, 11);
+            this.label1.Location = new System.Drawing.Point(12, 9);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(212, 26);
             this.label1.TabIndex = 0;
@@ -46,7 +46,7 @@ namespace TeddyBench
             // 
             // btnYes
             // 
-            this.btnYes.Location = new System.Drawing.Point(38, 54);
+            this.btnYes.Location = new System.Drawing.Point(112, 40);
             this.btnYes.Name = "btnYes";
             this.btnYes.Size = new System.Drawing.Size(64, 20);
             this.btnYes.TabIndex = 1;
@@ -57,7 +57,7 @@ namespace TeddyBench
             // btnNo
             // 
             this.btnNo.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnNo.Location = new System.Drawing.Point(116, 54);
+            this.btnNo.Location = new System.Drawing.Point(191, 40);
             this.btnNo.Name = "btnNo";
             this.btnNo.Size = new System.Drawing.Size(64, 20);
             this.btnNo.TabIndex = 1;
@@ -71,7 +71,7 @@ namespace TeddyBench
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnNo;
-            this.ClientSize = new System.Drawing.Size(221, 79);
+            this.ClientSize = new System.Drawing.Size(352, 72);
             this.Controls.Add(this.btnNo);
             this.Controls.Add(this.btnYes);
             this.Controls.Add(this.label1);
