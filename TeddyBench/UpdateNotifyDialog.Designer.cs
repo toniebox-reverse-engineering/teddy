@@ -46,7 +46,7 @@ namespace TeddyBench
             // 
             // btnYes
             // 
-            this.btnYes.Location = new System.Drawing.Point(112, 40);
+            this.btnYes.Location = new System.Drawing.Point(104, 50);
             this.btnYes.Name = "btnYes";
             this.btnYes.Size = new System.Drawing.Size(64, 20);
             this.btnYes.TabIndex = 1;
@@ -57,7 +57,7 @@ namespace TeddyBench
             // btnNo
             // 
             this.btnNo.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnNo.Location = new System.Drawing.Point(191, 40);
+            this.btnNo.Location = new System.Drawing.Point(183, 50);
             this.btnNo.Name = "btnNo";
             this.btnNo.Size = new System.Drawing.Size(64, 20);
             this.btnNo.TabIndex = 1;
@@ -71,14 +71,14 @@ namespace TeddyBench
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnNo;
-            this.ClientSize = new System.Drawing.Size(352, 72);
+            this.ClientSize = new System.Drawing.Size(352, 78);
             this.Controls.Add(this.btnNo);
             this.Controls.Add(this.btnYes);
             this.Controls.Add(this.label1);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "UpdateNotifyDialog";
-            this.Text = "Update available:";
+            this.Text = "Update:";
             this.ResumeLayout(false);
             this.PerformLayout();
 
