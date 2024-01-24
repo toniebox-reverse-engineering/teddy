@@ -1,4 +1,5 @@
 ﻿using ELFSharp.ELF;
+using ScottPlot.Drawing.Colormaps;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -6,6 +7,7 @@ using System.IO.Ports;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using static TeddyBench.Proxmark3;
 
@@ -646,14 +648,8 @@ namespace TeddyBench
 
                 switch (response.Cmd)
                 {
-                    case eCommandType.DebugString:
-                        {
-                            string debugStr = Encoding.UTF8.GetString(response.DataPtr, 0, response.DataLength).TrimEnd('\0');
-                            LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] UnlockTag:   String '" + debugStr + "'");
-                            break;
-                        }
-
                     case eCommandType.ISO15693_SLIX_DISABLE_PRIVACY:
+                    {
                         supported = true;
                         if (response.Status == 0)
                         {
@@ -667,26 +663,20 @@ namespace TeddyBench
                             LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] UnlockTag: NACK (reason: " + reason + ")");
                             return false;
                         }
+                    }
+                }
 
-                    case eCommandType.NoData:
-                    case eCommandType.Timeout:
-                        reason = -1;
-                        LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] UnlockTag: timeout");
-                        break;
-
-                    case eCommandType.WTX:
-                        LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] WTX received: " + response.DataUInt16(0));
-                        break;
-
-                    default:
-                        LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] UnlockTag: Unhandled: " + response.Cmd);
-                        break;
+                if (!HandleDefault(response))
+                {
+                    break;
                 }
             }
             if(!supported)
             {
                 throw new NotSupportedException();
             }
+
+            return false;
         }
 
         private string UIDToString(byte[] uid)
@@ -698,17 +688,46 @@ namespace TeddyBench
             return null;
         }
 
+        [Flags]
+        public enum Iso15Command
+        {
+            ISO15_CONNECT = 1 << 0,
+            ISO15_NO_DISCONNECT = 1 << 1,
+            ISO15_RAW = 1 << 2,
+            ISO15_APPEND_CRC = 1 << 3,
+            ISO15_HIGH_SPEED = 1 << 4,
+            ISO15_READ_RESPONSE = 1 << 5,
+            ISO15_LONG_WAIT = 1 << 6,
+        }
+
+        public byte[] CreateIso15CommandBuffer(Iso15Command flags, byte[] command)
+        {
+            byte[] buf = new byte[3 + command.Length];
+            buf[0] = (byte)flags;
+            buf[1] = (byte)(command.Length & 0xFF);
+            buf[2] = (byte)(command.Length >> 8);
+            Array.Copy(command, 0, buf, 3, command.Length);
+
+            return buf;
+        }
+
         private byte[] SendCommand(byte[] command)
         {
             if (Port == null)
             {
                 return null;
             }
+            byte[] ret = null;
 
-            Pm3UsbCommand cmd = new Pm3UsbCommand(eCommandType.ISO15693_COMMAND, (byte)command.Length, 1, 1, command);
+            byte[] buf = CreateIso15CommandBuffer(Iso15Command.ISO15_CONNECT | Iso15Command.ISO15_HIGH_SPEED | Iso15Command.ISO15_READ_RESPONSE, command);
+
+            Pm3UsbCommand cmd = new Pm3UsbCommand(eCommandType.ISO15693_COMMAND, (byte)buf.Length, 1, 1, buf);
 
             LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] GetResponse: Send " + BitConverter.ToString(command).Replace("-", ""));
             cmd.Write(Port);
+
+            int timeouts = 0;
+            int successes = 0;
 
             while (true)
             {
@@ -716,50 +735,41 @@ namespace TeddyBench
 
                 switch (response.Cmd)
                 {
-                    case eCommandType.DebugString:
-                        {
-                            string debugStr = Encoding.UTF8.GetString(response.DataPtr, 0, response.DataLength).TrimEnd('\0');
-                            LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] GetResponse: DebugMessage '" + debugStr + "'");
-                            break;
-                        }
-
-                    case eCommandType.NoData:
-                    case eCommandType.Timeout:
-                        LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] GetResponse: timeout, returning");
-                        return null;
-
                     case eCommandType.ISO15693_COMMAND:
                         if (response.DataLength > 0)
                         {
-                            byte[] ret = new byte[response.DataLength];
-                            
-                            Array.Copy(response.DataPtr, ret, response.DataLength);
+                            LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] GetResponse: ACK, returning data (" + response.DataLength + ")");
 
-                            if (!ISO15693.CheckChecksum(ret))
+                            if (successes++ == 1)
                             {
-                                LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] GetResponse: ACK, but Checksum failed");
-                                return null;
+                                ret = new byte[response.DataLength];
+
+                                Array.Copy(response.DataPtr, ret, response.DataLength);
+
+                                if (!ISO15693.CheckChecksum(ret))
+                                {
+                                    LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] GetResponse: ACK, but Checksum failed");
+                                    return null;
+                                }
+                                return ret;
                             }
 
-                            LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] GetResponse: ACK, returning data");
-                            
-                            return ret;
+                            continue;
                         }
                         else
                         {
-                            LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] GetResponse: no tag answered, returning");
-                            return null;
+                            LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] GetResponse: no tag answered, continue");
+                            continue;
                         }
+                }
 
-                    case eCommandType.WTX:
-                        LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] WTX received: " + response.DataUInt16(0));
-                        break;
-
-                    default:
-                        LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] GetResponse: Unhandled: " + response.Cmd);
-                        break;
+                if (!HandleDefault(response))
+                {
+                    break;
                 }
             }
+
+            return ret;
         }
 
         #region Send ISO15693 commands
@@ -846,29 +856,63 @@ namespace TeddyBench
 
                 switch (response.Cmd)
                 {
-                    case eCommandType.DebugString:
-                        {
-                            ushort flags = response.DataUInt16(0);
-                            string debugStr = Encoding.UTF8.GetString(response.DataPtr, 2, response.DataLength - 2).TrimEnd('\0');
-                            LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] Emulate: DebugMessage(" + flags + ") '" + debugStr + "'");
-                            break;
-                        }
-
-                    case eCommandType.NoData:
-                    case eCommandType.Timeout:
-                        //LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] Emulate: timeout, returning");
-                        //return;
-                        continue;
-
                     case eCommandType.ISO15693_SIMULATE:
                         LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] Emulate: Done");
-                        return;
+                        continue;
+                }
 
-                    default:
-                        LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] Emulate: Unhandled: " + response.Cmd);
-                        break;
+                if (!HandleDefault(response))
+                {
+                    break;
                 }
             }
+        }
+
+        private bool HandleDefault(Pm3UsbResponse response)
+        {
+            switch (response.Cmd)
+            {
+                case eCommandType.DebugString:
+                    LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] DebugMessage " + HandleDebug(response) + "");
+                    return true;
+
+                case eCommandType.WTX:
+                    int wtx = response.DataUInt16(0);
+                    LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] WTX received: " + wtx);
+                    Thread.Sleep(wtx);
+                    return true;
+
+                case eCommandType.NoData:
+                case eCommandType.Timeout:
+                    LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] timeout, returning");
+                    return false;
+
+                default:
+                    LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] Emulate: Unhandled: " + response.Cmd);
+                    return true;
+            }
+
+            return false;
+        }
+
+        public enum eDbprintfFlags
+        {
+            FLAG_RAWPRINT  =  0x00,
+            FLAG_LOG       =  0x01,
+            FLAG_NEWLINE   =  0x02,
+            FLAG_INPLACE   =  0x04,
+            FLAG_ANSI      =  0x08
+        }
+
+        private string HandleDebug(Pm3UsbResponse response)
+        {
+            ushort flags = response.DataUInt16(0);
+            string debugStr = Encoding.UTF8.GetString(response.DataPtr, 2, response.DataLength - 2).TrimEnd('\0');
+
+            string ansiPattern = @"\e\[[0-9;]*m";
+            string filtered = Regex.Replace(debugStr, ansiPattern, "");
+
+            return "" + flags + " '" + filtered + "'";
         }
 
         public enum eMeasurementType
@@ -921,28 +965,14 @@ namespace TeddyBench
             LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] MeasureAntenna: Start");
             cmd.Write(Port);
 
+            int timeouts = 0;
+
             while (true)
             {
                 Pm3UsbResponse response = new Pm3UsbResponse(Port);
 
                 switch (response.Cmd)
                 {
-                    case eCommandType.DebugString:
-                        {
-                            string debugStr = Encoding.UTF8.GetString(response.DataPtr, 0, response.DataLength).TrimEnd('\0');
-                            LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] MeasureAntenna: DebugMessage '" + debugStr + "'");
-                            break;
-                        }
-
-                    case eCommandType.WTX:
-                        LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] WTX received: " + response.DataUInt16(0));
-                        continue;
-
-                    case eCommandType.NoData:
-                    case eCommandType.Timeout:
-                        LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] MeasureAntenna: timeout");
-                        continue;
-
                     case eCommandType.MeasureAntennaTuning:
                         result.vLF134 = response.DataUInt32(0) * 0.002f;
                         result.vLF125 = response.DataUInt32(1) * 0.002f;
@@ -952,12 +982,18 @@ namespace TeddyBench
                         result.divisor = response.DataUInt32(6);
                         Array.Copy(response.DataPtr, 4*7, result.amplitudes, 0, 256);
                         return true;
+                }
 
-                    default:
-                        LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] MeasureAntenna: Unhandled: " + response.Cmd);
+                if (!HandleDefault(response))
+                {
+                    if (timeouts++ > 10)
+                    {
                         break;
+                    }
                 }
             }
+
+            return false;
         }
 
         public bool Detect()
@@ -1502,22 +1538,9 @@ namespace TeddyBench
                         {
                             Pm3UsbResponse response = new Pm3UsbResponse(Port);
 
-                            switch (response.Cmd)
+                            if (!HandleDefault(response))
                             {
-                                case eCommandType.DebugString:
-                                    {
-                                        string debugStr = Encoding.UTF8.GetString(response.DataPtr, 0, response.DataLength).TrimEnd('\0');
-                                        LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] GetResponse: DebugMessage '" + debugStr + "'");
-                                        break;
-                                    }
-
-                                case eCommandType.NoData:
-                                case eCommandType.Timeout:
-                                    break;
-
-                                default:
-                                    LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] GetResponse: Unhandled: " + response.Cmd);
-                                    break;
+                                break;
                             }
                         }
                     }
