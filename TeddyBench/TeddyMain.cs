@@ -45,6 +45,7 @@ namespace TeddyBench
         private static object TonieInfoLock = new object();
         private static TonieTools.TonieData[] TonieInfo = new TonieTools.TonieData[0];
         private static Dictionary<string, string> TonieInfoCustom = new Dictionary<string, string>();
+        private static string TonieInfoString = "";
 
         private Dictionary<string, Tuple<TonieAudio, DateTime>> CachedAudios = new Dictionary<string, Tuple<TonieAudio, DateTime>>();
         private ListViewItem LastSelectediItem = null;
@@ -142,6 +143,7 @@ namespace TeddyBench
             {
                 if (Settings.DownloadJson || force)
                 {
+                    TonieInfoString = "| Downloading...";
                     try
                     {
                         HttpWebRequest request = (HttpWebRequest)WebRequest.Create("https://api.revvox.de/tonies.json?source=TeddyBench&version=" + ThisAssembly.Git.BaseTag);
@@ -149,10 +151,13 @@ namespace TeddyBench
                         TextReader reader = new StreamReader(response.GetResponseStream());
                         string content = reader.ReadToEnd();
                         File.WriteAllText("tonies.json", content);
+                        TonieInfoString = "| Downloaded";
                     }
                     catch (Exception e)
                     {
+                        TonieInfoString = "| Download Failed";
                         ReportException("Downloader Thread", e);
+                        return;
                     }
                 }
 
@@ -160,10 +165,13 @@ namespace TeddyBench
                 {
                     try
                     {
+                        TonieInfoString = "| Parsing...";
                         TonieInfo = JsonConvert.DeserializeObject<TonieTools.TonieData[]>(File.ReadAllText("tonies.json"));
+                        TonieInfoString = "";
                     }
                     catch (Exception e)
                     {
+                        TonieInfoString = "| Parsing Failed";
                         TonieInfo = new TonieTools.TonieData[0];
                         ReportException("Parse tonies.json", e);
                     }
@@ -244,7 +252,7 @@ namespace TeddyBench
 
             StatusBarTimer = new System.Windows.Forms.Timer();
             StatusBarTimer.Tick += (object sender, EventArgs e) => { UpdateStatusBar(); };
-            StatusBarTimer.Interval = 500;
+            StatusBarTimer.Interval = 250;
             StatusBarTimer.Start();
         }
 
@@ -377,11 +385,15 @@ namespace TeddyBench
             {
                 if (TonieInfo.Length == 0)
                 {
-                    text += " | No tonies.json, consider downloading it";
+                    text += " | No tonies.json loaded, consider downloading it";
                 }
                 else
                 {
-                    text += " | tonies.json has " + TonieInfo.Length + " entries";
+                    text += " | Have " + TonieInfo.Length + " entries in tonies.json";
+                }
+                if (!string.IsNullOrEmpty(TonieInfoString))
+                {
+                    text += " " + TonieInfoString;
                 }
             }
 
