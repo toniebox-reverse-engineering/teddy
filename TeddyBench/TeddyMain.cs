@@ -41,8 +41,11 @@ namespace TeddyBench
         private string CurrentDirectory = null;
         private bool AutoOpenDrive = true;
         private Dictionary<ListViewTag, ListViewItem> RegisteredItems = new Dictionary<ListViewTag, ListViewItem>();
-        private static TonieTools.TonieData[] TonieInfos;
-        private static Dictionary<string, string> CustomTonies = new Dictionary<string, string>();
+
+        private static object TonieInfoLock = new object();
+        private static TonieTools.TonieData[] TonieInfo = new TonieTools.TonieData[0];
+        private static Dictionary<string, string> TonieInfoCustom = new Dictionary<string, string>();
+
         private Dictionary<string, Tuple<TonieAudio, DateTime>> CachedAudios = new Dictionary<string, Tuple<TonieAudio, DateTime>>();
         private ListViewItem LastSelectediItem = null;
         private RfidReaderBase RfidReader;
@@ -149,29 +152,34 @@ namespace TeddyBench
                     }
                     catch (Exception e)
                     {
+                        ReportException("Downloader Thread", e);
                     }
                 }
 
-                try
+                lock (TonieInfoLock)
                 {
-                    TonieInfos = JsonConvert.DeserializeObject<TonieTools.TonieData[]>(File.ReadAllText("tonies.json"));
-                }
-                catch (Exception e)
-                {
-                    TonieInfos = new TonieTools.TonieData[0];
-                }
+                    try
+                    {
+                        TonieInfo = JsonConvert.DeserializeObject<TonieTools.TonieData[]>(File.ReadAllText("tonies.json"));
+                    }
+                    catch (Exception e)
+                    {
+                        TonieInfo = new TonieTools.TonieData[0];
+                        ReportException("Parse tonies.json", e);
+                    }
 
-                try
-                {
-                    CustomTonies = JsonConvert.DeserializeObject<Dictionary<string, string>>(File.ReadAllText("customTonies.json"));
-                }
-                catch(FileNotFoundException e)
-                {
-                    CustomTonies = new Dictionary<string, string>();
-                }
-                catch (Exception e)
-                {
-                    CustomTonies = new Dictionary<string, string>();
+                    try
+                    {
+                        TonieInfoCustom = JsonConvert.DeserializeObject<Dictionary<string, string>>(File.ReadAllText("customTonies.json"));
+                    }
+                    catch (FileNotFoundException e)
+                    {
+                        TonieInfoCustom.Clear();
+                    }
+                    catch (Exception e)
+                    {
+                        TonieInfoCustom.Clear();
+                    }
                 }
             }
             catch (Exception e)
@@ -182,13 +190,16 @@ namespace TeddyBench
 
         void SaveJson()
         {
-            try
+            lock (TonieInfoLock)
             {
-                File.WriteAllText("customTonies.json", JsonConvert.SerializeObject(CustomTonies, Formatting.Indented));
-            }
-            catch (Exception e)
-            {
-                return;
+                try
+                {
+                    File.WriteAllText("customTonies.json", JsonConvert.SerializeObject(TonieInfoCustom, Formatting.Indented));
+                }
+                catch (Exception e)
+                {
+                    return;
+                }
             }
         }
 
@@ -209,7 +220,7 @@ namespace TeddyBench
             cmbSorting.SelectedIndex = 2;
             Text = TitleString;
 
-            LoadJson();
+
             StartThreads();
 
             UpdateCheckThread = new SafeThread(UpdateCheck, "UpdateCheckThread");
@@ -362,13 +373,16 @@ namespace TeddyBench
                 text += " | " + RfidReader.HardwareType + " (FW: " + (RfidReader.UnlockSupported ? "SLIX-L enabled" : "stock") + voltageString + ") found at " + RfidReader.CurrentPort + ". The UID of the tag will be automatically used where applicable.";
             }
 
-            if(TonieInfos.Length == 0)
+            lock (TonieInfoLock)
             {
-                text += " | No tonies.json, consider downloading it";
-            }
-            else
-            {
-                text += " | tonies.json has " + TonieInfos.Length + " entries";
+                if (TonieInfo.Length == 0)
+                {
+                    text += " | No tonies.json, consider downloading it";
+                }
+                else
+                {
+                    text += " | tonies.json has " + TonieInfo.Length + " entries";
+                }
             }
 
             if (text == "")
@@ -591,6 +605,12 @@ namespace TeddyBench
             ScanCardThreadStop = false;
             ScanCardThread = new SafeThread(ScanCardMain, "ScanCardThread");
             ScanCardThread.Start();
+
+
+            new SafeThread(() =>
+            {
+                LoadJson();
+            }, "JSON Downloader").Start();
         }
 
         private void ScanCardMain()
@@ -846,7 +866,12 @@ namespace TeddyBench
                                 LogWindow.Log(LogWindow.eLogLevel.DebugVerbose, "GetTonieAudio... done");
                                 string image = "";
                                 string hash = BitConverter.ToString(dumpFile.Header.Hash).Replace("-", "");
-                                var found = TonieInfos.Where(t => t.Hash.Where(h => h == hash).Count() > 0);
+                                IEnumerable<TonieTools.TonieData> found = new TonieTools.TonieData[0];
+
+                                lock (TonieInfoLock)
+                                {
+                                    found = TonieInfo.Where(t => t.Hash.Where(h => h == hash).Count() > 0);
+                                }
                                 string tonieName = "[" + tag.Uid + "]" + Environment.NewLine + "(unknown: " + dumpFile.Header.AudioId.ToString("X8") + ")";
 
                                 bool update = false;
@@ -862,10 +887,13 @@ namespace TeddyBench
                                     {
                                         tonieName = info.Model + " - " + tonieName;
                                     }
-                                    if (CustomTonies.ContainsKey(hash))
+                                    lock (TonieInfoLock)
                                     {
-                                        LogWindow.Log(LogWindow.eLogLevel.DebugVerbose, "     known tonie, overriding name");
-                                        tonieName = CustomTonies[hash];
+                                        if (TonieInfoCustom.ContainsKey(hash))
+                                        {
+                                            LogWindow.Log(LogWindow.eLogLevel.DebugVerbose, "     known tonie, overriding name");
+                                            tonieName = TonieInfoCustom[hash];
+                                        }
                                     }
                                     if (!string.IsNullOrEmpty(info.Pic) && !lstTonies.LargeImageList.Images.ContainsKey(hash))
                                     {
@@ -886,25 +914,28 @@ namespace TeddyBench
                                     tag.Info = new TonieTools.TonieData();
                                     image = "unknown";
 
-                                    if (CustomTonies.ContainsKey(hash))
+                                    lock (TonieInfoLock)
                                     {
-                                        LogWindow.Log(LogWindow.eLogLevel.DebugVerbose, "     known custom tonie");
-                                        tonieName = CustomTonies[hash];
-                                        tag.Info.Title = tonieName;
-                                        image = "custom";
-                                        update = true;
-                                    }
-                                    else if (dumpFile.Header.AudioId < 0x50000000)
-                                    {
-                                        LogWindow.Log(LogWindow.eLogLevel.DebugVerbose, "     unknown custom tonie");
-                                        tonieName = "Unnamed Teddy - " + tonieName;
-                                        tag.Info.Title = "Unnamed Teddy";
-                                        image = "custom";
-                                        update = true;
-                                    }
-                                    else
-                                    {
-                                        LogWindow.Log(LogWindow.eLogLevel.DebugVerbose, "     Not found -> unknown");
+                                        if (TonieInfoCustom.ContainsKey(hash))
+                                        {
+                                            LogWindow.Log(LogWindow.eLogLevel.DebugVerbose, "     known custom tonie");
+                                            tonieName = TonieInfoCustom[hash];
+                                            tag.Info.Title = tonieName;
+                                            image = "custom";
+                                            update = true;
+                                        }
+                                        else if (dumpFile.Header.AudioId < 0x50000000)
+                                        {
+                                            LogWindow.Log(LogWindow.eLogLevel.DebugVerbose, "     unknown custom tonie");
+                                            tonieName = "Unnamed Teddy - " + tonieName;
+                                            tag.Info.Title = "Unnamed Teddy";
+                                            image = "custom";
+                                            update = true;
+                                        }
+                                        else
+                                        {
+                                            LogWindow.Log(LogWindow.eLogLevel.DebugVerbose, "     Not found -> unknown");
+                                        }
                                     }
                                 }
 
@@ -1400,11 +1431,14 @@ namespace TeddyBench
                 return;
             }
 
-            if (!CustomTonies.ContainsKey(tag.Hash))
+            lock (TonieInfoLock)
             {
-                CustomTonies.Add(tag.Hash, "");
+                if (!TonieInfoCustom.ContainsKey(tag.Hash))
+                {
+                    TonieInfoCustom.Add(tag.Hash, "");
+                }
+                TonieInfoCustom[tag.Hash] = e.Label;
             }
-            CustomTonies[tag.Hash] = e.Label;
 
             SaveJson();
         }
@@ -1576,7 +1610,12 @@ namespace TeddyBench
                         tags.Add("TeddyFile=" + file);
 
                         string hashString = BitConverter.ToString(dump.Header.Hash).Replace("-", "");
-                        var found = TonieInfos.Where(t => t.Hash.Contains(hashString));
+                        IEnumerable<TonieTools.TonieData> found = new TonieTools.TonieData[0];
+
+                        lock (TonieInfoLock)
+                        {
+                            found = TonieInfo.Where(t => t.Hash.Contains(hashString));
+                        }
                         TonieTools.TonieData info = null;
 
                         if (found.Count() > 0)
@@ -1949,12 +1988,15 @@ namespace TeddyBench
 
         private void AddInfo(StringBuilder str, ListViewTag tag)
         {
-            string customName = null;
-            if (CustomTonies.ContainsKey(tag.Hash))
+            lock (TonieInfoLock)
             {
-                customName = CustomTonies[tag.Hash];
+                string customName = null;
+                if (TonieInfoCustom.ContainsKey(tag.Hash))
+                {
+                    customName = TonieInfoCustom[tag.Hash];
+                }
+                TonieTools.DumpInfo(str, TonieTools.eDumpFormat.FormatText, tag.FileName, TonieInfo, customName);
             }
-            TonieTools.DumpInfo(str, TonieTools.eDumpFormat.FormatText, tag.FileName, TonieInfos, customName);
         }
 
         private async void readContentToolStripMenuItem_Click(object sender, EventArgs e)
@@ -2350,13 +2392,16 @@ namespace TeddyBench
 
         private void downloadToniesjsonOnStartupToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            Settings.DownloadJson = downloadToniesjsonOnStartupToolStripMenuItem.Checked;
+            Settings.DownloadJson = !downloadToniesjsonOnStartupToolStripMenuItem.Checked;
             SaveSettings();
         }
 
         private void downloadToniesjsonNowToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            LoadJson(true);
+            new SafeThread(() =>
+            {
+                LoadJson(true);
+            }, "JSON Downloader").Start();
         }
     }
 }
