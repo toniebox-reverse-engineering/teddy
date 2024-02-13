@@ -141,24 +141,68 @@ namespace TeddyBench
         {
             try
             {
+                string jsonContent = "";
+
                 if (Settings.DownloadJson || force)
                 {
-                    TonieInfoString = "| Downloading...";
                     try
                     {
+                        TonieInfoString = "| Downloading...";
                         HttpWebRequest request = (HttpWebRequest)WebRequest.Create("https://api.revvox.de/tonies.json?source=TeddyBench&version=" + ThisAssembly.Git.BaseTag);
                         HttpWebResponse response = (HttpWebResponse)request.GetResponse();
                         TextReader reader = new StreamReader(response.GetResponseStream());
-                        string content = reader.ReadToEnd();
-                        File.WriteAllText("tonies.json", content);
+                        jsonContent = reader.ReadToEnd();
                         TonieInfoString = "| Downloaded";
                     }
                     catch (Exception e)
                     {
                         TonieInfoString = "| Download Failed";
-                        ReportException("Downloader Thread", e);
+                        ReportException("Downloader", e);
                         return;
                     }
+
+                    if (string.IsNullOrEmpty(jsonContent))
+                    {
+                        return;
+                    }
+                    bool written = false;
+                    for (int loop = 0; loop < 5; loop++)
+                    {
+                        try
+                        {
+                            File.WriteAllText("tonies.json", jsonContent);
+                            written = true;
+                            break;
+                        }
+                        catch (IOException e)
+                        {
+                            ReportException("Writing tonies.json", e);
+                            Thread.Sleep(100);
+                        }
+                    }
+
+                    if (!written)
+                    {
+                        TonieInfoString = "| Writing Failed - is the tonies.json accessible?";
+                    }
+                }
+                else
+                {
+                    try
+                    {
+                        jsonContent = File.ReadAllText("customTonies.json");
+                    }
+                    catch (Exception e)
+                    {
+                        TonieInfoString = "| Reading tonies.json Failed";
+                        TonieInfo = new TonieTools.TonieData[0];
+                    }
+                }
+
+                if(string.IsNullOrEmpty(jsonContent))
+                {
+                    /* failed to read or download. TonieInfoString is already set */
+                    return;
                 }
 
                 lock (TonieInfoLock)
@@ -166,7 +210,7 @@ namespace TeddyBench
                     try
                     {
                         TonieInfoString = "| Parsing...";
-                        TonieInfo = JsonConvert.DeserializeObject<TonieTools.TonieData[]>(File.ReadAllText("tonies.json"));
+                        TonieInfo = JsonConvert.DeserializeObject<TonieTools.TonieData[]>(jsonContent);
                         TonieInfoString = "";
                     }
                     catch (Exception e)
