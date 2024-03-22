@@ -2240,19 +2240,25 @@ namespace TeddyBench
             TagOperationDialog opDlg = new TagOperationDialog();
 
             opDlg.Show();
-            Proxmark3.MeasurementResult result = RfidReader.MeasureAntenna();
-
-            opDlg.Close();
-
-            if (result == null)
+            try
             {
-                MessageBox.Show("Measurement failed.", "Failed");
-                return;
+                Proxmark3.MeasurementResult result = RfidReader.MeasureAntenna();
+
+                opDlg.Close();
+
+                if (result == null)
+                {
+                    MessageBox.Show("Measurement failed.", "Failed");
+                    return;
+                }
+
+                PlotAntennaForm form = new PlotAntennaForm(result);
+
+                form.ShowDialog();
             }
-
-            PlotAntennaForm form = new PlotAntennaForm(result);
-
-            form.ShowDialog();
+            catch (Exception ex)
+            {
+            }
         }
 
         private void flashFirmwareToolStripMenuItem_Click(object sender, EventArgs e)
@@ -2263,7 +2269,13 @@ namespace TeddyBench
             dlg.Filter = "Firmware ELF files (*.elf)|*.elf|All files (*.*)|*.*";
             if (dlg.ShowDialog() == DialogResult.OK)
             {
-                RfidReader.EnterBootloader(dlg.FileName);
+                try
+                {
+                    RfidReader.EnterBootloader(dlg.FileName);
+                }
+                catch (Exception ex)
+                {
+                }
             }
         }
 
@@ -2275,7 +2287,13 @@ namespace TeddyBench
             dlg.Filter = "Bootloader ELF files (*.elf)|*.elf|All files (*.*)|*.*";
             if (dlg.ShowDialog() == DialogResult.OK)
             {
-                RfidReader.EnterBootloader(dlg.FileName);
+                try
+                {
+                    RfidReader.EnterBootloader(dlg.FileName);
+                }
+                catch (Exception ex)
+                {
+                }
             }
         }
 
