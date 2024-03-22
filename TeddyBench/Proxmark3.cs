@@ -1175,9 +1175,10 @@ namespace TeddyBench
 
                 string versionString = Encoding.UTF8.GetString(resVers.DataPtr, 12, (int)ver.versionstr_len - 1);
                 LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] Version:");
+                Regex removeAnsi = new Regex(@"\x1b\[[0-9;]*m");
                 foreach (string line in versionString.Split('\n'))
                 {
-                    LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3]     " + line);
+                    LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3]     " + removeAnsi.Replace(line, ""));
                 }
 
                 switch (ver.id)
