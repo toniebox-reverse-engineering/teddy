@@ -197,7 +197,6 @@
             // 
             // flashFirmwareToolStripMenuItem
             // 
-            this.flashFirmwareToolStripMenuItem.Enabled = false;
             this.flashFirmwareToolStripMenuItem.Name = "flashFirmwareToolStripMenuItem";
             this.flashFirmwareToolStripMenuItem.Size = new System.Drawing.Size(226, 22);
             this.flashFirmwareToolStripMenuItem.Text = "Flash Firmware";
@@ -205,7 +204,6 @@
             // 
             // flashBootloaderToolStripMenuItem
             // 
-            this.flashBootloaderToolStripMenuItem.Enabled = false;
             this.flashBootloaderToolStripMenuItem.Name = "flashBootloaderToolStripMenuItem";
             this.flashBootloaderToolStripMenuItem.Size = new System.Drawing.Size(226, 22);
             this.flashBootloaderToolStripMenuItem.Text = "Flash Bootloader";
@@ -337,7 +335,7 @@
             this.splitContainer1.Panel2.Controls.Add(this.btnDelete);
             this.splitContainer1.Panel2.Controls.Add(this.btnAdd);
             this.splitContainer1.Size = new System.Drawing.Size(788, 401);
-            this.splitContainer1.SplitterDistance = 693;
+            this.splitContainer1.SplitterDistance = 696;
             this.splitContainer1.SplitterWidth = 1;
             this.splitContainer1.TabIndex = 1;
             // 
@@ -361,7 +359,7 @@
             // splitContainer2.Panel2
             // 
             this.splitContainer2.Panel2.Controls.Add(this.lstTonies);
-            this.splitContainer2.Size = new System.Drawing.Size(693, 401);
+            this.splitContainer2.Size = new System.Drawing.Size(696, 401);
             this.splitContainer2.SplitterDistance = 36;
             this.splitContainer2.SplitterWidth = 1;
             this.splitContainer2.TabIndex = 1;
@@ -443,7 +441,7 @@
             this.lstTonies.Location = new System.Drawing.Point(0, 0);
             this.lstTonies.Name = "lstTonies";
             this.lstTonies.ShowItemToolTips = true;
-            this.lstTonies.Size = new System.Drawing.Size(693, 364);
+            this.lstTonies.Size = new System.Drawing.Size(696, 364);
             this.lstTonies.TabIndex = 0;
             this.lstTonies.TileSize = new System.Drawing.Size(64, 64);
             this.lstTonies.UseCompatibleStateImageBehavior = false;

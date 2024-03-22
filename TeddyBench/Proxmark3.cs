@@ -91,7 +91,9 @@ namespace TeddyBench
             ISO15693_EML_SETMEM = 0x0331,
 
             MeasureAntennaTuning = 0x400,
-            WTX = 0x116
+            WTX = 0x116,
+            Nack = 0xFE,
+            Ack = 0xFF
         }
 
         public struct OldArgs
@@ -105,6 +107,8 @@ namespace TeddyBench
         {
             public Pm3UsbCommandStructLegacy data = new Pm3UsbCommandStructLegacy();
 
+
+            public Pm3UsbCommand(eCommandType cmd, byte[] payload) : this(cmd, 0, 0, 0, payload) { }
 
             public Pm3UsbCommand(eCommandType cmd, ulong arg0 = 0, ulong arg1 = 0, ulong arg2 = 0, byte[] payload = null)
             {
@@ -636,11 +640,18 @@ namespace TeddyBench
             {
                 return false;
             }
-            bool supported = false;
-            Pm3UsbCommand cmd = new Pm3UsbCommand(eCommandType.ISO15693_SLIX_DISABLE_PRIVACY, pass);
+
+            byte[] key = new byte[4];
+            key[0] = (byte)((pass >> 0) & 0xFF);
+            key[1] = (byte)((pass >> 8) & 0xFF);
+            key[2] = (byte)((pass >> 16) & 0xFF);
+            key[3] = (byte)((pass >> 24) & 0xFF);
+            Pm3UsbCommand cmd = new Pm3UsbCommand(eCommandType.ISO15693_SLIX_DISABLE_PRIVACY, key);
 
             LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] UnlockTag: Send request for pass 0x" + pass.ToString("X8"));
             cmd.Write(Port);
+
+            int retries = 0;
 
             while (true)
             {
@@ -650,7 +661,6 @@ namespace TeddyBench
                 {
                     case eCommandType.ISO15693_SLIX_DISABLE_PRIVACY:
                     {
-                        supported = true;
                         if (response.Status == 0)
                         {
                             reason = 0;
@@ -668,15 +678,14 @@ namespace TeddyBench
 
                 if (!HandleDefault(response))
                 {
-                    break;
+                    if (retries++ > 3)
+                    {
+                        break;
+                    }
                 }
             }
-            if(!supported)
-            {
-                throw new NotSupportedException();
-            }
 
-            return false;
+            throw new NotSupportedException();
         }
 
         private string UIDToString(byte[] uid)
@@ -719,15 +728,12 @@ namespace TeddyBench
             }
             byte[] ret = null;
 
-            byte[] buf = CreateIso15CommandBuffer(Iso15Command.ISO15_CONNECT | Iso15Command.ISO15_HIGH_SPEED | Iso15Command.ISO15_READ_RESPONSE, command);
-
-            Pm3UsbCommand cmd = new Pm3UsbCommand(eCommandType.ISO15693_COMMAND, (byte)buf.Length, 1, 1, buf);
+            Pm3UsbCommand cmd = new Pm3UsbCommand(eCommandType.ISO15693_COMMAND, (byte)command.Length, 1, 1, command);
 
             LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] GetResponse: Send " + BitConverter.ToString(command).Replace("-", ""));
             cmd.Write(Port);
 
-            int timeouts = 0;
-            int successes = 0;
+            int retries = 0;
 
             while (true)
             {
@@ -740,8 +746,6 @@ namespace TeddyBench
                         {
                             LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] GetResponse: ACK, returning data (" + response.DataLength + ")");
 
-                            if (successes++ == 1)
-                            {
                                 ret = new byte[response.DataLength];
 
                                 Array.Copy(response.DataPtr, ret, response.DataLength);
@@ -752,20 +756,20 @@ namespace TeddyBench
                                     return null;
                                 }
                                 return ret;
-                            }
-
-                            continue;
                         }
                         else
                         {
-                            LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] GetResponse: no tag answered, continue");
-                            continue;
+                            LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] GetResponse: no tag answered");
+                            return null;
                         }
                 }
 
                 if (!HandleDefault(response))
                 {
-                    break;
+                    if (retries++ > 3)
+                    {
+                        break;
+                    }
                 }
             }
 
@@ -868,7 +872,7 @@ namespace TeddyBench
             }
         }
 
-        private bool HandleDefault(Pm3UsbResponse response)
+        private bool HandleDefault(Pm3UsbResponse response, string comment = "")
         {
             switch (response.Cmd)
             {
@@ -884,7 +888,7 @@ namespace TeddyBench
 
                 case eCommandType.NoData:
                 case eCommandType.Timeout:
-                    LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] timeout, returning");
+                    LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] timeout " + comment);
                     return false;
 
                 default:
@@ -984,7 +988,7 @@ namespace TeddyBench
                         return true;
                 }
 
-                if (!HandleDefault(response))
+                if (!HandleDefault(response, "(measurement takes a while)"))
                 {
                     if (timeouts++ > 10)
                     {
@@ -1335,6 +1339,10 @@ namespace TeddyBench
             {
                 Pm3UsbCommand cmdStart = new Pm3UsbCommand(eCommandType.StartFlash, bootloader ? FlashStart : BootloaderEnd, FlashEnd, bootloader ? 0x54494f44UL : 0UL);
                 cmdStart.Write(Port);
+                if (!ReadLegacyAck())
+                {
+                    return false;
+                }
 
                 foreach (var seg in segments)
                 {
@@ -1377,16 +1385,28 @@ namespace TeddyBench
             byte[] memBuf = Enumerable.Repeat((byte)0xFF, 0x100).ToArray();
             Array.Copy(data, offset, memBuf, 0, length);
 
-            //LogWindow.Log(LogWindow.eLogLevel.Debug, "[Flash]   Block 0x" + address.ToString("X8") + "..." );
+            LogWindow.Log(LogWindow.eLogLevel.Debug, "[Flash]   Block 0x" + address.ToString("X8") + "..." );
 
             Pm3UsbCommand finish = new Pm3UsbCommand(eCommandType.FinishWrite, address);
             Array.Copy(memBuf, finish.data.d, memBuf.Length);
             finish.Write(Port);
-            if (!ReadAck())
+            if (!ReadLegacyAck())
             {
                 return false;
             }
 
+            return true;
+        }
+
+        private bool ReadLegacyAck()
+        {
+            Pm3UsbResponse response = new Pm3UsbResponse(Port);
+
+            if (!response.ResponseLegacy || response.respLegacy.cmd != (int)eCommandType.Ack)
+            {
+                LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] ReadAck: did not reply with ACK");
+                return false;
+            }
             return true;
         }
 

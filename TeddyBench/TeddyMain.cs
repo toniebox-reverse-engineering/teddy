@@ -316,7 +316,7 @@ namespace TeddyBench
 
             if (e)
             {
-                MessageBox.Show("Flashing the device succeeded, it will reconnect now", "Flashing Proxmark3 done");
+                MessageBox.Show("Flashing the device succeeded, will reconnect now", "Flashing Proxmark3 done");
             }
             else
             {
@@ -405,8 +405,8 @@ namespace TeddyBench
                 reportProxmarkAnToolStripMenuItem.Enabled = true;
                 reportNFCTagToolStripMenuItem.Enabled = true;
 
-                flashBootloaderToolStripMenuItem.Enabled = false; // (RfidReader.DeviceInfo & RfidReaderBase.eDeviceInfo.BootromPresent) != 0;
-                flashFirmwareToolStripMenuItem.Enabled = false; // (RfidReader.DeviceInfo & RfidReaderBase.eDeviceInfo.BootromPresent) != 0;
+                flashBootloaderToolStripMenuItem.Enabled = (RfidReader.DeviceInfo & RfidReaderBase.eDeviceInfo.BootromPresent) != 0;
+                flashFirmwareToolStripMenuItem.Enabled = (RfidReader.DeviceInfo & RfidReaderBase.eDeviceInfo.BootromPresent) != 0;
             }
         }
 
