@@ -43,10 +43,18 @@ jobs:
       env:
         Configuration: ${{ matrix.configuration }}
 
-    - name: Upload build artifacts
+    - name: Upload TeddyBench
       uses: actions/upload-artifact@v4
       with:
         name: TeddyBench-${{ matrix.configuration }}
-        path: TeddyBench/bin/${{ matrix.configuration }}/net48/win10-x64/TeddyBench.exe
+        path: TeddyBench/bin/${{ matrix.configuration }}/net48/win10-x64
+      env:
+        Configuration: ${{ matrix.configuration }}
+
+    - name: Upload Teddy
+      uses: actions/upload-artifact@v4
+      with:
+        name: Teddy-${{ matrix.configuration }}
+        path: Teddy/bin/${{ matrix.configuration }}/net48
       env:
         Configuration: ${{ matrix.configuration }}
