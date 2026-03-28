@@ -1,0 +1,90 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="using:TeddyBench.Avalonia.Dialogs"
+        mc:Ignorable="d" d:DesignWidth="550" d:DesignHeight="400"
+        x:Class="TeddyBench.Avalonia.Dialogs.BulkEditMetadataDialog"
+        x:DataType="vm:BulkEditMetadataDialogViewModel"
+        Title="Bulk Edit Metadata"
+        Width="550" Height="400"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False">
+
+  <StackPanel Margin="15">
+    <TextBlock Text="Bulk Edit Custom Tonie Metadata"
+               FontSize="16"
+               FontWeight="Bold"
+               Margin="0,0,0,10"/>
+
+    <TextBlock FontSize="11"
+               Foreground="Gray"
+               Margin="0,0,0,15"
+               TextWrapping="Wrap">
+      <Run Text="Editing "/>
+      <Run Text="{Binding SelectedCount}" FontWeight="SemiBold"/>
+      <Run Text=" custom tonies. Only fill in fields you want to update. Empty fields will not be changed."/>
+    </TextBlock>
+
+    <!-- Info Box -->
+    <Border Background="#E3F2FD"
+            BorderBrush="#2196F3"
+            BorderThickness="1"
+            Padding="10"
+            Margin="0,0,0,15"
+            CornerRadius="3">
+      <TextBlock FontSize="11"
+                 Foreground="#1976D2"
+                 TextWrapping="Wrap"
+                 Text="Tip: Leave a field empty to keep existing values for each tonie. Only non-empty fields will be updated."/>
+    </Border>
+
+    <!-- Series -->
+    <TextBlock Text="Series" FontWeight="SemiBold" Margin="0,0,0,3"/>
+    <TextBlock Text="Apply the same series name to all selected tonies (e.g., 'My Collection', 'Kids Stories')"
+               FontSize="10" Foreground="Gray" Margin="0,0,0,3"/>
+    <TextBox Text="{Binding Series}"
+             Watermark="Leave empty to keep existing values"
+             Margin="0,0,0,15"/>
+
+    <!-- Category -->
+    <TextBlock Text="Category" FontWeight="SemiBold" Margin="0,0,0,3"/>
+    <TextBlock Text="Apply the same category to all selected tonies (e.g., 'custom', 'music', 'audiobook')"
+               FontSize="10" Foreground="Gray" Margin="0,0,0,3"/>
+    <TextBox Text="{Binding Category}"
+             Watermark="Leave empty to keep existing values"
+             Margin="0,0,0,15"/>
+
+    <!-- Language -->
+    <TextBlock Text="Language" FontWeight="SemiBold" Margin="0,0,0,3"/>
+    <TextBlock Text="Apply the same language code to all selected tonies (e.g., 'en-us', 'de-de', 'fr-fr')"
+               FontSize="10" Foreground="Gray" Margin="0,0,0,3"/>
+    <TextBox Text="{Binding Language}"
+             Watermark="Leave empty to keep existing values"
+             Margin="0,0,0,2"/>
+    <TextBlock Text="{Binding LanguageError}"
+               FontSize="10"
+               Foreground="Red"
+               IsVisible="{Binding HasLanguageError}"
+               Margin="0,2,0,15"/>
+
+    <!-- Buttons -->
+    <StackPanel Orientation="Horizontal"
+                HorizontalAlignment="Center"
+                Margin="0,10,0,0">
+      <Button Content="_Apply"
+              Width="90"
+              Command="{Binding ApplyCommand}"
+              Click="OnApplyClick"
+              IsEnabled="{Binding IsValid}"
+              IsDefault="True"/>
+      <Button Content="_Cancel"
+              Width="90"
+              Margin="10,0,0,0"
+              Command="{Binding CancelCommand}"
+              Click="OnCancelClick"
+              IsCancel="True"/>
+    </StackPanel>
+  </StackPanel>
+
+</Window>

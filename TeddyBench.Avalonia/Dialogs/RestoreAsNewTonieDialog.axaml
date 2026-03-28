@@ -1,0 +1,96 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="clr-namespace:TeddyBench.Avalonia.Dialogs"
+        mc:Ignorable="d" d:DesignWidth="500" d:DesignHeight="350"
+        x:Class="TeddyBench.Avalonia.Dialogs.RestoreAsNewTonieDialog"
+        x:DataType="vm:RestoreAsNewTonieDialogViewModel"
+        Title="Restore as New Tonie"
+        Width="500" Height="350"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False">
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="20"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="10"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="10"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="10"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="10"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Info Text -->
+        <TextBlock Grid.Row="0" TextWrapping="Wrap" Foreground="#FFA500">
+            The original Audio ID is unknown for this Tonie. It will be re-encoded with a new Audio ID and restored as a new custom Tonie.
+        </TextBlock>
+
+        <!-- RFID UID Input -->
+        <TextBlock Grid.Row="2" Text="RFID UID (8 hex characters, required):"/>
+        <TextBox Grid.Row="4"
+                 Text="{Binding RfidUid}"
+                 MaxLength="8"
+                 Watermark="0EED5104"
+                 FontFamily="Consolas, Courier New, monospace"/>
+
+        <!-- Custom Title Input -->
+        <TextBlock Grid.Row="6" Text="Custom Title (optional):"/>
+        <TextBox Grid.Row="8"
+                 Text="{Binding CustomTitle}"
+                 Watermark="Leave empty to use existing title"/>
+
+        <!-- Audio ID Input -->
+        <TextBlock Grid.Row="10">
+            <Run Text="Audio ID (Unix timestamp):"/>
+            <Run Text=" " />
+            <Run Text="[Optional]" FontSize="11" Foreground="Gray"/>
+        </TextBlock>
+
+        <!-- Custom Tonie Toggle -->
+        <StackPanel Grid.Row="11" Orientation="Horizontal" Margin="0,5,0,0">
+            <ToggleSwitch IsChecked="{Binding IsCustomTonie}"
+                          OnContent="Custom Tonie"
+                          OffContent="Custom Tonie"
+                          Margin="0,0,10,0"/>
+            <TextBlock Text="(Apply -0x50000000 offset)"
+                       VerticalAlignment="Center"
+                       FontSize="11"
+                       Foreground="Gray"
+                       IsVisible="{Binding IsCustomTonie}"/>
+            <TextBlock Text="(Use timestamp as-is)"
+                       VerticalAlignment="Center"
+                       FontSize="11"
+                       Foreground="Gray"
+                       IsVisible="{Binding !IsCustomTonie}"/>
+        </StackPanel>
+
+        <TextBox Grid.Row="11"
+                 Text="{Binding AudioIdInput}"
+                 MaxLength="10"
+                 Watermark="e.g., 1684838575"
+                 FontFamily="Consolas, Courier New, monospace"
+                 Margin="0,35,0,0"/>
+
+        <!-- Buttons -->
+        <StackPanel Grid.Row="12"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    Spacing="10">
+            <Button Content="Cancel"
+                    Width="100"
+                    Command="{Binding CancelCommand}"/>
+            <Button Content="Restore"
+                    Width="100"
+                    Command="{Binding RestoreCommand}"
+                    IsEnabled="{Binding IsValid}"/>
+        </StackPanel>
+    </Grid>
+</Window>

@@ -1,0 +1,44 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="using:TeddyBench.Avalonia.Dialogs"
+        mc:Ignorable="d" d:DesignWidth="450" d:DesignHeight="220"
+        x:Class="TeddyBench.Avalonia.Dialogs.RenameTonieDialog"
+        x:DataType="vm:RenameTonieDialogViewModel"
+        Title="Rename Tonie"
+        Width="450" Height="220"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False">
+
+  <StackPanel Margin="10">
+    <TextBlock Text="Enter a new name for this tonie:"
+               Margin="0,0,0,5"
+               FontWeight="Bold"/>
+
+    <TextBlock Text="Note: RFID information will be preserved automatically."
+               Margin="0,0,0,10"
+               FontSize="11"
+               Foreground="Gray"/>
+
+    <TextBox Text="{Binding NewTitle}"
+             Margin="0,0,0,10"
+             Name="TitleInput"/>
+
+    <StackPanel Orientation="Horizontal"
+                HorizontalAlignment="Center">
+      <Button Content="_OK"
+              Width="80"
+              Command="{Binding OkCommand}"
+              Click="OnOkClick"
+              IsDefault="True"/>
+      <Button Content="_Cancel"
+              Width="80"
+              Margin="10,0,0,0"
+              Command="{Binding CancelCommand}"
+              Click="OnCancelClick"
+              IsCancel="True"/>
+    </StackPanel>
+  </StackPanel>
+
+</Window>

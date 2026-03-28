@@ -1,0 +1,94 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="using:TeddyBench.Avalonia.Dialogs"
+        mc:Ignorable="d" d:DesignWidth="850" d:DesignHeight="550"
+        x:Class="TeddyBench.Avalonia.Dialogs.TrackSortDialog"
+        x:DataType="vm:TrackSortDialogViewModel"
+        Title="Sort Your Tracks"
+        Width="850" Height="550"
+        WindowStartupLocation="CenterOwner"
+        CanResize="True">
+
+  <Grid RowDefinitions="Auto,*,Auto">
+
+    <!-- Header -->
+    <TextBlock Grid.Row="0"
+               Text="Reorder tracks using Up/Down buttons.&#x0a;Add more files or remove selected tracks.&#x0a;Multi-select with Ctrl or Shift."
+               Margin="10"
+               FontWeight="Bold"
+               TextWrapping="Wrap"/>
+
+    <!-- Main content area -->
+    <Grid Grid.Row="1" ColumnDefinitions="*,Auto" Margin="10,0">
+
+      <!-- Track list -->
+      <ListBox Grid.Column="0"
+               ItemsSource="{Binding Tracks}"
+               SelectionMode="Multiple"
+               Name="TrackListBox"
+               Margin="0,0,10,0">
+        <ListBox.ItemTemplate>
+          <DataTemplate>
+            <StackPanel Orientation="Horizontal" ToolTip.Tip="{Binding FileName}">
+              <TextBlock Text="{Binding TrackNumber, StringFormat='{}{0}. '}"
+                         Width="40"
+                         FontWeight="Bold"/>
+              <TextBlock Text="{Binding DisplayName}"
+                         TextTrimming="CharacterEllipsis"/>
+            </StackPanel>
+          </DataTemplate>
+        </ListBox.ItemTemplate>
+      </ListBox>
+
+      <!-- Buttons panel -->
+      <StackPanel Grid.Column="1"
+                  VerticalAlignment="Top"
+                  Margin="0,10,0,0">
+        <Button Content="Move _Up"
+                Width="110"
+                Margin="5"
+                Command="{Binding MoveUpCommand}"
+                IsEnabled="{Binding CanMoveUp}"/>
+        <Button Content="Move _Down"
+                Width="110"
+                Margin="5"
+                Command="{Binding MoveDownCommand}"
+                IsEnabled="{Binding CanMoveDown}"/>
+        <Button Content="_Add Files"
+                Width="110"
+                Margin="5,20,5,5"
+                Command="{Binding AddFilesCommand}"/>
+        <Button Content="_Remove"
+                Width="110"
+                Margin="5"
+                Command="{Binding RemoveCommand}"
+                IsEnabled="{Binding CanRemove}"/>
+      </StackPanel>
+
+    </Grid>
+
+    <!-- Bottom buttons -->
+    <StackPanel Grid.Row="2"
+                Orientation="Horizontal"
+                HorizontalAlignment="Right"
+                Margin="10">
+      <Button Name="EncodeButton"
+              Content="_Encode"
+              Width="100"
+              Margin="5"
+              Command="{Binding EncodeCommand}"
+              Click="OnEncodeClick"
+              IsDefault="True"/>
+      <Button Content="_Cancel"
+              Width="100"
+              Margin="5"
+              Command="{Binding CancelCommand}"
+              Click="OnCancelClick"
+              IsCancel="True"/>
+    </StackPanel>
+
+  </Grid>
+
+</Window>

@@ -1,0 +1,185 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:TeddyBench.Avalonia.ViewModels"
+        x:Class="TeddyBench.Avalonia.Dialogs.PlayerDialog"
+        x:DataType="vm:PlayerDialogViewModel"
+        Title="{Binding Title}"
+        Width="600" Height="500"
+        CanResize="True"
+        WindowStartupLocation="CenterOwner">
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Currently Playing Label -->
+        <TextBlock Grid.Row="0"
+                   Text="{Binding CurrentTrackText}"
+                   FontWeight="SemiBold"
+                   FontSize="13"
+                   HorizontalAlignment="Center"
+                   Margin="0,0,0,15"/>
+
+        <!-- Progress Bar -->
+        <Grid Grid.Row="1" Margin="0,0,0,15">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <TextBlock Grid.Column="0"
+                       Text="{Binding CurrentPositionText}"
+                       FontFamily="Consolas"
+                       FontSize="12"
+                       VerticalAlignment="Center"
+                       Margin="0,0,10,0"/>
+
+            <Slider Grid.Column="1"
+                    Minimum="0"
+                    Maximum="{Binding DurationSeconds}"
+                    Value="{Binding PositionSeconds}"
+                    IsEnabled="{Binding CanStop}"
+                    VerticalAlignment="Center"/>
+
+            <TextBlock Grid.Column="2"
+                       Text="{Binding DurationText}"
+                       FontFamily="Consolas"
+                       FontSize="12"
+                       VerticalAlignment="Center"
+                       Margin="10,0,0,0"/>
+        </Grid>
+
+        <!-- Playback Controls -->
+        <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center" Margin="0,0,0,20">
+            <!-- Previous Track Button -->
+            <Button Command="{Binding PreviousTrackCommand}"
+                    IsEnabled="{Binding CanGoPrevious}"
+                    Width="40" Height="40"
+                    ToolTip.Tip="Previous track"
+                    CornerRadius="8"
+                    Padding="0">
+                <TextBlock Text="⏮" FontSize="18" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+            </Button>
+
+            <!-- Play/Pause Button -->
+            <Button Name="PlayPauseButton"
+                    Command="{Binding PlayPauseCommand}"
+                    Width="40" Height="40"
+                    CornerRadius="8"
+                    Padding="0"
+                    ToolTip.Tip="{Binding PlayPauseTooltip}">
+                <TextBlock Text="{Binding PlayPauseIcon}" FontSize="18" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+            </Button>
+
+            <!-- Stop Button -->
+            <Button Name="StopButton"
+                    Command="{Binding StopCommand}"
+                    IsEnabled="{Binding CanStop}"
+                    Width="40" Height="40"
+                    ToolTip.Tip="Stop"
+                    CornerRadius="8"
+                    Padding="0">
+                <TextBlock Text="⏹" FontSize="18" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+            </Button>
+
+            <!-- Next Track Button -->
+            <Button Command="{Binding NextTrackCommand}"
+                    IsEnabled="{Binding CanGoNext}"
+                    Width="40" Height="40"
+                    ToolTip.Tip="Next track"
+                    CornerRadius="8"
+                    Padding="0">
+                <TextBlock Text="⏭" FontSize="18" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+            </Button>
+        </StackPanel>
+
+        <!-- Spacer -->
+        <Border Grid.Row="3" Height="10"/>
+
+        <!-- Track List -->
+        <Border Grid.Row="4"
+                BorderBrush="#CCCCCC"
+                BorderThickness="1"
+                Padding="10">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <TextBlock Grid.Row="0" Text="Tracks:" FontWeight="Bold" Margin="0,0,0,10"/>
+
+                <ListBox Grid.Row="1"
+                         x:Name="TrackListBox"
+                         ItemsSource="{Binding Tracks}"
+                         SelectedItem="{Binding CurrentTrack}"
+                         SelectionMode="Single"
+                         Background="Transparent"
+                         BorderThickness="0">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate DataType="vm:TrackInfo">
+                            <Button Content="{Binding DisplayText}"
+                                    Command="{Binding $parent[Window].((vm:PlayerDialogViewModel)DataContext).SeekToTrackCommand}"
+                                    CommandParameter="{Binding Position}"
+                                    HorizontalAlignment="Stretch"
+                                    HorizontalContentAlignment="Left"
+                                    BorderThickness="0"
+                                    Padding="5"
+                                    Margin="0,2,0,2">
+                                <Button.Styles>
+                                    <!-- Default transparent background -->
+                                    <Style Selector="Button">
+                                        <Setter Property="Background" Value="Transparent"/>
+                                    </Style>
+                                    <!-- Highlighted when it's the current track -->
+                                    <Style Selector="Button[Tag=True]">
+                                        <Setter Property="Background" Value="#D0E8FF"/>
+                                        <Setter Property="FontWeight" Value="SemiBold"/>
+                                    </Style>
+                                    <!-- Hover effect -->
+                                    <Style Selector="Button:pointerover /template/ ContentPresenter">
+                                        <Setter Property="Background" Value="#E0E0E0"/>
+                                    </Style>
+                                    <!-- Hover effect for current track -->
+                                    <Style Selector="Button[Tag=True]:pointerover /template/ ContentPresenter">
+                                        <Setter Property="Background" Value="#B8DAFF"/>
+                                    </Style>
+                                </Button.Styles>
+                                <Button.Tag>
+                                    <Binding Path="IsCurrentTrack"/>
+                                </Button.Tag>
+                            </Button>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                    <ListBox.Styles>
+                        <!-- Remove ListBox selection styling since we're using our own -->
+                        <Style Selector="ListBoxItem">
+                            <Setter Property="Background" Value="Transparent"/>
+                            <Setter Property="Padding" Value="0"/>
+                        </Style>
+                        <Style Selector="ListBoxItem:selected /template/ ContentPresenter">
+                            <Setter Property="Background" Value="Transparent"/>
+                        </Style>
+                    </ListBox.Styles>
+                </ListBox>
+            </Grid>
+        </Border>
+
+        <!-- Close Button -->
+        <Button Grid.Row="5"
+                Name="CloseButton"
+                Content="_Close"
+                Command="{Binding CloseCommand}"
+                HorizontalAlignment="Right"
+                Width="100"
+                Margin="0,20,0,0"
+                IsCancel="True"/>
+    </Grid>
+</Window>

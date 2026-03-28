@@ -1,0 +1,58 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="using:TeddyBench.Avalonia.Dialogs"
+        mc:Ignorable="d" d:DesignWidth="500" d:DesignHeight="350"
+        x:Class="TeddyBench.Avalonia.Dialogs.HashConflictResolutionDialog"
+        x:DataType="vm:HashConflictResolutionDialogViewModel"
+        Title="Audio Content Already Exists"
+        Width="500" Height="350"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False">
+
+  <StackPanel Margin="15">
+    <!-- Warning message -->
+    <TextBlock Text="{Binding Message}"
+               Margin="0,0,0,15"
+               TextWrapping="Wrap"
+               FontWeight="Bold"/>
+
+    <!-- Details -->
+    <TextBlock Text="{Binding Details}"
+               Margin="0,0,0,20"
+               TextWrapping="Wrap"
+               Foreground="Gray"/>
+
+    <!-- Options -->
+    <TextBlock Text="What would you like to do?"
+               Margin="0,0,0,10"
+               FontWeight="SemiBold"/>
+
+    <!-- Buttons -->
+    <StackPanel Spacing="10">
+      <Button Content="_Move Existing File to Different RFID"
+              Width="420"
+              HorizontalAlignment="Left"
+              Command="{Binding MoveExistingCommand}"
+              Click="OnMoveExistingClick"
+              ToolTip.Tip="Move the existing file to a new RFID location, then restore this file to its original location"/>
+
+      <Button Content="_Keep Existing File (Delete Trashcan Copy)"
+              Width="420"
+              HorizontalAlignment="Left"
+              Command="{Binding KeepExistingCommand}"
+              Click="OnKeepExistingClick"
+              ToolTip.Tip="Keep the file at its current location and permanently delete the copy in TRASHCAN"/>
+
+      <Button Content="_Cancel"
+              Width="420"
+              HorizontalAlignment="Left"
+              Command="{Binding CancelCommand}"
+              Click="OnCancelClick"
+              IsDefault="True"
+              IsCancel="True"/>
+    </StackPanel>
+  </StackPanel>
+
+</Window>

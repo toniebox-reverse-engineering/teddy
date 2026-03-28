@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading;
 
 namespace TeddyBench
@@ -21,9 +21,6 @@ namespace TeddyBench
             {
                 ThreadStart.Invoke();
             }
-            catch (ThreadAbortException ex)
-            {
-            }
             catch (Exception ex)
             {
                 Program.MainClass.ReportException(Thread.Name, ex);
@@ -37,7 +34,9 @@ namespace TeddyBench
 
         internal void Abort()
         {
-            Thread.Abort();
+            // Thread.Abort() is not supported in .NET Core/.NET 5+
+            // Threads should stop gracefully via their stop flags
+            // If thread doesn't stop within Join() timeout, it will be terminated when process exits
         }
 
         internal bool Join(int v)

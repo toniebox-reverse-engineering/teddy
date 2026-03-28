@@ -45,7 +45,7 @@ namespace Concentus
     /// <summary>
     /// multi-layer perceptron processor
     /// </summary>
-    internal static class mlp
+    internal static class Mlp
     {
         private const int MAX_NEURONS = 100;
 

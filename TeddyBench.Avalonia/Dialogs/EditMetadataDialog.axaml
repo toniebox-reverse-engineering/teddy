@@ -1,0 +1,130 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="using:TeddyBench.Avalonia.Dialogs"
+        mc:Ignorable="d" d:DesignWidth="600" d:DesignHeight="750"
+        x:Class="TeddyBench.Avalonia.Dialogs.EditMetadataDialog"
+        x:DataType="vm:EditMetadataDialogViewModel"
+        Title="Edit Custom Tonie Metadata"
+        Width="600" Height="750"
+        WindowStartupLocation="CenterOwner"
+        CanResize="True">
+
+  <ScrollViewer>
+    <StackPanel Margin="15">
+      <TextBlock Text="Edit Custom Tonie Metadata"
+                 FontSize="16"
+                 FontWeight="Bold"
+                 Margin="0,0,0,10"/>
+
+      <TextBlock Text="Configure metadata for your custom Tonie. All fields are optional except Title."
+                 FontSize="11"
+                 Foreground="Gray"
+                 Margin="0,0,0,15"
+                 TextWrapping="Wrap"/>
+
+      <!-- Title -->
+      <TextBlock Text="Title *" FontWeight="SemiBold" Margin="0,0,0,3"/>
+      <TextBlock Text="The main title of the Tonie (required)"
+                 FontSize="10" Foreground="Gray" Margin="0,0,0,3"/>
+      <TextBox Text="{Binding Title}"
+               Name="TitleInput"
+               Margin="0,0,0,12"/>
+
+      <!-- Series -->
+      <TextBlock Text="Series" FontWeight="SemiBold" Margin="0,0,0,3"/>
+      <TextBlock Text="Series name (e.g., 'Custom Tonie', 'My Collection')"
+                 FontSize="10" Foreground="Gray" Margin="0,0,0,3"/>
+      <TextBox Text="{Binding Series}"
+               Margin="0,0,0,12"/>
+
+      <!-- Episodes -->
+      <TextBlock Text="Episodes" FontWeight="SemiBold" Margin="0,0,0,3"/>
+      <TextBlock Text="Episode description or subtitle"
+                 FontSize="10" Foreground="Gray" Margin="0,0,0,3"/>
+      <TextBox Text="{Binding Episodes}"
+               Margin="0,0,0,12"/>
+
+      <!-- Model -->
+      <TextBlock Text="Model Number" FontWeight="SemiBold" Margin="0,0,0,3"/>
+      <TextBlock Text="Model number (e.g., '123456', optional)"
+                 FontSize="10" Foreground="Gray" Margin="0,0,0,3"/>
+      <TextBox Text="{Binding Model}"
+               Margin="0,0,0,12"/>
+
+      <!-- Audio ID -->
+      <TextBlock Text="Audio ID" FontWeight="SemiBold" Margin="0,0,0,3"/>
+      <TextBlock Text="Comma-separated audio IDs (e.g., '369519776' or '369519776,369519777')"
+                 FontSize="10" Foreground="Gray" Margin="0,0,0,3"/>
+      <TextBox Text="{Binding AudioIdText}"
+               Margin="0,0,0,2"/>
+      <TextBlock Text="{Binding AudioIdError}"
+                 FontSize="10"
+                 Foreground="Red"
+                 IsVisible="{Binding HasAudioIdError}"
+                 Margin="0,2,0,12"/>
+
+      <!-- Tracks -->
+      <TextBlock Text="Tracks" FontWeight="SemiBold" Margin="0,0,0,3"/>
+      <TextBlock Text="Track titles, one per line"
+                 FontSize="10" Foreground="Gray" Margin="0,0,0,3"/>
+      <TextBox Text="{Binding TracksText}"
+               Height="100"
+               AcceptsReturn="True"
+               TextWrapping="Wrap"
+               Margin="0,0,0,12"/>
+
+      <!-- Language -->
+      <TextBlock Text="Language" FontWeight="SemiBold" Margin="0,0,0,3"/>
+      <TextBlock Text="Language code (e.g., 'en-us', 'de-de', 'fr-fr')"
+                 FontSize="10" Foreground="Gray" Margin="0,0,0,3"/>
+      <TextBox Text="{Binding Language}"
+               Margin="0,0,0,2"/>
+      <TextBlock Text="{Binding LanguageError}"
+                 FontSize="10"
+                 Foreground="Red"
+                 IsVisible="{Binding HasLanguageError}"
+                 Margin="0,2,0,12"/>
+
+      <!-- Category -->
+      <TextBlock Text="Category" FontWeight="SemiBold" Margin="0,0,0,3"/>
+      <TextBlock Text="Category (e.g., 'custom', 'music', 'audiobook')"
+                 FontSize="10" Foreground="Gray" Margin="0,0,0,3"/>
+      <TextBox Text="{Binding Category}"
+               Margin="0,0,0,12"/>
+
+      <!-- Release -->
+      <TextBlock Text="Release" FontWeight="SemiBold" Margin="0,0,0,3"/>
+      <TextBlock Text="Release information or date (optional)"
+                 FontSize="10" Foreground="Gray" Margin="0,0,0,3"/>
+      <TextBox Text="{Binding Release}"
+               Margin="0,0,0,12"/>
+
+      <!-- Picture URL -->
+      <TextBlock Text="Picture URL" FontWeight="SemiBold" Margin="0,0,0,3"/>
+      <TextBlock Text="URL to the cover image (e.g., 'https://example.com/image.png' or '/custom_img/Logo.png')"
+                 FontSize="10" Foreground="Gray" Margin="0,0,0,3"/>
+      <TextBox Text="{Binding Pic}"
+               Margin="0,0,0,15"/>
+
+      <!-- Buttons -->
+      <StackPanel Orientation="Horizontal"
+                  HorizontalAlignment="Center">
+        <Button Content="_Save"
+                Width="90"
+                Command="{Binding SaveCommand}"
+                Click="OnSaveClick"
+                IsEnabled="{Binding IsValid}"
+                IsDefault="True"/>
+        <Button Content="_Cancel"
+                Width="90"
+                Margin="10,0,0,0"
+                Command="{Binding CancelCommand}"
+                Click="OnCancelClick"
+                IsCancel="True"/>
+      </StackPanel>
+    </StackPanel>
+  </ScrollViewer>
+
+</Window>

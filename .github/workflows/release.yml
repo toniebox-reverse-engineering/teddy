@@ -1,0 +1,150 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    name: Build Release Binaries
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+
+    - name: Get version from tag
+      id: get_version
+      run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+    - name: Build Windows x64 CLI
+      run: |
+        dotnet publish Teddy/Teddy.csproj \
+          -c Release \
+          -r win-x64 \
+          --self-contained true \
+          -p:PublishSingleFile=true \
+          -p:IncludeNativeLibrariesForSelfExtract=true \
+          -p:EnableCompressionInSingleFile=true \
+          -o artifacts/teddy-win-x64
+
+    - name: Build Linux x64 CLI
+      run: |
+        dotnet publish Teddy/Teddy.csproj \
+          -c Release \
+          -r linux-x64 \
+          --self-contained true \
+          -p:PublishSingleFile=true \
+          -p:IncludeNativeLibrariesForSelfExtract=true \
+          -p:EnableCompressionInSingleFile=true \
+          -o artifacts/teddy-linux-x64
+
+    - name: Build macOS x64 CLI
+      run: |
+        dotnet publish Teddy/Teddy.csproj \
+          -c Release \
+          -r osx-x64 \
+          --self-contained true \
+          -p:PublishSingleFile=true \
+          -p:IncludeNativeLibrariesForSelfExtract=true \
+          -p:EnableCompressionInSingleFile=true \
+          -o artifacts/teddy-osx-x64
+
+    - name: Build macOS ARM64 CLI
+      run: |
+        dotnet publish Teddy/Teddy.csproj \
+          -c Release \
+          -r osx-arm64 \
+          --self-contained true \
+          -p:PublishSingleFile=true \
+          -p:IncludeNativeLibrariesForSelfExtract=true \
+          -p:EnableCompressionInSingleFile=true \
+          -o artifacts/teddy-osx-arm64
+
+    - name: Build Windows x64 GUI
+      run: |
+        dotnet publish TeddyBench.Avalonia/TeddyBench.Avalonia.csproj \
+          -c Release \
+          -r win-x64 \
+          --self-contained true \
+          -p:PublishSingleFile=true \
+          -p:DebugType=none \
+          -p:DebugSymbols=false \
+          -o artifacts/teddybench-win-x64
+
+    - name: Build Linux x64 GUI
+      run: |
+        dotnet publish TeddyBench.Avalonia/TeddyBench.Avalonia.csproj \
+          -c Release \
+          -r linux-x64 \
+          --self-contained true \
+          -p:PublishSingleFile=true \
+          -p:DebugType=none \
+          -p:DebugSymbols=false \
+          -o artifacts/teddybench-linux-x64
+
+    - name: Build macOS x64 GUI
+      run: |
+        dotnet publish TeddyBench.Avalonia/TeddyBench.Avalonia.csproj \
+          -c Release \
+          -r osx-x64 \
+          --self-contained true \
+          -p:PublishSingleFile=true \
+          -p:DebugType=none \
+          -p:DebugSymbols=false \
+          -o artifacts/teddybench-osx-x64
+
+    - name: Build macOS ARM64 GUI
+      run: |
+        dotnet publish TeddyBench.Avalonia/TeddyBench.Avalonia.csproj \
+          -c Release \
+          -r osx-arm64 \
+          --self-contained true \
+          -p:PublishSingleFile=true \
+          -p:DebugType=none \
+          -p:DebugSymbols=false \
+          -o artifacts/teddybench-osx-arm64
+
+    - name: Create release archives
+      run: |
+        cd artifacts
+
+        # CLI archives
+        cd teddy-win-x64 && zip -q ../teddy-${{ steps.get_version.outputs.VERSION }}-win-x64.zip Teddy.exe && cd ..
+        cd teddy-linux-x64 && tar czf ../teddy-${{ steps.get_version.outputs.VERSION }}-linux-x64.tar.gz Teddy && cd ..
+        cd teddy-osx-x64 && tar czf ../teddy-${{ steps.get_version.outputs.VERSION }}-osx-x64.tar.gz Teddy && cd ..
+        cd teddy-osx-arm64 && tar czf ../teddy-${{ steps.get_version.outputs.VERSION }}-osx-arm64.tar.gz Teddy && cd ..
+
+        # GUI archives (include all files for LibVLC native dependencies)
+        cd teddybench-win-x64 && zip -qr ../teddybench-${{ steps.get_version.outputs.VERSION }}-win-x64.zip . && cd ..
+        cd teddybench-linux-x64 && tar czf ../teddybench-${{ steps.get_version.outputs.VERSION }}-linux-x64.tar.gz . && cd ..
+        cd teddybench-osx-x64 && tar czf ../teddybench-${{ steps.get_version.outputs.VERSION }}-osx-x64.tar.gz . && cd ..
+        cd teddybench-osx-arm64 && tar czf ../teddybench-${{ steps.get_version.outputs.VERSION }}-osx-arm64.tar.gz . && cd ..
+
+    - name: Generate checksums
+      run: |
+        cd artifacts
+        sha256sum *.zip *.tar.gz > SHA256SUMS.txt
+
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        draft: false
+        prerelease: false
+        body_path: CHANGELOG-${{ steps.get_version.outputs.VERSION }}.md
+        files: |
+          artifacts/teddy-*.zip
+          artifacts/teddy-*.tar.gz
+          artifacts/teddybench-*.zip
+          artifacts/teddybench-*.tar.gz
+          artifacts/SHA256SUMS.txt
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

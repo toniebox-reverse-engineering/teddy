@@ -1,0 +1,85 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="using:TeddyBench.Avalonia.Dialogs"
+        mc:Ignorable="d" d:DesignWidth="500" d:DesignHeight="340"
+        x:Class="TeddyBench.Avalonia.Dialogs.ChangeAudioIdDialog"
+        x:DataType="vm:ChangeAudioIdDialogViewModel"
+        Title="Change Audio ID"
+        Width="500" Height="340"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False">
+
+  <StackPanel Margin="15">
+    <TextBlock Text="Change Audio ID"
+               Margin="0,0,0,5"
+               FontWeight="Bold"
+               FontSize="14"/>
+
+    <TextBlock TextWrapping="Wrap" Margin="0,0,0,15" LineHeight="20">
+      <Run Text="Enter the Audio ID as a Unix timestamp (seconds since Jan 1, 1970)."/><LineBreak/>
+      <Run Text="The Audio ID uniquely identifies the audio content in the Tonie file."/><LineBreak/>
+      <Run Text="Changing this will rewrite the file header with the new Audio ID and hash."/>
+    </TextBlock>
+
+    <Border Background="#E8F4F8" BorderBrush="#0288D1" BorderThickness="1"
+            Padding="10" Margin="0,0,0,15" CornerRadius="5">
+      <StackPanel>
+        <TextBlock Text="Audio ID (Unix timestamp):" FontWeight="Bold" Margin="0,0,0,5" Foreground="#01579B"/>
+
+        <!-- Custom Tonie Toggle -->
+        <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+          <ToggleSwitch IsChecked="{Binding IsCustomTonie}"
+                        OnContent="Custom Tonie"
+                        OffContent="Custom Tonie"
+                        Margin="0,0,10,0"/>
+          <TextBlock Text="(Apply -0x50000000 offset)"
+                     VerticalAlignment="Center"
+                     FontSize="11"
+                     Foreground="#01579B"
+                     IsVisible="{Binding IsCustomTonie}"/>
+          <TextBlock Text="(Use timestamp as-is)"
+                     VerticalAlignment="Center"
+                     FontSize="11"
+                     Foreground="#01579B"
+                     IsVisible="{Binding !IsCustomTonie}"/>
+        </StackPanel>
+
+        <TextBox Text="{Binding AudioIdInput}"
+                 Watermark="e.g., 1684838575"
+                 Margin="0,0,0,5"
+                 MaxLength="10"
+                 FontFamily="Consolas, Courier New, monospace"
+                 Name="AudioIdInput"/>
+        <TextBlock Text="{Binding AudioIdError}"
+                   Foreground="#D32F2F"
+                   TextWrapping="Wrap"
+                   IsVisible="{Binding AudioIdError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                   FontSize="11"
+                   Margin="0,0,0,5"/>
+        <TextBlock Text="Enter a Unix timestamp (seconds since 1970-01-01). When 'Custom Tonie' is enabled, the program will automatically apply the offset calculation."
+                   FontSize="11"
+                   TextWrapping="Wrap"
+                   Foreground="#01579B"/>
+      </StackPanel>
+    </Border>
+
+    <StackPanel Orientation="Horizontal"
+                HorizontalAlignment="Center">
+      <Button Content="_OK"
+              Width="80"
+              Command="{Binding OkCommand}"
+              Click="OnOkClick"
+              IsEnabled="{Binding IsAudioIdValid}"
+              IsDefault="True"/>
+      <Button Content="_Cancel"
+              Width="80"
+              Margin="10,0,0,0"
+              Command="{Binding CancelCommand}"
+              Click="OnCancelClick"
+              IsCancel="True"/>
+    </StackPanel>
+  </StackPanel>
+
+</Window>

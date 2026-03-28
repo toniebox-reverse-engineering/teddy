@@ -1,0 +1,58 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="using:TeddyBench.Avalonia.Dialogs"
+        mc:Ignorable="d" d:DesignWidth="500" d:DesignHeight="280"
+        x:Class="TeddyBench.Avalonia.Dialogs.HexInputDialog"
+        x:DataType="vm:HexInputDialogViewModel"
+        Title="Enter Audio ID"
+        Width="500" Height="280"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False">
+
+  <StackPanel Margin="10">
+    <TextBlock Text="Enter a custom Audio ID (Advanced):"
+               Margin="0,0,0,5"
+               FontWeight="Bold"/>
+
+    <TextBlock TextWrapping="Wrap" Margin="0,0,0,10">
+      <Run Text="• Enter an 8-character hexadecimal value (e.g., 5E034216)"/><LineBreak/>
+      <Run Text="• This is an advanced feature for specific use cases"/><LineBreak/>
+      <Run Text="• Most users should click Cancel to auto-generate the Audio ID"/><LineBreak/>
+      <Run Text="• The Audio ID uniquely identifies the audio content in the Tonie file"/>
+    </TextBlock>
+
+    <TextBox Text="{Binding HexValue}"
+             Watermark="e.g., 5E034216"
+             MaxLength="8"
+             Margin="0,0,0,5"
+             Name="HexInput"/>
+
+    <!-- Error message display -->
+    <TextBlock Text="{Binding ErrorMessage}"
+               Foreground="Red"
+               FontWeight="SemiBold"
+               TextWrapping="Wrap"
+               MinHeight="20"
+               Margin="0,0,0,10"
+               IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+
+    <StackPanel Orientation="Horizontal"
+                HorizontalAlignment="Center">
+      <Button Content="_OK"
+              Width="80"
+              Command="{Binding OkCommand}"
+              Click="OnOkClick"
+              IsEnabled="{Binding CanSubmit}"
+              IsDefault="True"/>
+      <Button Content="_Cancel"
+              Width="80"
+              Margin="10,0,0,0"
+              Command="{Binding CancelCommand}"
+              Click="OnCancelClick"
+              IsCancel="True"/>
+    </StackPanel>
+  </StackPanel>
+
+</Window>

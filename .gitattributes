@@ -1,0 +1,18 @@
+# Auto detect text files and normalize to LF
+* text=auto
+
+# Explicitly declare text files
+*.cs text diff=csharp
+*.csproj text diff=csharp
+*.sln text
+*.md text
+*.json text
+*.xml text
+*.sh text eol=lf
+*.ps1 text eol=crlf
+
+# Declare binary files
+*.png binary
+*.jpg binary
+*.dll binary
+*.exe binary

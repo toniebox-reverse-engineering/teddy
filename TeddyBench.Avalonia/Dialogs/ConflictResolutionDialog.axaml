@@ -1,0 +1,56 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="using:TeddyBench.Avalonia.Dialogs"
+        mc:Ignorable="d" d:DesignWidth="450" d:DesignHeight="280"
+        x:Class="TeddyBench.Avalonia.Dialogs.ConflictResolutionDialog"
+        x:DataType="vm:ConflictResolutionDialogViewModel"
+        Title="Restore Conflict"
+        Width="450" Height="280"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False">
+
+  <StackPanel Margin="15">
+    <!-- Warning message -->
+    <TextBlock Text="{Binding Message}"
+               Margin="0,0,0,15"
+               TextWrapping="Wrap"
+               FontWeight="Bold"/>
+
+    <!-- Details -->
+    <TextBlock Text="{Binding Details}"
+               Margin="0,0,0,20"
+               TextWrapping="Wrap"
+               Foreground="Gray"/>
+
+    <!-- Options -->
+    <TextBlock Text="What would you like to do?"
+               Margin="0,0,0,10"
+               FontWeight="SemiBold"/>
+
+    <!-- Buttons -->
+    <StackPanel Spacing="10">
+      <Button Content="_Overwrite Existing Tonie"
+              Width="350"
+              HorizontalAlignment="Left"
+              Command="{Binding OverwriteCommand}"
+              Click="OnOverwriteClick"/>
+
+      <Button Content="Enter _New RFID UID"
+              Width="350"
+              HorizontalAlignment="Left"
+              Command="{Binding NewUidCommand}"
+              Click="OnNewUidClick"/>
+
+      <Button Content="_Cancel"
+              Width="350"
+              HorizontalAlignment="Left"
+              Command="{Binding CancelCommand}"
+              Click="OnCancelClick"
+              IsDefault="True"
+              IsCancel="True"/>
+    </StackPanel>
+  </StackPanel>
+
+</Window>

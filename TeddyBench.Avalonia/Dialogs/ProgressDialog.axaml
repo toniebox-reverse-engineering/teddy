@@ -1,0 +1,61 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="clr-namespace:TeddyBench.Avalonia.Dialogs"
+        mc:Ignorable="d" d:DesignWidth="500" d:DesignHeight="250"
+        Width="500" Height="250"
+        x:Class="TeddyBench.Avalonia.Dialogs.ProgressDialog"
+        x:DataType="vm:ProgressDialogViewModel"
+        Title="{Binding Title}"
+        CanResize="False"
+        WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False">
+
+    <Design.DataContext>
+        <vm:ProgressDialogViewModel />
+    </Design.DataContext>
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="20" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="10" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="20" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="10" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- Current file status -->
+        <TextBlock Grid.Row="0"
+                   Text="{Binding CurrentFileStatus}"
+                   FontSize="14"
+                   FontWeight="SemiBold"
+                   TextWrapping="Wrap" />
+
+        <!-- Overall progress bar (only shown when encoding multiple files) -->
+        <StackPanel Grid.Row="2" IsVisible="{Binding ShowOverallProgress}">
+            <TextBlock Text="{Binding OverallProgressText}"
+                       FontSize="12"
+                       Margin="0,0,0,5" />
+            <ProgressBar Value="{Binding OverallProgress}"
+                         Minimum="0"
+                         Maximum="100"
+                         Height="20" />
+        </StackPanel>
+
+        <!-- Current file progress bar -->
+        <StackPanel Grid.Row="6" IsVisible="{Binding ShowCurrentFileProgress}">
+            <TextBlock Text="{Binding CurrentFileProgressText}"
+                       FontSize="12"
+                       Margin="0,0,0,5" />
+            <ProgressBar Value="{Binding CurrentFileProgress}"
+                         Minimum="0"
+                         Maximum="100"
+                         Height="20" />
+        </StackPanel>
+    </Grid>
+</Window>

@@ -1,0 +1,222 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="600" d:DesignHeight="500"
+        x:Class="TeddyBench.Avalonia.Dialogs.ShortcutsDialog"
+        Title="Keyboard Shortcuts"
+        Width="600" Height="500"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False">
+
+  <ScrollViewer>
+    <StackPanel Margin="20">
+      <TextBlock Text="Keyboard Shortcuts"
+                 FontSize="18"
+                 FontWeight="Bold"
+                 Margin="0,0,0,15"/>
+
+      <!-- Direct Key Shortcuts Section -->
+      <TextBlock Text="Direct Key Shortcuts"
+                 FontSize="14"
+                 FontWeight="Bold"
+                 Margin="0,0,0,10"/>
+
+      <Grid Margin="10,0,0,15">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="150"/>
+          <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+          <RowDefinition Height="Auto"/>
+          <RowDefinition Height="Auto"/>
+          <RowDefinition Height="Auto"/>
+          <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0" Grid.Column="0" Text="F2" FontFamily="Consolas" FontWeight="SemiBold" Margin="0,3"/>
+        <TextBlock Grid.Row="0" Grid.Column="1" Text="Rename selected custom tonie" Margin="0,3"/>
+
+        <TextBlock Grid.Row="1" Grid.Column="0" Text="Space" FontFamily="Consolas" FontWeight="SemiBold" Margin="0,3"/>
+        <TextBlock Grid.Row="1" Grid.Column="1" Text="Open audio player for selected tonie" Margin="0,3"/>
+
+        <TextBlock Grid.Row="2" Grid.Column="0" Text="Enter" FontFamily="Consolas" FontWeight="SemiBold" Margin="0,3"/>
+        <TextBlock Grid.Row="2" Grid.Column="1" Text="Modify contents of selected tonie" Margin="0,3"/>
+
+        <TextBlock Grid.Row="3" Grid.Column="0" Text="Delete" FontFamily="Consolas" FontWeight="SemiBold" Margin="0,3"/>
+        <TextBlock Grid.Row="3" Grid.Column="1" Text="Delete selected tonie(s)" Margin="0,3"/>
+      </Grid>
+
+      <!-- Search Shortcuts Section -->
+      <TextBlock Text="Search"
+                 FontSize="14"
+                 FontWeight="Bold"
+                 Margin="0,10,0,10"/>
+
+      <TextBlock Text="Start typing to search. Search filters by display name, Audio ID (hex), containing folder name, or UID."
+                 FontStyle="Italic"
+                 TextWrapping="Wrap"
+                 Foreground="Gray"
+                 Margin="10,0,0,10"/>
+
+      <Grid Margin="10,0,0,15">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="150"/>
+          <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+          <RowDefinition Height="Auto"/>
+          <RowDefinition Height="Auto"/>
+          <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0" Grid.Column="0" Text="Type text" FontFamily="Consolas" FontWeight="SemiBold" Margin="0,3"/>
+        <TextBlock Grid.Row="0" Grid.Column="1" Text="Search/filter tonies (debounced 250ms)" Margin="0,3"/>
+
+        <TextBlock Grid.Row="1" Grid.Column="0" Text="Backspace" FontFamily="Consolas" FontWeight="SemiBold" Margin="0,3"/>
+        <TextBlock Grid.Row="1" Grid.Column="1" Text="Remove last character from search" Margin="0,3"/>
+
+        <TextBlock Grid.Row="2" Grid.Column="0" Text="Esc" FontFamily="Consolas" FontWeight="SemiBold" Margin="0,3"/>
+        <TextBlock Grid.Row="2" Grid.Column="1" Text="Clear search filter" Margin="0,3"/>
+      </Grid>
+
+      <!-- Alt Key Shortcuts Section -->
+      <TextBlock Text="Alt + Key Shortcuts (Main Window)"
+                 FontSize="14"
+                 FontWeight="Bold"
+                 Margin="0,10,0,10"/>
+
+      <TextBlock Text="Press Alt to see underlined letters, then press the letter key"
+                 FontStyle="Italic"
+                 Foreground="Gray"
+                 Margin="10,0,0,10"/>
+
+      <Grid Margin="10,0,0,15">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="150"/>
+          <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+          <RowDefinition Height="Auto"/>
+          <RowDefinition Height="Auto"/>
+          <RowDefinition Height="Auto"/>
+          <RowDefinition Height="Auto"/>
+          <RowDefinition Height="Auto"/>
+          <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0" Grid.Column="0" Text="Alt + O" FontFamily="Consolas" FontWeight="SemiBold" Margin="0,3"/>
+        <TextBlock Grid.Row="0" Grid.Column="1" Text="Open Directory" Margin="0,3"/>
+
+        <TextBlock Grid.Row="1" Grid.Column="0" Text="Alt + A" FontFamily="Consolas" FontWeight="SemiBold" Margin="0,3"/>
+        <TextBlock Grid.Row="1" Grid.Column="1" Text="Add Custom Tonie" Margin="0,3"/>
+
+        <TextBlock Grid.Row="2" Grid.Column="0" Text="Alt + D" FontFamily="Consolas" FontWeight="SemiBold" Margin="0,3"/>
+        <TextBlock Grid.Row="2" Grid.Column="1" Text="Decode Selected" Margin="0,3"/>
+
+        <TextBlock Grid.Row="3" Grid.Column="0" Text="Alt + S" FontFamily="Consolas" FontWeight="SemiBold" Margin="0,3"/>
+        <TextBlock Grid.Row="3" Grid.Column="1" Text="Show Info" Margin="0,3"/>
+
+        <TextBlock Grid.Row="4" Grid.Column="0" Text="Alt + R" FontFamily="Consolas" FontWeight="SemiBold" Margin="0,3"/>
+        <TextBlock Grid.Row="4" Grid.Column="1" Text="Refresh" Margin="0,3"/>
+
+        <TextBlock Grid.Row="5" Grid.Column="0" Text="Alt + L" FontFamily="Consolas" FontWeight="SemiBold" Margin="0,3"/>
+        <TextBlock Grid.Row="5" Grid.Column="1" Text="Remove All LIVE Flags" Margin="0,3"/>
+      </Grid>
+
+      <!-- Dialog Shortcuts Section -->
+      <TextBlock Text="Dialog Shortcuts"
+                 FontSize="14"
+                 FontWeight="Bold"
+                 Margin="0,10,0,10"/>
+
+      <TextBlock Text="When a dialog is open, main window shortcuts are disabled. Each dialog has its own shortcuts based on its buttons."
+                 FontStyle="Italic"
+                 TextWrapping="Wrap"
+                 Foreground="Gray"
+                 Margin="10,0,0,10"/>
+
+      <Grid Margin="10,0,0,15">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="150"/>
+          <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+          <RowDefinition Height="Auto"/>
+          <RowDefinition Height="Auto"/>
+          <RowDefinition Height="Auto"/>
+          <RowDefinition Height="Auto"/>
+          <RowDefinition Height="Auto"/>
+          <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0" Grid.Column="0" Text="Enter" FontFamily="Consolas" FontWeight="SemiBold" Margin="0,3"/>
+        <TextBlock Grid.Row="0" Grid.Column="1" Text="Activate default button (OK, Yes, Continue, Encode)" Margin="0,3"/>
+
+        <TextBlock Grid.Row="1" Grid.Column="0" Text="Esc" FontFamily="Consolas" FontWeight="SemiBold" Margin="0,3"/>
+        <TextBlock Grid.Row="1" Grid.Column="1" Text="Activate cancel button (Cancel, No)" Margin="0,3"/>
+
+        <TextBlock Grid.Row="2" Grid.Column="0" Text="Alt + Y" FontFamily="Consolas" FontWeight="SemiBold" Margin="0,3"/>
+        <TextBlock Grid.Row="2" Grid.Column="1" Text="Confirm deletion or modification (Yes button)" Margin="0,3"/>
+
+        <TextBlock Grid.Row="3" Grid.Column="0" Text="Alt + N" FontFamily="Consolas" FontWeight="SemiBold" Margin="0,3"/>
+        <TextBlock Grid.Row="3" Grid.Column="1" Text="Cancel operation (No or Cancel button)" Margin="0,3"/>
+
+        <TextBlock Grid.Row="4" Grid.Column="0" Text="Alt + O" FontFamily="Consolas" FontWeight="SemiBold" Margin="0,3"/>
+        <TextBlock Grid.Row="4" Grid.Column="1" Text="Confirm input (OK button in input dialogs)" Margin="0,3"/>
+
+        <TextBlock Grid.Row="5" Grid.Column="0" Text="Alt + C" FontFamily="Consolas" FontWeight="SemiBold" Margin="0,3"/>
+        <TextBlock Grid.Row="5" Grid.Column="1" Text="Cancel input or close dialog (Cancel/Close button)" Margin="0,3"/>
+      </Grid>
+
+      <!-- Track Sort Dialog Shortcuts Section -->
+      <TextBlock Text="Track Sort Dialog Shortcuts"
+                 FontSize="14"
+                 FontWeight="Bold"
+                 Margin="0,10,0,10"/>
+
+      <Grid Margin="10,0,0,15">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="150"/>
+          <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+          <RowDefinition Height="Auto"/>
+          <RowDefinition Height="Auto"/>
+          <RowDefinition Height="Auto"/>
+          <RowDefinition Height="Auto"/>
+          <RowDefinition Height="Auto"/>
+          <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0" Grid.Column="0" Text="Alt + U" FontFamily="Consolas" FontWeight="SemiBold" Margin="0,3"/>
+        <TextBlock Grid.Row="0" Grid.Column="1" Text="Move selected track(s) up" Margin="0,3"/>
+
+        <TextBlock Grid.Row="1" Grid.Column="0" Text="Alt + D" FontFamily="Consolas" FontWeight="SemiBold" Margin="0,3"/>
+        <TextBlock Grid.Row="1" Grid.Column="1" Text="Move selected track(s) down" Margin="0,3"/>
+
+        <TextBlock Grid.Row="2" Grid.Column="0" Text="Alt + A" FontFamily="Consolas" FontWeight="SemiBold" Margin="0,3"/>
+        <TextBlock Grid.Row="2" Grid.Column="1" Text="Add more audio files" Margin="0,3"/>
+
+        <TextBlock Grid.Row="3" Grid.Column="0" Text="Alt + R" FontFamily="Consolas" FontWeight="SemiBold" Margin="0,3"/>
+        <TextBlock Grid.Row="3" Grid.Column="1" Text="Remove selected track(s)" Margin="0,3"/>
+
+        <TextBlock Grid.Row="4" Grid.Column="0" Text="Alt + E" FontFamily="Consolas" FontWeight="SemiBold" Margin="0,3"/>
+        <TextBlock Grid.Row="4" Grid.Column="1" Text="Encode with current track order" Margin="0,3"/>
+
+        <TextBlock Grid.Row="5" Grid.Column="0" Text="Alt + C" FontFamily="Consolas" FontWeight="SemiBold" Margin="0,3"/>
+        <TextBlock Grid.Row="5" Grid.Column="1" Text="Cancel encoding" Margin="0,3"/>
+      </Grid>
+
+      <!-- Close Button -->
+      <Button Content="_Close"
+              Width="100"
+              HorizontalAlignment="Center"
+              Margin="0,10,0,0"
+              Click="OnCloseClick"
+              IsDefault="True"
+              IsCancel="True"/>
+    </StackPanel>
+  </ScrollViewer>
+
+</Window>

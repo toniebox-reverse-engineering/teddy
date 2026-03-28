@@ -895,8 +895,6 @@ namespace TeddyBench
                     LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] Emulate: Unhandled: " + response.Cmd);
                     return true;
             }
-
-            return false;
         }
 
         public enum eDbprintfFlags
@@ -1487,10 +1485,10 @@ namespace TeddyBench
                     ret = ReadMemoryInternal();
                 }
             }
-            catch (ThreadAbortException ex)
+            catch (ThreadAbortException)
             {
                 StartThread();
-                throw ex;
+                throw;
             }
 
             StartThread();

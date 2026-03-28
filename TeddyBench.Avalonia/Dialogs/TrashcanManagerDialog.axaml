@@ -1,0 +1,214 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="using:TeddyBench.Avalonia.Dialogs"
+        xmlns:converters="using:TeddyBench.Avalonia.Converters"
+        mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="700"
+        x:Class="TeddyBench.Avalonia.Dialogs.TrashcanManagerDialog"
+        x:DataType="vm:TrashcanManagerDialogViewModel"
+        Title="TRASHCAN Recovery Manager"
+        Width="1000" Height="700"
+        WindowStartupLocation="CenterOwner"
+        CanResize="True">
+
+    <Window.Resources>
+        <converters:PathToBitmapConverter x:Key="PathToBitmapConverter"/>
+    </Window.Resources>
+
+    <Grid RowDefinitions="Auto,*,Auto,Auto">
+
+        <!-- Header -->
+        <Border Grid.Row="0" Background="#34495e" Padding="15">
+            <StackPanel>
+                <TextBlock Text="TRASHCAN Recovery Manager"
+                           FontSize="20"
+                           FontWeight="Bold"
+                           Foreground="White"/>
+                <TextBlock Text="Restore or permanently delete Tonies that were removed when online"
+                           FontSize="12"
+                           Foreground="#ecf0f1"
+                           Margin="0,5,0,0"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Main content -->
+        <Border Grid.Row="1" Margin="10" BorderBrush="#bdc3c7" BorderThickness="1">
+            <ScrollViewer>
+                <ItemsControl ItemsSource="{Binding DeletedTonies}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Padding="10"
+                                    Margin="5"
+                                    Background="White"
+                                    BorderBrush="#95a5a6"
+                                    BorderThickness="1"
+                                    CornerRadius="5">
+                                <Grid ColumnDefinitions="Auto,*,Auto">
+
+                                    <!-- Tonie Image -->
+                                    <Border Grid.Column="0"
+                                            Width="80"
+                                            Height="80"
+                                            Background="#ecf0f1"
+                                            CornerRadius="5"
+                                            Margin="0,0,15,0">
+                                        <Image Source="{Binding ImagePath, Converter={StaticResource PathToBitmapConverter}}"
+                                               Stretch="Uniform"/>
+                                    </Border>
+
+                                    <!-- Tonie Info -->
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding DisplayName}"
+                                                   FontSize="16"
+                                                   FontWeight="Bold"
+                                                   Foreground="#2c3e50"
+                                                   TextWrapping="Wrap"/>
+
+                                        <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
+                                            <TextBlock Text="UID: "
+                                                       FontWeight="SemiBold"
+                                                       Foreground="#7f8c8d"/>
+                                            <TextBlock Text="{Binding Uid}"
+                                                       Foreground="#7f8c8d"
+                                                       FontFamily="Consolas"/>
+                                        </StackPanel>
+
+                                        <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
+                                            <TextBlock Text="Deleted: "
+                                                       FontWeight="SemiBold"
+                                                       Foreground="#7f8c8d"/>
+                                            <TextBlock Text="{Binding DeletionDate, StringFormat='{}{0:yyyy-MM-dd HH:mm:ss}'}"
+                                                       Foreground="#7f8c8d"/>
+                                        </StackPanel>
+
+                                        <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
+                                            <TextBlock Text="Duration: "
+                                                       FontWeight="SemiBold"
+                                                       Foreground="#7f8c8d"/>
+                                            <TextBlock Text="{Binding Duration}"
+                                                       Foreground="#7f8c8d"/>
+                                            <TextBlock Text=" • "
+                                                       Foreground="#7f8c8d"
+                                                       Margin="5,0"/>
+                                            <TextBlock Text="{Binding TrackCount}"
+                                                       Foreground="#7f8c8d"/>
+                                            <TextBlock Text=" track(s)"
+                                                       Foreground="#7f8c8d"
+                                                       Margin="2,0,0,0"/>
+                                        </StackPanel>
+
+                                        <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
+                                            <TextBlock Text="Audio ID: "
+                                                       FontWeight="SemiBold"
+                                                       Foreground="#7f8c8d"/>
+                                            <TextBlock Text="{Binding AudioId}"
+                                                       Foreground="#7f8c8d"
+                                                       FontFamily="Consolas"/>
+                                        </StackPanel>
+                                    </StackPanel>
+
+                                    <!-- Action Buttons -->
+                                    <StackPanel Grid.Column="2"
+                                                VerticalAlignment="Center"
+                                                Margin="15,0,0,0">
+                                        <Button Content="Restore"
+                                                Width="120"
+                                                Background="#27ae60"
+                                                Foreground="White"
+                                                Margin="0,5"
+                                                Command="{Binding $parent[Window].DataContext.RestoreSelectedCommand}"
+                                                CommandParameter="{Binding}"
+                                                Click="OnRestoreClick">
+                                            <Button.Styles>
+                                                <Style Selector="Button:pointerover">
+                                                    <Setter Property="Background" Value="#229954"/>
+                                                </Style>
+                                            </Button.Styles>
+                                        </Button>
+
+                                        <Button Content="Delete Forever"
+                                                Width="120"
+                                                Background="#e74c3c"
+                                                Foreground="White"
+                                                Margin="0,5"
+                                                Command="{Binding $parent[Window].DataContext.DeleteSelectedCommand}"
+                                                CommandParameter="{Binding}"
+                                                Click="OnDeleteClick">
+                                            <Button.Styles>
+                                                <Style Selector="Button:pointerover">
+                                                    <Setter Property="Background" Value="#c0392b"/>
+                                                </Style>
+                                            </Button.Styles>
+                                        </Button>
+                                    </StackPanel>
+
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+        </Border>
+
+        <!-- Empty state message -->
+        <Border Grid.Row="1"
+                IsVisible="{Binding !HasDeletedTonies}"
+                Margin="20">
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                <TextBlock Text="🎉"
+                           FontSize="48"
+                           HorizontalAlignment="Center"/>
+                <TextBlock Text="No deleted Tonies found in TRASHCAN"
+                           FontSize="16"
+                           FontWeight="Bold"
+                           HorizontalAlignment="Center"
+                           Margin="0,10,0,0"/>
+                <TextBlock Text="Your SD card is clean!"
+                           FontSize="12"
+                           Foreground="#7f8c8d"
+                           HorizontalAlignment="Center"
+                           Margin="0,5,0,0"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Status Bar -->
+        <Border Grid.Row="2" Background="#34495e" Padding="10">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Text="{Binding StatusText}"
+                           Foreground="White"
+                           VerticalAlignment="Center"/>
+
+                <ProgressBar Grid.Column="1"
+                             Width="150"
+                             Height="20"
+                             IsIndeterminate="{Binding IsLoading}"
+                             IsVisible="{Binding IsLoading}"/>
+            </Grid>
+        </Border>
+
+        <!-- Bottom buttons -->
+        <StackPanel Grid.Row="3"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    Margin="10">
+            <Button Content="_Refresh"
+                    Width="100"
+                    Margin="5"
+                    Command="{Binding RefreshCommand}"/>
+            <Button Content="_Close"
+                    Width="100"
+                    Margin="5"
+                    Command="{Binding CloseCommand}"
+                    Click="OnCloseClick"
+                    IsCancel="True"/>
+        </StackPanel>
+
+    </Grid>
+
+</Window>
