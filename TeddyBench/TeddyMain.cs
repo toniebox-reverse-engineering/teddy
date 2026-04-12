@@ -158,35 +158,34 @@ namespace TeddyBench
                     {
                         TonieInfoString = "| Download Failed";
                         ReportException("Downloader", e);
-                        return;
                     }
 
-                    if (string.IsNullOrEmpty(jsonContent))
+                    if (!string.IsNullOrEmpty(jsonContent))
                     {
-                        return;
-                    }
-                    bool written = false;
-                    for (int loop = 0; loop < 5; loop++)
-                    {
-                        try
+                        bool written = false;
+                        for (int loop = 0; loop < 5; loop++)
                         {
-                            File.WriteAllText("tonies.json", jsonContent);
-                            written = true;
-                            break;
+                            try
+                            {
+                                File.WriteAllText("tonies.json", jsonContent);
+                                written = true;
+                                break;
+                            }
+                            catch (IOException e)
+                            {
+                                ReportException("Writing tonies.json", e);
+                                Thread.Sleep(100);
+                            }
                         }
-                        catch (IOException e)
-                        {
-                            ReportException("Writing tonies.json", e);
-                            Thread.Sleep(100);
-                        }
-                    }
 
-                    if (!written)
-                    {
-                        TonieInfoString = "| Writing Failed - is the tonies.json accessible?";
+                        if (!written)
+                        {
+                            TonieInfoString = "| Writing Failed - is the tonies.json accessible?";
+                        }
                     }
                 }
-                else
+
+                if (string.IsNullOrEmpty(jsonContent))
                 {
                     try
                     {
