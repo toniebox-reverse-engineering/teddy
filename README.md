@@ -7,6 +7,20 @@ With this tool you can dump existing files of the famous audio box or create cus
 The command line tool `Teddy` (encode / decode / info) and its audio library run natively on Linux.
 The GUI `TeddyBench` is still Windows-only (WinForms) and is not part of the Linux build yet.
 
+### Project layout
+
+| Project | Target | Purpose |
+|---|---|---|
+| `TonieAudio`, `Concentus*`, `ID3` | netstandard2.0 | Tonie file format, Opus encoding/decoding |
+| `Teddy` | net10.0 | Command line tool |
+| `TeddyBench.Core` | netstandard2.0 | Everything of TeddyBench that is not UI: NFC reader drivers (Proxmark3, PN5180), tonies.json database, SD card operations, card detection, update check, diagnostics, playback, logging. Platform specific parts (card detection, shell, "live" flag, audio output, app data paths) are behind interfaces in `PlatformServices`/`AppPaths`. |
+| `TeddyBench` | net48 | WinForms GUI (Windows only), uses `TeddyBench.Core` |
+| `*.Tests` | net10.0 | xUnit tests, run on Linux |
+
+On Linux, TeddyBench keeps its settings, `tonies.json` and `customTonies.json` in `$XDG_CONFIG_HOME/TeddyBench`
+(default `~/.config/TeddyBench`) and downloaded images in `~/.cache/TeddyBench`. On Windows they stay in the
+current directory as before.
+
 Requirements: [.NET 10 SDK](https://dotnet.microsoft.com/download) (Fedora: `sudo dnf install dotnet-sdk-10.0`).
 
 ```sh

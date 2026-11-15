@@ -4,9 +4,9 @@ using System.IO.Ports;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using static TeddyBench.Proxmark3;
+using static TeddyBench.Core.Proxmark3;
 
-namespace TeddyBench
+namespace TeddyBench.Core
 {
     public abstract class RfidReaderBase
     {
@@ -79,7 +79,7 @@ namespace TeddyBench
             if (ScanThread == null)
             {
                 ExitScanThread = false;
-                ScanThread = new SafeThread(ScanThreadFunc, "Pn5180Esp Scan Thread");
+                ScanThread = new SafeThread(ScanThreadFunc, GetType().Name + " Scan Thread");
                 ScanThread.Start();
             }
         }
@@ -97,12 +97,12 @@ namespace TeddyBench
         {
             if (ScanThread != null)
             {
-                LogWindow.Log(LogWindow.eLogLevel.Debug, "[Pn5180Esp] Trying to stop thread");
+                Logger.Log(Logger.eLogLevel.Debug, "[Pn5180Esp] Trying to stop thread");
                 ExitScanThread = true;
 
                 if (!ScanThread.Join(1000))
                 {
-                    LogWindow.Log(LogWindow.eLogLevel.Debug, "[Pn5180Esp] Trying to abort thread");
+                    Logger.Log(Logger.eLogLevel.Debug, "[Pn5180Esp] Trying to abort thread");
                     ScanThread.Abort();
                 }
                 ScanThread = null;
@@ -143,7 +143,7 @@ namespace TeddyBench
         {
             if (p.BytesToRead > 0)
             {
-                LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] Flush: " + p.BytesToRead + " bytes to flush");
+                Logger.Log(Logger.eLogLevel.Debug, "[PM3] Flush: " + p.BytesToRead + " bytes to flush");
             }
             while (p.BytesToRead > 0)
             {
@@ -151,20 +151,20 @@ namespace TeddyBench
             }
         }
 
-        internal abstract void ScanThreadFunc();
+        protected abstract void ScanThreadFunc();
 
-        internal virtual void EnterConsole() { }
-        internal virtual void ExitConsole() { }
+        public virtual void EnterConsole() { }
+        public virtual void ExitConsole() { }
 
-        internal virtual byte[] ReadMemory()
+        public virtual byte[] ReadMemory()
         {
             return null;
         }
 
-        internal virtual void EmulateTag(byte[] data) { }
+        public virtual void EmulateTag(byte[] data) { }
 
         public virtual void EnterBootloader(string fileName) { }
-        internal virtual MeasurementResult MeasureAntenna(eMeasurementType type = eMeasurementType.Both)
+        public virtual MeasurementResult MeasureAntenna(eMeasurementType type = eMeasurementType.Both)
         {
             return null;
         }

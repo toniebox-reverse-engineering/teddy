@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace TeddyBench
+namespace TeddyBench.Core
 {
     public class Settings
     {

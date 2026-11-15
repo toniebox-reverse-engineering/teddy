@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Text;
 using System.Windows.Forms;
+using NAudio.Wave;
+using TeddyBench.Core;
 using static TeddyBench.TeddyMain;
 
 namespace TeddyBench
@@ -20,7 +22,10 @@ namespace TeddyBench
 
             Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
             Application.ThreadException += Application_ThreadException;
-            
+
+            /* UI independent code reports crashes and gets its audio output through these */
+            SafeThread.UnhandledException += (name, ex) => MainClass?.ReportException(name, ex);
+            PlatformServices.AudioOutputFactory = () => new WaveOutEvent();
 
             MainClass = new TeddyMain();
             Application.Run(MainClass);
