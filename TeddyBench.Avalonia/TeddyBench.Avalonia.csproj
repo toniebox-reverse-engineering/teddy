@@ -1,0 +1,41 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <!-- Cross-platform TeddyBench GUI (Linux, Windows, macOS). All logic lives in TeddyBench.Core. -->
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <AssemblyName>TeddyBench</AssemblyName>
+    <RootNamespace>TeddyBench.Avalonia</RootNamespace>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <ApplicationIcon>..\TeddyBench\dog.ico</ApplicationIcon>
+    <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
+    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <NoWarn>1701;1702;168</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\TeddyBench.Core\TeddyBench.Core.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="11.3.22" />
+    <PackageReference Include="Avalonia.Desktop" Version="11.3.22" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.22" />
+    <PackageReference Include="Avalonia.Fonts.Inter" Version="11.3.22" />
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+    <PackageReference Include="ScottPlot.Avalonia" Version="5.1.58" />
+    <!-- ScottPlot 5 lifts the managed SkiaSharp to 3.119 (Avalonia 11.3 supports it), but Avalonia.Skia still
+         brings the 2.88 native Linux library, which then fails to load. Pin the matching native build. -->
+    <PackageReference Include="SkiaSharp.NativeAssets.Linux" Version="3.119.0" />
+    <PackageReference Include="GitInfo" Version="2.2.0" />
+    <!-- audio output for previews on Windows; Linux output follows in phase 4 -->
+    <PackageReference Include="NAudio.WinMM" Version="2.0.1" />
+  </ItemGroup>
+  <ItemGroup>
+    <AvaloniaResource Include="..\TeddyBench\fragen.png" Link="Assets\unknown.png" />
+    <AvaloniaResource Include="..\TeddyBench\dog.png" Link="Assets\custom.png" />
+    <AvaloniaResource Include="..\TeddyBench\dog.ico" Link="Assets\dog.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="TeddyBench.Avalonia.Tests" />
+  </ItemGroup>
+</Project>

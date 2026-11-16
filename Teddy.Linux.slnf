@@ -1,0 +1,17 @@
+{
+  "solution": {
+    "path": "Teddy.sln",
+    "projects": [
+      "Concentus\\Concentus.csproj",
+      "Concentus.Oggfile\\Concentus.Oggfile.csproj",
+      "ID3\\ID3.csproj",
+      "TonieAudio\\TonieAudio.csproj",
+      "TonieAudio.Tests\\TonieAudio.Tests.csproj",
+      "Teddy\\Teddy.csproj",
+      "TeddyBench.Core\\TeddyBench.Core.csproj",
+      "TeddyBench.Core.Tests\\TeddyBench.Core.Tests.csproj",
+      "TeddyBench.Avalonia\\TeddyBench.Avalonia.csproj",
+      "TeddyBench.Avalonia.Tests\\TeddyBench.Avalonia.Tests.csproj"
+    ]
+  }
+}

@@ -1,14 +1,18 @@
-name: TeddyBench Windows
+name: Build
 
 on:
   push:
-    branches: [ "*" ]
+    # "*" does not match names with a slash, so the integration branch is listed explicitly
+    branches: [ "*", "linux-port/integration" ]
+    tags: [ "v*" ]
   pull_request:
-    branches: [ "master" ]
+    branches: [ "master", "linux-port/integration" ]
+  # "Run workflow" button in the Actions tab
+  workflow_dispatch:
 
 jobs:
 
-  build:
+  windows:
 
     strategy:
       matrix:
@@ -28,7 +32,7 @@ jobs:
     - name: Install .NET Core
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: 6.0.x
+        dotnet-version: 10.0.x
 
     - name: Setup MSBuild.exe
       uses: microsoft/setup-msbuild@v1
@@ -50,3 +54,68 @@ jobs:
         path: TeddyBench/bin/${{ matrix.configuration }}/net48/win10-x64/TeddyBench.exe
       env:
         Configuration: ${{ matrix.configuration }}
+
+  linux:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Install .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 10.0.x
+
+    # Teddy.Linux.slnf leaves out TeddyBench (WinForms, Windows only until it is ported)
+    - name: Build
+      run: dotnet build Teddy.Linux.slnf -c Release
+
+    - name: Test
+      run: dotnet test Teddy.Linux.slnf -c Release --no-build
+
+    # AppImage (GUI + "cli" mode) and tarball with a per-user installer, see packaging/linux
+    - name: Build Linux packages
+      run: packaging/linux/build.sh
+
+    - name: Smoke test packages
+      run: |
+        artifacts/work/lib/Teddy --help
+        APPIMAGE_EXTRACT_AND_RUN=1 artifacts/TeddyBench-x86_64.AppImage cli --help
+        tar -tzf artifacts/TeddyBench-linux-x64.tar.gz teddybench-linux-x64/install.sh
+
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: TeddyBench-linux-x64
+        path: |
+          artifacts/TeddyBench-x86_64.AppImage
+          artifacts/TeddyBench-linux-x64.tar.gz
+
+  release:
+    # attach the Linux packages to the GitHub release of a pushed v* tag
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: linux
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+    - name: Download Linux packages
+      uses: actions/download-artifact@v4
+      with:
+        name: TeddyBench-linux-x64
+        path: artifacts
+
+    - name: Create or update release
+      env:
+        GH_TOKEN: ${{ github.token }}
+        GH_REPO: ${{ github.repository }}
+      run: |
+        if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+          gh release upload "$GITHUB_REF_NAME" artifacts/* --clobber
+        else
+          gh release create "$GITHUB_REF_NAME" artifacts/* --title "$GITHUB_REF_NAME" --generate-notes
+        fi

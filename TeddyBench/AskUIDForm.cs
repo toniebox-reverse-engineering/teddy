@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Linq;
 using System.Media;
 using System.Windows.Forms;
+using TeddyBench.Core;
 
 namespace TeddyBench
 {

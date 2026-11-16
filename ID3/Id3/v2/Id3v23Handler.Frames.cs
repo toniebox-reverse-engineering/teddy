@@ -50,6 +50,9 @@ namespace Id3.v2
                 value = encoding.GetString(data, 0, data.Length);
             }
 
+            /* many taggers (e.g. ffmpeg) terminate text with NUL; it is not part of the value
+               (otherwise e.g. TRCK "1\0" is not recognized as track 1) */
+            value = value.TrimEnd('\0');
             frame.TextValue = value;
 
             return frame;

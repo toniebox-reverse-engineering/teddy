@@ -1,5 +1,4 @@
 ﻿using ELFSharp.ELF;
-using ScottPlot.Drawing.Colormaps;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -9,9 +8,9 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
-using static TeddyBench.Proxmark3;
+using static TeddyBench.Core.Proxmark3;
 
-namespace TeddyBench
+namespace TeddyBench.Core
 {
     public class Proxmark3 : RfidReaderBase
     {
@@ -159,8 +158,8 @@ namespace TeddyBench
             {
                 byte[] buf = ToByteArray();
                 p.Write(buf, 0, buf.Length);
-                //LogWindow.Log(LogWindow.eLogLevel.Debug, "[Serial] Wrote " + buf.Length + " byte");
-                //LogWindow.Log(LogWindow.eLogLevel.Debug, "[Serial] Dump: '" + BitConverter.ToString(buf).Replace("-", " ") + "'");
+                //Logger.Log(Logger.eLogLevel.Debug, "[Serial] Wrote " + buf.Length + " byte");
+                //Logger.Log(Logger.eLogLevel.Debug, "[Serial] Dump: '" + BitConverter.ToString(buf).Replace("-", " ") + "'");
             }
         }
         public class Pm3UsbCommandNG
@@ -280,8 +279,8 @@ namespace TeddyBench
                         continue;
                     }
 
-                    //LogWindow.Log(LogWindow.eLogLevel.Debug, "[Serial] Read " + read + " byte");
-                    //LogWindow.Log(LogWindow.eLogLevel.Debug, "[Serial] Dump: '" + BitConverter.ToString(receivedData, start, read).Replace("-", " ") + "'");
+                    //Logger.Log(Logger.eLogLevel.Debug, "[Serial] Read " + read + " byte");
+                    //Logger.Log(Logger.eLogLevel.Debug, "[Serial] Dump: '" + BitConverter.ToString(receivedData, start, read).Replace("-", " ") + "'");
 
                     start += read;
                     readCount -= read;
@@ -299,8 +298,8 @@ namespace TeddyBench
                     int read = BlockingRead(p, ReceivedData, 0, 10, waitTime);
                     if (read != 10)
                     {
-                        LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] Pm3UsbResponse: " + p.PortName + " did not reply with header, " + read + "/" + 16 + " bytes)");
-                        LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] Dump: '" + BitConverter.ToString(ReceivedData, 0, read).Replace("-", " ") + "'");
+                        Logger.Log(Logger.eLogLevel.Debug, "[PM3] Pm3UsbResponse: " + p.PortName + " did not reply with header, " + read + "/" + 16 + " bytes)");
+                        Logger.Log(Logger.eLogLevel.Debug, "[PM3] Dump: '" + BitConverter.ToString(ReceivedData, 0, read).Replace("-", " ") + "'");
 
                         FailType = eCommandType.NoData;
                         return;
@@ -321,8 +320,8 @@ namespace TeddyBench
                             read = BlockingRead(p, ReceivedData, readOffset, expectedPayloadLength, waitTime);
                             if (read != expectedPayloadLength)
                             {
-                                LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] Pm3UsbResponse: " + p.PortName + " did not reply with payload, " + read + "/" + expectedPayloadLength + " bytes)");
-                                LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] Dump: '" + BitConverter.ToString(ReceivedData, readOffset, read).Replace("-", " ") + "'");
+                                Logger.Log(Logger.eLogLevel.Debug, "[PM3] Pm3UsbResponse: " + p.PortName + " did not reply with payload, " + read + "/" + expectedPayloadLength + " bytes)");
+                                Logger.Log(Logger.eLogLevel.Debug, "[PM3] Dump: '" + BitConverter.ToString(ReceivedData, readOffset, read).Replace("-", " ") + "'");
 
                                 FailType = eCommandType.Partial;
                                 return;
@@ -342,8 +341,8 @@ namespace TeddyBench
                         read = BlockingRead(p, ReceivedData, readOffset, expectedPayloadLength, waitTime);
                         if (read != expectedPayloadLength)
                         {
-                            LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] Pm3UsbResponse: " + p.PortName + " did not reply with payload, " + read + "/" + expectedPayloadLength + " bytes)");
-                            LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] Dump: '" + BitConverter.ToString(ReceivedData, readOffset, read).Replace("-", " ") + "'");
+                            Logger.Log(Logger.eLogLevel.Debug, "[PM3] Pm3UsbResponse: " + p.PortName + " did not reply with payload, " + read + "/" + expectedPayloadLength + " bytes)");
+                            Logger.Log(Logger.eLogLevel.Debug, "[PM3] Dump: '" + BitConverter.ToString(ReceivedData, readOffset, read).Replace("-", " ") + "'");
 
                             FailType = eCommandType.Partial;
                             return;
@@ -449,10 +448,10 @@ namespace TeddyBench
 
         public Proxmark3()
         {
-            LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] new instance");
+            Logger.Log(Logger.eLogLevel.Debug, "[PM3] new instance");
         }
 
-        internal override void ScanThreadFunc()
+        protected override void ScanThreadFunc()
         {
             lock (ReaderLock)
             {
@@ -462,7 +461,7 @@ namespace TeddyBench
                     {
                         if (ExitScanThread)
                         {
-                            LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] MainFunc: Exiting");
+                            Logger.Log(Logger.eLogLevel.Debug, "[PM3] MainFunc: Exiting");
                             return;
                         }
                         try
@@ -484,7 +483,7 @@ namespace TeddyBench
                         {
                             if (ExitScanThread)
                             {
-                                LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] MainFunc: Exiting");
+                                Logger.Log(Logger.eLogLevel.Debug, "[PM3] MainFunc: Exiting");
                                 return;
                             }
                             Flush(Port);
@@ -507,7 +506,7 @@ namespace TeddyBench
                             }
 
 
-                            LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] MainFunc: Tag detected, identifying");
+                            Logger.Log(Logger.eLogLevel.Debug, "[PM3] MainFunc: Tag detected, identifying");
 
                             byte[] uid = GetUID();
 
@@ -516,16 +515,16 @@ namespace TeddyBench
                             {
                                 if (UnlockSupported)
                                 {
-                                    LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] MainFunc: Tag in privacy mode, try to unlock");
+                                    Logger.Log(Logger.eLogLevel.Debug, "[PM3] MainFunc: Tag in privacy mode, try to unlock");
 
                                     /* try to unlock using the common passwords */
                                     if (UnlockTag(0x0F0F0F0F) || UnlockTag(0x7FFD6E5B))
                                     {
-                                        LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] MainFunc: Unlocked tag");
+                                        Logger.Log(Logger.eLogLevel.Debug, "[PM3] MainFunc: Unlocked tag");
                                         uid = GetUID();
                                         if (uid == null)
                                         {
-                                            LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] MainFunc: But it did still not respond to an INVENTORY command?!");
+                                            Logger.Log(Logger.eLogLevel.Debug, "[PM3] MainFunc: But it did still not respond to an INVENTORY command?!");
                                             Thread.Sleep(100);
                                             continue;
                                         }
@@ -533,32 +532,32 @@ namespace TeddyBench
                                 }
                                 else
                                 {
-                                    LogWindow.Log(LogWindow.eLogLevel.Warning, "[PM3] MainFunc: Tag in privacy mode, unlock not supported by your firmware");
-                                    LogWindow.Log(LogWindow.eLogLevel.Warning, "[PM3] MainFunc: Either use our custom firmware from");
-                                    LogWindow.Log(LogWindow.eLogLevel.Warning, "[PM3] MainFunc: -> https://github.com/g3gg0/proxmark3/tree/iso15693_slix_l_features");
-                                    LogWindow.Log(LogWindow.eLogLevel.Warning, "[PM3] MainFunc: or use the \"knock method\" to get it out of privacy mode ");
-                                    LogWindow.Log(LogWindow.eLogLevel.Warning, "[PM3] MainFunc: -> https://youtu.be/IiZYM5k90pY");
-                                    LogWindow.Log(LogWindow.eLogLevel.Warning, "[PM3] MainFunc: Please remove the tag");
+                                    Logger.Log(Logger.eLogLevel.Warning, "[PM3] MainFunc: Tag in privacy mode, unlock not supported by your firmware");
+                                    Logger.Log(Logger.eLogLevel.Warning, "[PM3] MainFunc: Either use our custom firmware from");
+                                    Logger.Log(Logger.eLogLevel.Warning, "[PM3] MainFunc: -> https://github.com/g3gg0/proxmark3/tree/iso15693_slix_l_features");
+                                    Logger.Log(Logger.eLogLevel.Warning, "[PM3] MainFunc: or use the \"knock method\" to get it out of privacy mode ");
+                                    Logger.Log(Logger.eLogLevel.Warning, "[PM3] MainFunc: -> https://youtu.be/IiZYM5k90pY");
+                                    Logger.Log(Logger.eLogLevel.Warning, "[PM3] MainFunc: Please remove the tag");
 
                                     while (GetRandom() != null)
                                     {
                                         /* exit as quickly as possible if requested */
                                         if (ExitScanThread)
                                         {
-                                            LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] MainFunc: Exiting");
+                                            Logger.Log(Logger.eLogLevel.Debug, "[PM3] MainFunc: Exiting");
                                             Flush(Port);
                                             return;
                                         }
                                         Thread.Sleep(100);
                                     }
-                                    LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] MainFunc: Tag disappeared");
+                                    Logger.Log(Logger.eLogLevel.Debug, "[PM3] MainFunc: Tag disappeared");
                                 }
                             }
 
                             /* exit as quickly as possible if requested */
                             if (ExitScanThread)
                             {
-                                LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] MainFunc: Exiting");
+                                Logger.Log(Logger.eLogLevel.Debug, "[PM3] MainFunc: Exiting");
                                 Flush(Port);
                                 return;
                             }
@@ -568,11 +567,11 @@ namespace TeddyBench
                             /* found a new one? print a log message */
                             if (uidString != null)
                             {
-                                LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] Report tag UID: " + uidString);
+                                Logger.Log(Logger.eLogLevel.Debug, "[PM3] Report tag UID: " + uidString);
                             }
                             else
                             {
-                                LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] Report removed tag");
+                                Logger.Log(Logger.eLogLevel.Debug, "[PM3] Report removed tag");
                             }
                             CurrentUidString = uidString;
 
@@ -584,31 +583,31 @@ namespace TeddyBench
                                 /* exit as quickly as possible if requested */
                                 if (ExitScanThread)
                                 {
-                                    LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] MainFunc: Exiting");
+                                    Logger.Log(Logger.eLogLevel.Debug, "[PM3] MainFunc: Exiting");
                                     Flush(Port);
                                     return;
                                 }
                                 //ReadVoltage();
                                 Thread.Sleep(100);
                             }
-                            LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] MainFunc: Tag disappeared");
+                            Logger.Log(Logger.eLogLevel.Debug, "[PM3] MainFunc: Tag disappeared");
 
                         }
                         catch (InvalidOperationException ex2)
                         {
                             if (ex2.TargetSite.DeclaringType.Name == "SerialPort")
                             {
-                                LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] MainFunc: Serial port lost. Closing device.");
+                                Logger.Log(Logger.eLogLevel.Debug, "[PM3] MainFunc: Serial port lost. Closing device.");
                             }
                             else
                             {
-                                LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] MainFunc: Device failed. Closing. (" + ex2.ToString() + ")");
+                                Logger.Log(Logger.eLogLevel.Debug, "[PM3] MainFunc: Device failed. Closing. (" + ex2.ToString() + ")");
                             }
                             Close();
                         }
                         catch (Exception ex3)
                         {
-                            LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] MainFunc: Device failed. Closing. (" + ex3.ToString() + ")");
+                            Logger.Log(Logger.eLogLevel.Debug, "[PM3] MainFunc: Device failed. Closing. (" + ex3.ToString() + ")");
                             Close();
                         }
                     }
@@ -648,7 +647,7 @@ namespace TeddyBench
             key[3] = (byte)((pass >> 24) & 0xFF);
             Pm3UsbCommand cmd = new Pm3UsbCommand(eCommandType.ISO15693_SLIX_DISABLE_PRIVACY, key);
 
-            LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] UnlockTag: Send request for pass 0x" + pass.ToString("X8"));
+            Logger.Log(Logger.eLogLevel.Debug, "[PM3] UnlockTag: Send request for pass 0x" + pass.ToString("X8"));
             cmd.Write(Port);
 
             int retries = 0;
@@ -664,13 +663,13 @@ namespace TeddyBench
                         if (response.Status == 0)
                         {
                             reason = 0;
-                            LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] UnlockTag: ACK");
+                            Logger.Log(Logger.eLogLevel.Debug, "[PM3] UnlockTag: ACK");
                             return true;
                         }
                         else
                         {
                             reason = response.Status;
-                            LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] UnlockTag: NACK (reason: " + reason + ")");
+                            Logger.Log(Logger.eLogLevel.Debug, "[PM3] UnlockTag: NACK (reason: " + reason + ")");
                             return false;
                         }
                     }
@@ -730,7 +729,7 @@ namespace TeddyBench
 
             Pm3UsbCommand cmd = new Pm3UsbCommand(eCommandType.ISO15693_COMMAND, (byte)command.Length, 1, 1, command);
 
-            LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] GetResponse: Send " + BitConverter.ToString(command).Replace("-", ""));
+            Logger.Log(Logger.eLogLevel.Debug, "[PM3] GetResponse: Send " + BitConverter.ToString(command).Replace("-", ""));
             cmd.Write(Port);
 
             int retries = 0;
@@ -744,7 +743,7 @@ namespace TeddyBench
                     case eCommandType.ISO15693_COMMAND:
                         if (response.DataLength > 0)
                         {
-                            LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] GetResponse: ACK, returning data (" + response.DataLength + ")");
+                            Logger.Log(Logger.eLogLevel.Debug, "[PM3] GetResponse: ACK, returning data (" + response.DataLength + ")");
 
                                 ret = new byte[response.DataLength];
 
@@ -752,14 +751,14 @@ namespace TeddyBench
 
                                 if (!ISO15693.CheckChecksum(ret))
                                 {
-                                    LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] GetResponse: ACK, but Checksum failed");
+                                    Logger.Log(Logger.eLogLevel.Debug, "[PM3] GetResponse: ACK, but Checksum failed");
                                     return null;
                                 }
                                 return ret;
                         }
                         else
                         {
-                            LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] GetResponse: no tag answered");
+                            Logger.Log(Logger.eLogLevel.Debug, "[PM3] GetResponse: no tag answered");
                             return null;
                         }
                 }
@@ -785,7 +784,7 @@ namespace TeddyBench
 
             if (data == null || data.Length != 5)
             {
-                LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] GetRandom: Failed (" + ((data == null) ? "no resp" : (data.Length + " bytes")) + ")");
+                Logger.Log(Logger.eLogLevel.Debug, "[PM3] GetRandom: Failed (" + ((data == null) ? "no resp" : (data.Length + " bytes")) + ")");
                 return null;
             }
 
@@ -804,7 +803,7 @@ namespace TeddyBench
 
                 if (data == null || data.Length != 12)
                 {
-                    LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] GetUID: Failed (" + ((data == null) ? "no resp" : (data.Length + " bytes")) + ")");
+                    Logger.Log(Logger.eLogLevel.Debug, "[PM3] GetUID: Failed (" + ((data == null) ? "no resp" : (data.Length + " bytes")) + ")");
                     continue;
                 }
 
@@ -812,7 +811,7 @@ namespace TeddyBench
                 Array.Copy(data, 2, uidBytes, 0, 8);
 
                 string uid = BitConverter.ToString(uidBytes.Reverse().ToArray()).Replace("-", "");
-                LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] GetUID: ACK, returning " + uid.Length + " byte");
+                Logger.Log(Logger.eLogLevel.Debug, "[PM3] GetUID: ACK, returning " + uid.Length + " byte");
                 return uidBytes;
             }
             return null;
@@ -827,7 +826,7 @@ namespace TeddyBench
 
                 if (data == null || data.Length != 7)
                 {
-                    LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] ReadMemory: Failed (" + ((data == null) ? "no resp" : (data.Length + " bytes")) + ")");
+                    Logger.Log(Logger.eLogLevel.Debug, "[PM3] ReadMemory: Failed (" + ((data == null) ? "no resp" : (data.Length + " bytes")) + ")");
                     continue;
                 }
 
@@ -835,7 +834,7 @@ namespace TeddyBench
                 Array.Copy(data, 1, mem, 0, 4);
 
                 string str = BitConverter.ToString(mem.ToArray()).Replace("-", "");
-                LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] ReadMemory: ACK, returning " + str + "");
+                Logger.Log(Logger.eLogLevel.Debug, "[PM3] ReadMemory: ACK, returning " + str + "");
                 return mem;
             }
             return null;
@@ -851,7 +850,7 @@ namespace TeddyBench
             }
             Pm3UsbCommandNG cmd = new Pm3UsbCommandNG(eCommandType.ISO15693_SIMULATE, data);
 
-            LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] Emulate: Start");
+            Logger.Log(Logger.eLogLevel.Debug, "[PM3] Emulate: Start");
             cmd.Write(Port);
 
             while (true)
@@ -861,7 +860,7 @@ namespace TeddyBench
                 switch (response.Cmd)
                 {
                     case eCommandType.ISO15693_SIMULATE:
-                        LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] Emulate: Done");
+                        Logger.Log(Logger.eLogLevel.Debug, "[PM3] Emulate: Done");
                         continue;
                 }
 
@@ -877,22 +876,22 @@ namespace TeddyBench
             switch (response.Cmd)
             {
                 case eCommandType.DebugString:
-                    LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] DebugMessage " + HandleDebug(response) + "");
+                    Logger.Log(Logger.eLogLevel.Debug, "[PM3] DebugMessage " + HandleDebug(response) + "");
                     return true;
 
                 case eCommandType.WTX:
                     int wtx = response.DataUInt16(0);
-                    LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] WTX received: " + wtx);
+                    Logger.Log(Logger.eLogLevel.Debug, "[PM3] WTX received: " + wtx);
                     Thread.Sleep(wtx);
                     return true;
 
                 case eCommandType.NoData:
                 case eCommandType.Timeout:
-                    LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] timeout " + comment);
+                    Logger.Log(Logger.eLogLevel.Debug, "[PM3] timeout " + comment);
                     return false;
 
                 default:
-                    LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] Emulate: Unhandled: " + response.Cmd);
+                    Logger.Log(Logger.eLogLevel.Debug, "[PM3] Emulate: Unhandled: " + response.Cmd);
                     return true;
             }
 
@@ -936,7 +935,7 @@ namespace TeddyBench
             public byte[] amplitudes = new byte[256];
             public uint divisor;
 
-            internal double[] GetFrequencieskHz()
+            public double[] GetFrequencieskHz()
             {
                 double[] freq = new double[256];
 
@@ -947,12 +946,12 @@ namespace TeddyBench
                 return freq;
             }
 
-            internal double GetPeakFrequency()
+            public double GetPeakFrequency()
             {
                 return 12000000 / (peakF + 1);
             }
 
-            internal double[] GetVoltages()
+            public double[] GetVoltages()
             {
                 return amplitudes.Select(b => (double)(b * 512.0f / 1000.0f)).ToArray();
             }
@@ -966,7 +965,7 @@ namespace TeddyBench
             }
             Pm3UsbCommand cmd = new Pm3UsbCommand(eCommandType.MeasureAntennaTuning, (ulong)type);
 
-            LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] MeasureAntenna: Start");
+            Logger.Log(Logger.eLogLevel.Debug, "[PM3] MeasureAntenna: Start");
             cmd.Write(Port);
 
             int timeouts = 0;
@@ -1002,24 +1001,8 @@ namespace TeddyBench
 
         public bool Detect()
         {
-            string[] ports = SerialPort.GetPortNames();
-            List<string> reallyAvailablePorts = new List<string>();
-
-            /* SerialPort.GetPortNames() also returns stale ports from registry. do a check if they are really available. */
-            foreach (string listedPort in ports)
-            {
-                try
-                {
-                    SerialPort p = new SerialPort(listedPort, 115200);
-
-                    p.Open();
-                    p.Close();
-                    reallyAvailablePorts.Add(listedPort);
-                }
-                catch (Exception e0)
-                {
-                }
-            }
+            /* only usable ports; also notes ports we lack permission for (Linux: dialout group) */
+            List<string> reallyAvailablePorts = SerialPorts.GetAvailablePorts();
 
             /* update seen list */
             foreach (string newPort in reallyAvailablePorts)
@@ -1027,7 +1010,7 @@ namespace TeddyBench
                 if (!PortsAppeared.ContainsKey(newPort))
                 {
                     PortsAppeared.Add(newPort, DateTime.Now);
-                    LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] New port: " + newPort);
+                    Logger.Log(Logger.eLogLevel.Debug, "[PM3] New port: " + newPort);
                 }
             }
 
@@ -1036,7 +1019,7 @@ namespace TeddyBench
             {
                 PortsFailed.Remove(del);
                 PortsAppeared.Remove(del);
-                LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] Port disappeared: " + del);
+                Logger.Log(Logger.eLogLevel.Debug, "[PM3] Port disappeared: " + del);
             }
 
             /* only try to connect to ports that have been seen more than a second ago. Ensure PM3 has booted properly. */
@@ -1048,14 +1031,14 @@ namespace TeddyBench
                     continue;
                 }
 
-                LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] Try port " + port);
+                Logger.Log(Logger.eLogLevel.Debug, "[PM3] Try port " + port);
                 if (TryOpen(port))
                 {
-                    LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] Success");
+                    Logger.Log(Logger.eLogLevel.Debug, "[PM3] Success");
                     return true;
                 }
 
-                LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] Failed");
+                Logger.Log(Logger.eLogLevel.Debug, "[PM3] Failed");
                 if (!PortsFailed.ContainsKey(port))
                 {
                     PortsFailed.Add(port, DateTime.Now);
@@ -1089,20 +1072,20 @@ namespace TeddyBench
                 Pm3UsbResponse resDevInfo = new Pm3UsbResponse(p);
                 if (resDevInfo.respLegacy.cmd != (int)eCommandType.DeviceInfo)
                 {
-                    LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] TryOpen: " + port + " did not reply to a device info");
+                    Logger.Log(Logger.eLogLevel.Debug, "[PM3] TryOpen: " + port + " did not reply to a device info");
                     p.Close();
                     return false;
                 }
 
                 DeviceInfo = (eDeviceInfo)resDevInfo.respLegacy.arg[0];
 
-                LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] Device info: ");
-                LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3]   BOOTROM_PRESENT         " + ((DeviceInfo & eDeviceInfo.BootromPresent) != 0 ? "Y" : "N"));
-                LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3]   OSIMAGE_PRESENT         " + ((DeviceInfo & eDeviceInfo.OsImagePresent) != 0 ? "Y" : "N"));
-                LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3]   MODE_BOOTROM            " + ((DeviceInfo & eDeviceInfo.ModeBootrom) != 0 ? "Y" : "N"));
-                LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3]   MODE_OS                 " + ((DeviceInfo & eDeviceInfo.ModeOs) != 0 ? "Y" : "N"));
-                LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3]   UNDERSTANDS_START_FLASH " + ((DeviceInfo & eDeviceInfo.UnderstandStartFlash) != 0 ? "Y" : "N"));
-                LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3]   UNDERSTANDS_VERSION     " + ((DeviceInfo & eDeviceInfo.UnderstandVersion) != 0 ? "Y" : "N"));
+                Logger.Log(Logger.eLogLevel.Debug, "[PM3] Device info: ");
+                Logger.Log(Logger.eLogLevel.Debug, "[PM3]   BOOTROM_PRESENT         " + ((DeviceInfo & eDeviceInfo.BootromPresent) != 0 ? "Y" : "N"));
+                Logger.Log(Logger.eLogLevel.Debug, "[PM3]   OSIMAGE_PRESENT         " + ((DeviceInfo & eDeviceInfo.OsImagePresent) != 0 ? "Y" : "N"));
+                Logger.Log(Logger.eLogLevel.Debug, "[PM3]   MODE_BOOTROM            " + ((DeviceInfo & eDeviceInfo.ModeBootrom) != 0 ? "Y" : "N"));
+                Logger.Log(Logger.eLogLevel.Debug, "[PM3]   MODE_OS                 " + ((DeviceInfo & eDeviceInfo.ModeOs) != 0 ? "Y" : "N"));
+                Logger.Log(Logger.eLogLevel.Debug, "[PM3]   UNDERSTANDS_START_FLASH " + ((DeviceInfo & eDeviceInfo.UnderstandStartFlash) != 0 ? "Y" : "N"));
+                Logger.Log(Logger.eLogLevel.Debug, "[PM3]   UNDERSTANDS_VERSION     " + ((DeviceInfo & eDeviceInfo.UnderstandVersion) != 0 ? "Y" : "N"));
 
                 if ((DeviceInfo & eDeviceInfo.ModeBootrom) != 0)
                 {
@@ -1112,7 +1095,7 @@ namespace TeddyBench
 
                     if (!File.Exists(Flashfile))
                     {
-                        LogWindow.Log(LogWindow.eLogLevel.Error, "[PM3] Device started in bootloader mode, but I cannot find flash file " + Flashfile + ". Reset device.");
+                        Logger.Log(Logger.eLogLevel.Error, "[PM3] Device started in bootloader mode, but I cannot find flash file " + Flashfile + ". Reset device.");
                     }
                     else
                     {
@@ -1146,7 +1129,7 @@ namespace TeddyBench
 
                 if (resPing.Cmd != eCommandType.Ping)
                 {
-                    LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] TryOpen: " + port + " did not reply to a ping");
+                    Logger.Log(Logger.eLogLevel.Debug, "[PM3] TryOpen: " + port + " did not reply to a ping");
                     p.Close();
                     return false;
                 }
@@ -1157,7 +1140,7 @@ namespace TeddyBench
                 Pm3UsbResponse resVers = new Pm3UsbResponse(p);
                 if (resVers.Cmd != eCommandType.VersionInfo)
                 {
-                    LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] TryOpen: " + port + " did not reply to a version info");
+                    Logger.Log(Logger.eLogLevel.Debug, "[PM3] TryOpen: " + port + " did not reply to a version info");
                     p.Close();
                     return false;
                 }
@@ -1168,17 +1151,17 @@ namespace TeddyBench
 
                 ByteArrayToStructure<Pm3VersionInfoStruct>(resVers.DataPtr, 0, ref ver);
 
-                LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] Chip ID: 0x" + ver.id.ToString("X8"));
-                LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] Section: 0x" + ver.section_size.ToString("X8"));
+                Logger.Log(Logger.eLogLevel.Debug, "[PM3] Chip ID: 0x" + ver.id.ToString("X8"));
+                Logger.Log(Logger.eLogLevel.Debug, "[PM3] Section: 0x" + ver.section_size.ToString("X8"));
 
                 uint len = (ver.versionstr_len >> 24) | ((ver.versionstr_len >> 16) & 0xFF);
 
                 string versionString = Encoding.UTF8.GetString(resVers.DataPtr, 12, (int)ver.versionstr_len - 1);
-                LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] Version:");
+                Logger.Log(Logger.eLogLevel.Debug, "[PM3] Version:");
                 Regex removeAnsi = new Regex(@"\x1b\[[0-9;]*m");
                 foreach (string line in versionString.Split('\n'))
                 {
-                    LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3]     " + removeAnsi.Replace(line, ""));
+                    Logger.Log(Logger.eLogLevel.Debug, "[PM3]     " + removeAnsi.Replace(line, ""));
                 }
 
                 switch (ver.id)
@@ -1214,10 +1197,10 @@ namespace TeddyBench
 
                 ReadVoltage();
 
-                LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] Device does " + (UnlockSupported ? "" : "*NOT*") + " support SLIX-L unlock command");
+                Logger.Log(Logger.eLogLevel.Debug, "[PM3] Device does " + (UnlockSupported ? "" : "*NOT*") + " support SLIX-L unlock command");
 
                 OnDeviceFound(CurrentPort);
-                LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] TryOpen: " + port + " successfully opened");
+                Logger.Log(Logger.eLogLevel.Debug, "[PM3] TryOpen: " + port + " successfully opened");
 
                 Connected = true;
                 return true;
@@ -1282,7 +1265,7 @@ namespace TeddyBench
         {
             if((DeviceInfo & eDeviceInfo.BootromPresent) == 0)
             {
-                LogWindow.Log(LogWindow.eLogLevel.Error, "Device does not support bootloader mode");
+                Logger.Log(Logger.eLogLevel.Error, "Device does not support bootloader mode");
                 return;
             }
             Flashfile = fileName;
@@ -1334,7 +1317,7 @@ namespace TeddyBench
         {
             if (segments.Count < 1)
             {
-                LogWindow.Log(LogWindow.eLogLevel.Debug, "[Flash] Failed, no data to flash - reconnecting device");
+                Logger.Log(Logger.eLogLevel.Debug, "[Flash] Failed, no data to flash - reconnecting device");
             }
             else
             {
@@ -1352,7 +1335,7 @@ namespace TeddyBench
                         return false;
                     }
                 }
-                LogWindow.Log(LogWindow.eLogLevel.Debug, "[Flash] DONE, reconnecting device");
+                Logger.Log(Logger.eLogLevel.Debug, "[Flash] DONE, reconnecting device");
             }
 
             return true;
@@ -1362,7 +1345,7 @@ namespace TeddyBench
         {
             int blockPos = 0;
 
-            LogWindow.Log(LogWindow.eLogLevel.Debug, "[Flash] Flashing 0x" + address.ToString("X8") + " - 0x" + (address + data.Length).ToString("X8") + " (0x" + data.Length.ToString("X8") + " byte)");
+            Logger.Log(Logger.eLogLevel.Debug, "[Flash] Flashing 0x" + address.ToString("X8") + " - 0x" + (address + data.Length).ToString("X8") + " (0x" + data.Length.ToString("X8") + " byte)");
 
             while (blockPos < data.Length)
             {
@@ -1371,7 +1354,7 @@ namespace TeddyBench
 
                 if (!WriteBlock(blockAddress, data, blockPos, blockLen))
                 {
-                    LogWindow.Log(LogWindow.eLogLevel.Debug, "[Flash] FAILED at 0x" + blockAddress.ToString("X8"));
+                    Logger.Log(Logger.eLogLevel.Debug, "[Flash] FAILED at 0x" + blockAddress.ToString("X8"));
                     return false;
                 }
 
@@ -1386,7 +1369,7 @@ namespace TeddyBench
             byte[] memBuf = Enumerable.Repeat((byte)0xFF, 0x100).ToArray();
             Array.Copy(data, offset, memBuf, 0, length);
 
-            LogWindow.Log(LogWindow.eLogLevel.Debug, "[Flash]   Block 0x" + address.ToString("X8") + "..." );
+            Logger.Log(Logger.eLogLevel.Debug, "[Flash]   Block 0x" + address.ToString("X8") + "..." );
 
             Pm3UsbCommand finish = new Pm3UsbCommand(eCommandType.FinishWrite, address);
             Array.Copy(memBuf, finish.data.d, memBuf.Length);
@@ -1405,7 +1388,7 @@ namespace TeddyBench
 
             if (!response.ResponseLegacy || response.respLegacy.cmd != (int)eCommandType.Ack)
             {
-                LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] ReadAck: did not reply with ACK");
+                Logger.Log(Logger.eLogLevel.Debug, "[PM3] ReadAck: did not reply with ACK");
                 return false;
             }
             return true;
@@ -1417,7 +1400,7 @@ namespace TeddyBench
 
             if (res.Cmd != 0)
             {
-                LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] ReadAck: did not reply with ACK");
+                Logger.Log(Logger.eLogLevel.Debug, "[PM3] ReadAck: did not reply with ACK");
                 return false;
             }
 
@@ -1447,7 +1430,7 @@ namespace TeddyBench
 
                     if (buf == null)
                     {
-                        LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] ReadMemory: Failed to read bank " + bank + ", aborting");
+                        Logger.Log(Logger.eLogLevel.Debug, "[PM3] ReadMemory: Failed to read bank " + bank + ", aborting");
                         return null;
                     }
                     Array.Copy(buf, 0, mem, bank * 4, buf.Length);
@@ -1460,7 +1443,7 @@ namespace TeddyBench
 
                 Array.Copy(mem, bank * 4, buf, 0, 4);
                 string str = BitConverter.ToString(buf.ToArray()).Replace("-", " ");
-                LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] ReadMemory: #" + bank + "  " + str);
+                Logger.Log(Logger.eLogLevel.Debug, "[PM3] ReadMemory: #" + bank + "  " + str);
             }
 
             byte[] data = new byte[8 + 8 * 4];
@@ -1471,7 +1454,7 @@ namespace TeddyBench
             return data;
         }
 
-        internal override byte[] ReadMemory()
+        public override byte[] ReadMemory()
         {
             if (Port == null)
             {
@@ -1498,7 +1481,7 @@ namespace TeddyBench
             return ret;
         }
 
-        internal override void EmulateTag(byte[] data)
+        public override void EmulateTag(byte[] data)
         {
             if (Port == null)
             {
@@ -1513,7 +1496,7 @@ namespace TeddyBench
             StartThread();
         }
 
-        internal override MeasurementResult MeasureAntenna(eMeasurementType type = eMeasurementType.Both)
+        public override MeasurementResult MeasureAntenna(eMeasurementType type = eMeasurementType.Both)
         {
             MeasurementResult result = new MeasurementResult();
             if (Port == null)
@@ -1531,12 +1514,12 @@ namespace TeddyBench
             return result;
         }
 
-        internal float GetHFVoltage()
+        public float GetHFVoltage()
         {
             return AntennaVoltage;
         }
 
-        internal override void EnterConsole()
+        public override void EnterConsole()
         {
             if (Port == null)
             {
@@ -1548,9 +1531,9 @@ namespace TeddyBench
             ExitConsoleThread = false;
             ConsoleThread = new SafeThread(() =>
             {
-                LogWindow.Log(LogWindow.eLogLevel.Debug, "");
-                LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] Console mode. If you have no clue what this is for, then you clicked the wrong menu entry.");
-                LogWindow.Log(LogWindow.eLogLevel.Debug, "[PM3] If you know what you are doing, then long-press the PM3 button.");
+                Logger.Log(Logger.eLogLevel.Debug, "");
+                Logger.Log(Logger.eLogLevel.Debug, "[PM3] Console mode. If you have no clue what this is for, then you clicked the wrong menu entry.");
+                Logger.Log(Logger.eLogLevel.Debug, "[PM3] If you know what you are doing, then long-press the PM3 button.");
                 lock (ReaderLock)
                 {
                     try
@@ -1575,7 +1558,7 @@ namespace TeddyBench
 
         }
 
-        internal override void ExitConsole()
+        public override void ExitConsole()
         {
             ExitConsoleThread = true;
 

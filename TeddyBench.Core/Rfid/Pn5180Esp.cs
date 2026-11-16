@@ -5,16 +5,16 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 
-namespace TeddyBench
+namespace TeddyBench.Core
 {
     public class Pn5180Esp : RfidReaderBase
     {
         public Pn5180Esp()
         {
-            LogWindow.Log(LogWindow.eLogLevel.Debug, "[Pn5180Esp] new instance");
+            Logger.Log(Logger.eLogLevel.Debug, "[Pn5180Esp] new instance");
         }
 
-        internal override void ScanThreadFunc()
+        protected override void ScanThreadFunc()
         {
             lock (ReaderLock)
             {
@@ -24,7 +24,7 @@ namespace TeddyBench
                     {
                         if (ExitScanThread)
                         {
-                            LogWindow.Log(LogWindow.eLogLevel.Debug, "[Pn5180Esp] MainFunc: Exiting");
+                            Logger.Log(Logger.eLogLevel.Debug, "[Pn5180Esp] MainFunc: Exiting");
                             return;
                         }
                         try
@@ -46,28 +46,28 @@ namespace TeddyBench
                         {
                             if (ExitScanThread)
                             {
-                                LogWindow.Log(LogWindow.eLogLevel.Debug, "[Pn5180Esp] MainFunc: Exiting");
+                                Logger.Log(Logger.eLogLevel.Debug, "[Pn5180Esp] MainFunc: Exiting");
                                 return;
                             }
                             Flush(Port);
 
-                            LogWindow.Log(LogWindow.eLogLevel.Debug, "[Pn5180Esp] MainFunc: Tag detected, identifying");
+                            Logger.Log(Logger.eLogLevel.Debug, "[Pn5180Esp] MainFunc: Tag detected, identifying");
 
                             String uid = GetUID();
 
                             /* no UID detected? might be locked */
                             if (uid == "")
                             {
-                                    LogWindow.Log(LogWindow.eLogLevel.Debug, "[Pn5180Esp] MainFunc: Tag in privacy mode, try to unlock");
+                                    Logger.Log(Logger.eLogLevel.Debug, "[Pn5180Esp] MainFunc: Tag in privacy mode, try to unlock");
 
                                     /* try to unlock using the common passwords */
                                     if (UnlockTag(0x0F0F0F0F) || UnlockTag(0x7FFD6E5B))
                                     {
-                                        LogWindow.Log(LogWindow.eLogLevel.Debug, "[Pn5180Esp] MainFunc: Unlocked tag");
+                                        Logger.Log(Logger.eLogLevel.Debug, "[Pn5180Esp] MainFunc: Unlocked tag");
                                         uid = GetUID();
                                         if (uid == null)
                                         {
-                                            LogWindow.Log(LogWindow.eLogLevel.Debug, "[Pn5180Esp] MainFunc: But it did still not respond to an INVENTORY command?!");
+                                            Logger.Log(Logger.eLogLevel.Debug, "[Pn5180Esp] MainFunc: But it did still not respond to an INVENTORY command?!");
                                             Thread.Sleep(100);
                                             continue;
                                         }
@@ -77,7 +77,7 @@ namespace TeddyBench
                             /* exit as quickly as possible if requested */
                             if (ExitScanThread)
                             {
-                                LogWindow.Log(LogWindow.eLogLevel.Debug, "[Pn5180Esp] MainFunc: Exiting");
+                                Logger.Log(Logger.eLogLevel.Debug, "[Pn5180Esp] MainFunc: Exiting");
                                 Flush(Port);
                                 return;
                             }
@@ -87,11 +87,11 @@ namespace TeddyBench
                             /* found a new one? print a log message */
                             if (uidString != null)
                             {
-                                LogWindow.Log(LogWindow.eLogLevel.Debug, "[Pn5180Esp] Report tag UID: " + uidString);
+                                Logger.Log(Logger.eLogLevel.Debug, "[Pn5180Esp] Report tag UID: " + uidString);
                             }
                             else
                             {
-                                LogWindow.Log(LogWindow.eLogLevel.Debug, "[Pn5180Esp] Report removed tag");
+                                Logger.Log(Logger.eLogLevel.Debug, "[Pn5180Esp] Report removed tag");
                             }
                             CurrentUidString = uidString;
 
@@ -106,30 +106,30 @@ namespace TeddyBench
                                 /* exit as quickly as possible if requested */
                                 if (ExitScanThread)
                                 {
-                                    LogWindow.Log(LogWindow.eLogLevel.Debug, "[Pn5180Esp] MainFunc: Exiting");
+                                    Logger.Log(Logger.eLogLevel.Debug, "[Pn5180Esp] MainFunc: Exiting");
                                     Flush(Port);
                                     return;
                                 }
                                 Thread.Sleep(100);
                             }
-                            LogWindow.Log(LogWindow.eLogLevel.Debug, "[Pn5180Esp] MainFunc: Tag disappeared");
+                            Logger.Log(Logger.eLogLevel.Debug, "[Pn5180Esp] MainFunc: Tag disappeared");
 
                         }
                         catch (InvalidOperationException ex2)
                         {
                             if (ex2.TargetSite.DeclaringType.Name == "SerialPort")
                             {
-                                LogWindow.Log(LogWindow.eLogLevel.Debug, "[Pn5180Esp] MainFunc: Serial port lost. Closing device.");
+                                Logger.Log(Logger.eLogLevel.Debug, "[Pn5180Esp] MainFunc: Serial port lost. Closing device.");
                             }
                             else
                             {
-                                LogWindow.Log(LogWindow.eLogLevel.Debug, "[Pn5180Esp] MainFunc: Device failed. Closing. (" + ex2.ToString() + ")");
+                                Logger.Log(Logger.eLogLevel.Debug, "[Pn5180Esp] MainFunc: Device failed. Closing. (" + ex2.ToString() + ")");
                             }
                             Close();
                         }
                         catch (Exception ex3)
                         {
-                            LogWindow.Log(LogWindow.eLogLevel.Debug, "[Pn5180Esp] MainFunc: Device failed. Closing. (" + ex3.ToString() + ")");
+                            Logger.Log(Logger.eLogLevel.Debug, "[Pn5180Esp] MainFunc: Device failed. Closing. (" + ex3.ToString() + ")");
                             Close();
                         }
                     }
@@ -178,7 +178,7 @@ namespace TeddyBench
 
                 if (response == "" || response.Length != 16)
                 {
-                    LogWindow.Log(LogWindow.eLogLevel.Debug, "[Pn5180Esp] GetUID: Failed (" + ((response == "") ? "no resp" : (response.Length + " bytes")) + ")");
+                    Logger.Log(Logger.eLogLevel.Debug, "[Pn5180Esp] GetUID: Failed (" + ((response == "") ? "no resp" : (response.Length + " bytes")) + ")");
                     continue;
                 }
 
@@ -191,24 +191,8 @@ namespace TeddyBench
 
         public bool Detect()
         {
-            string[] ports = SerialPort.GetPortNames();
-            List<string> reallyAvailablePorts = new List<string>();
-
-            /* SerialPort.GetPortNames() also returns stale ports from registry. do a check if they are really available. */
-            foreach (string listedPort in ports)
-            {
-                try
-                {
-                    SerialPort p = new SerialPort(listedPort, 115200);
-
-                    p.Open();
-                    p.Close();
-                    reallyAvailablePorts.Add(listedPort);
-                }
-                catch (Exception e0)
-                {
-                }
-            }
+            /* only usable ports; also notes ports we lack permission for (Linux: dialout group) */
+            List<string> reallyAvailablePorts = SerialPorts.GetAvailablePorts();
 
             /* update seen list */
             foreach (string newPort in reallyAvailablePorts)
@@ -216,7 +200,7 @@ namespace TeddyBench
                 if (!PortsAppeared.ContainsKey(newPort))
                 {
                     PortsAppeared.Add(newPort, DateTime.Now);
-                    LogWindow.Log(LogWindow.eLogLevel.Debug, "[Pn5180Esp] New port: " + newPort);
+                    Logger.Log(Logger.eLogLevel.Debug, "[Pn5180Esp] New port: " + newPort);
                 }
             }
 
@@ -225,7 +209,7 @@ namespace TeddyBench
             {
                 PortsFailed.Remove(del);
                 PortsAppeared.Remove(del);
-                LogWindow.Log(LogWindow.eLogLevel.Debug, "[Pn5180Esp] Port disappeared: " + del);
+                Logger.Log(Logger.eLogLevel.Debug, "[Pn5180Esp] Port disappeared: " + del);
             }
 
             /* only try to connect to ports that have been seen more than a second ago. Ensure Pn5180Esp has booted properly. */
@@ -237,14 +221,14 @@ namespace TeddyBench
                     continue;
                 }
 
-                LogWindow.Log(LogWindow.eLogLevel.Debug, "[Pn5180Esp] Try port " + port);
+                Logger.Log(Logger.eLogLevel.Debug, "[Pn5180Esp] Try port " + port);
                 if (TryOpen(port))
                 {
-                    LogWindow.Log(LogWindow.eLogLevel.Debug, "[Pn5180Esp] Success");
+                    Logger.Log(Logger.eLogLevel.Debug, "[Pn5180Esp] Success");
                     return true;
                 }
 
-                LogWindow.Log(LogWindow.eLogLevel.Debug, "[Pn5180Esp] Failed");
+                Logger.Log(Logger.eLogLevel.Debug, "[Pn5180Esp] Failed");
                 if (!PortsFailed.ContainsKey(port))
                 {
                     PortsFailed.Add(port, DateTime.Now);
@@ -283,7 +267,7 @@ namespace TeddyBench
                 Port = p;
 
                 OnDeviceFound(CurrentPort);
-                LogWindow.Log(LogWindow.eLogLevel.Debug, "[Pn5180Esp] TryOpen: " + port + " successfully opened");
+                Logger.Log(Logger.eLogLevel.Debug, "[Pn5180Esp] TryOpen: " + port + " successfully opened");
 
                 Connected = true;
                 return true;
