@@ -12,7 +12,12 @@
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <NoWarn>1701;1702;168</NoWarn>
+    <!-- GitHub repository ("owner/name") checked for updates; CI sets it to the repository being built -->
+    <TeddyUpdateRepository Condition="'$(TeddyUpdateRepository)' == ''">toniebox-reverse-engineering/teddy</TeddyUpdateRepository>
   </PropertyGroup>
+  <ItemGroup>
+    <AssemblyMetadata Include="UpdateRepository" Value="$(TeddyUpdateRepository)" />
+  </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\TeddyBench.Core\TeddyBench.Core.csproj" />
   </ItemGroup>

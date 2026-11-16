@@ -9,6 +9,8 @@ using Xunit;
 
 namespace TeddyBench.Avalonia.Tests
 {
+    /* both classes change the static AppPaths: never run them in parallel */
+    [Collection("AppPaths")]
     public class MainWindowViewModelTests
     {
         private const string Uid1 = "E00403500102AB12";
@@ -317,6 +319,27 @@ namespace TeddyBench.Avalonia.Tests
             finally
             {
                 PlatformServices.Shell = previous;
+            }
+        }
+
+        [Fact]
+        public void AppVersion_DefaultsToUpstreamUpdateRepository()
+        {
+            /* CI builds set -p:TeddyUpdateRepository; the test build uses the default */
+            Assert.Equal(UpdateChecker.DefaultRepository, AppVersion.UpdateRepository);
+
+            /* CreateDefault uses the real data folders: keep them out of the user's home */
+            using (var dir = new TempDir())
+            {
+                AppPaths.Configure(dir.Combine("config"), dir.Combine("cache"));
+                try
+                {
+                    Assert.Equal("someone/fork", ViewModels.MainWindowServices.CreateDefault("1", "", "someone/fork").UpdateChecker.Repository);
+                }
+                finally
+                {
+                    AppPaths.Configure(null, null);
+                }
             }
         }
 

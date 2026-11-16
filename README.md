@@ -40,7 +40,7 @@ current directory as before.
 
 ### Install
 
-Download from the [releases](https://github.com/toniebox-reverse-engineering/teddy/releases):
+Download from the [releases](../../releases) of this repository:
 
 - **`TeddyBench-x86_64.AppImage`**: make it executable (`chmod +x`) and start it. Runs the GUI;
   `./TeddyBench-x86_64.AppImage cli --help` runs the command line tool.

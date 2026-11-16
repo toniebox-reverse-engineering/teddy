@@ -38,7 +38,8 @@ namespace TeddyBench.Avalonia.ViewModels
         /// <summary>false in tests: no threads, timers, downloads or readers are started.</summary>
         public bool StartBackgroundWork = true;
 
-        public static MainWindowServices CreateDefault(string version, string baseTag)
+        /// <param name="updateRepository">GitHub "owner/name" checked for updates; null: upstream.</param>
+        public static MainWindowServices CreateDefault(string version, string baseTag, string updateRepository = null)
         {
             return new MainWindowServices
             {
@@ -48,7 +49,8 @@ namespace TeddyBench.Avalonia.ViewModels
                 SettingsFile = AppPaths.SettingsFile,
                 SendDiagnostics = (payload, sender, message, filename) => new DiagnosticsClient(version).SendAsync(payload, sender, message, filename),
                 Version = version,
-                BaseTag = baseTag
+                BaseTag = baseTag,
+                UpdateChecker = new UpdateChecker(null, updateRepository)
             };
         }
     }
