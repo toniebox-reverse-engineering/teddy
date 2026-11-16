@@ -1,0 +1,139 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="using:TeddyBench.Avalonia.ViewModels"
+        mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="680"
+        x:Class="TeddyBench.Avalonia.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        Title="{Binding Title}"
+        Icon="/Assets/dog.ico"
+        Width="1000" Height="680" MinWidth="640" MinHeight="420"
+        DragDrop.AllowDrop="True">
+
+  <Window.KeyBindings>
+    <KeyBinding Gesture="Ctrl+O" Command="{Binding OpenDirectoryCommand}" />
+  </Window.KeyBindings>
+
+  <DockPanel>
+    <Menu DockPanel.Dock="Top">
+      <MenuItem Header="_File">
+        <MenuItem Header="_Open Directory..." InputGesture="Ctrl+O" Command="{Binding OpenDirectoryCommand}" />
+        <Separator />
+        <MenuItem Header="E_xit" Command="{Binding ExitCommand}" />
+      </MenuItem>
+      <MenuItem Header="_NFC Reader">
+        <MenuItem Header="Autodetect Proxmark3" ToggleType="CheckBox" IsChecked="{Binding NfcAutodetect}" />
+        <MenuItem Header="Advanced Actions" IsEnabled="{Binding AdvancedActionsEnabled}">
+          <MenuItem Header="Read tag content" Command="{Binding ReadTagContentCommand}" />
+          <MenuItem Header="Emulate tag" Command="{Binding EmulateTagCommand}" />
+          <MenuItem Header="Measure antenna" Command="{Binding MeasureAntennaCommand}" />
+          <Separator />
+          <MenuItem Header="Flash Firmware" Command="{Binding FlashFirmwareCommand}" />
+          <MenuItem Header="Flash Bootloader" Command="{Binding FlashBootloaderCommand}" />
+          <MenuItem Header="Console mode (experts only)" ToggleType="CheckBox" IsChecked="{Binding ConsoleMode, Mode=OneWay}" Command="{Binding ToggleConsoleCommand}" />
+        </MenuItem>
+      </MenuItem>
+      <MenuItem Header="_Options">
+        <MenuItem Header="Download tonies.json on startup" ToggleType="CheckBox" IsChecked="{Binding DownloadJsonOnStartup}" />
+        <MenuItem Header="Download tonies.json now" Command="{Binding DownloadJsonNowCommand}" />
+        <MenuItem Header="Debug window" ToggleType="CheckBox" IsChecked="{Binding DebugWindow}" />
+      </MenuItem>
+      <MenuItem Header="_Help">
+        <MenuItem Header="_About" Command="{Binding AboutCommand}" />
+        <Separator />
+        <MenuItem Header="Diagnostics">
+          <MenuItem Header="Report *selected* files" Command="{Binding ReportSelectedCommand}" />
+          <MenuItem Header="Report Proxmark3 antenna measurement" Command="{Binding ReportAntennaCommand}" />
+          <MenuItem Header="Report detected NFC Tag" Command="{Binding ReportNfcTagCommand}" />
+        </MenuItem>
+      </MenuItem>
+    </Menu>
+
+    <Border DockPanel.Dock="Bottom" Padding="8,4" BorderThickness="0,1,0,0"
+            BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+      <TextBlock x:Name="StatusBar" Text="{Binding StatusText}" TextTrimming="CharacterEllipsis" FontSize="12" />
+    </Border>
+
+    <Panel>
+      <!-- no card / directory opened -->
+      <StackPanel x:Name="NoCardPanel" IsVisible="{Binding !IsCardOpen}" HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="16">
+        <Image Source="/Assets/custom.png" Width="128" Height="128" Opacity="0.85" />
+        <TextBlock Text="Please insert your box' SD card" FontSize="20" HorizontalAlignment="Center" />
+        <TextBlock Text="It is opened automatically. You can also open its CONTENT folder (or any folder with exported tonies)."
+                   Classes="hint" TextWrapping="Wrap" MaxWidth="420" TextAlignment="Center" />
+        <Button Content="Open directory..." Command="{Binding OpenDirectoryCommand}" HorizontalAlignment="Center" />
+      </StackPanel>
+
+      <!-- encoding progress replaces the card view -->
+      <DockPanel IsVisible="{Binding ShowEncodeLog}" Margin="12">
+        <TextBlock DockPanel.Dock="Top" Text="Encoding..." FontWeight="SemiBold" Margin="0,0,0,8" />
+        <TextBox x:Name="EncodeLogBox" Text="{Binding EncodeLog}" IsReadOnly="True" AcceptsReturn="True" TextWrapping="NoWrap"
+                 FontFamily="Cascadia Mono,Consolas,DejaVu Sans Mono,Liberation Mono,monospace" />
+      </DockPanel>
+
+      <!-- card content -->
+      <DockPanel x:Name="CardPanel" Margin="8">
+        <DockPanel.IsVisible>
+          <MultiBinding Converter="{x:Static BoolConverters.And}">
+            <Binding Path="IsCardOpen" />
+            <Binding Path="!ShowEncodeLog" />
+          </MultiBinding>
+        </DockPanel.IsVisible>
+
+        <Grid DockPanel.Dock="Top" ColumnDefinitions="Auto,Auto,Auto,*,Auto" Margin="0,0,0,8">
+          <TextBlock Grid.Column="0" Text="Sort by" VerticalAlignment="Center" Margin="0,0,8,0" />
+          <ComboBox Grid.Column="1" x:Name="SortBox" ItemsSource="{Binding SortModes}" SelectedIndex="{Binding SortMode}" MinWidth="150" />
+          <Button Grid.Column="2" Content="{Binding PlayButtonText}" Command="{Binding PlayStopCommand}" Margin="16,0,8,0"
+                  ToolTip.Tip="Play the selected tonie" />
+          <Slider Grid.Column="3" Minimum="0" Maximum="{Binding PlayLength}" Value="{Binding PlayPosition}" IsEnabled="{Binding CanPlay}"
+                  VerticalAlignment="Center" />
+          <TextBlock Grid.Column="4" Text="{Binding PlayTimeText}" VerticalAlignment="Center" Margin="8,0,0,0" FontSize="12" />
+        </Grid>
+
+        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Spacing="8" Margin="0,8,0,0">
+          <Button Content="Add..." Command="{Binding AddFilesCommand}" ToolTip.Tip="Encode MP3/Ogg files or copy a tonie file onto the card (files can also be dropped here)" />
+          <Button Content="Delete..." Command="{Binding DeleteSelectedCommand}" />
+          <Button Content="Save as .ogg..." Command="{Binding SaveSelectedCommand}" />
+        </StackPanel>
+
+        <ListBox x:Name="TonieList" ItemsSource="{Binding Items}" SelectedItems="{Binding SelectedItems}" SelectionMode="Multiple"
+                 ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+          <ListBox.KeyBindings>
+            <KeyBinding Gesture="F2" Command="{Binding RenameCommand}" />
+            <KeyBinding Gesture="Delete" Command="{Binding DeleteSelectedCommand}" />
+            <KeyBinding Gesture="Enter" Command="{Binding ReassignSelectedCommand}" />
+          </ListBox.KeyBindings>
+          <ListBox.ItemsPanel>
+            <ItemsPanelTemplate>
+              <WrapPanel Orientation="Horizontal" />
+            </ItemsPanelTemplate>
+          </ListBox.ItemsPanel>
+          <ListBox.ContextMenu>
+            <ContextMenu>
+              <MenuItem Header="Toggle live flag" Command="{Binding ToggleLiveCommand}" />
+              <MenuItem Header="Rename" InputGesture="F2" Command="{Binding RenameCommand}" />
+              <MenuItem Header="Delete" InputGesture="Delete" Command="{Binding DeleteSelectedCommand}" />
+              <MenuItem Header="Assign new UID" InputGesture="Enter" Command="{Binding ReassignSelectedCommand}" />
+              <Separator />
+              <MenuItem Header="Show in file manager" Command="{Binding RevealCommand}" />
+              <MenuItem Header="Export to .ogg" Command="{Binding SaveSelectedCommand}" />
+              <MenuItem Header="Export to..." Command="{Binding ExportSelectedCommand}" />
+              <MenuItem Header="Send diagnostics report" Command="{Binding ReportSelectedCommand}" />
+            </ContextMenu>
+          </ListBox.ContextMenu>
+          <ListBox.ItemTemplate>
+            <DataTemplate x:DataType="vm:TonieItemViewModel">
+              <StackPanel Width="148" Margin="2" Spacing="4" ToolTip.Tip="{Binding ToolTip}">
+                <Image Source="{Binding Image}" Width="128" Height="128" />
+                <TextBlock Text="{Binding GroupName}" Classes="hint" HorizontalAlignment="Center"
+                           IsVisible="{Binding $parent[ListBox].((vm:MainWindowViewModel)DataContext).IsGroupedByType}" />
+                <TextBlock Text="{Binding Text}" TextWrapping="Wrap" TextAlignment="Center" MaxHeight="64" TextTrimming="CharacterEllipsis" />
+              </StackPanel>
+            </DataTemplate>
+          </ListBox.ItemTemplate>
+        </ListBox>
+      </DockPanel>
+    </Panel>
+  </DockPanel>
+</Window>

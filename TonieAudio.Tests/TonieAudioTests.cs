@@ -64,6 +64,19 @@ namespace TonieAudio.Tests
         }
 
         [Fact]
+        public void Id3_ReadsNulTerminatedTrackNumbers()
+        {
+            /* ffmpeg (like many taggers) writes TRCK as "2\0"; the NUL used to make the track unreadable */
+            using (var mp3 = new Id3.Mp3(Path.Combine(AlbumDir, "02 MONO22K.MP3"), Id3.Mp3Permissions.Read))
+            {
+                var tag = mp3.GetAllTags().First();
+                Assert.True(tag.Track.IsAssigned);
+                Assert.Equal(2, tag.Track.Value);
+                Assert.Equal("Mono 1k", tag.Title.Value);
+            }
+        }
+
+        [Fact]
         public void OpenMp3_DecodesWithManagedDecoder()
         {
             using (var mp3 = AudioInput.OpenMp3(Path.Combine(AlbumDir, "01 stereo44k.mp3")))
