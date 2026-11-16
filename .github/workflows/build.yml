@@ -2,10 +2,13 @@ name: Build
 
 on:
   push:
-    branches: [ "*" ]
+    # "*" does not match names with a slash, so the integration branch is listed explicitly
+    branches: [ "*", "linux-port/integration" ]
     tags: [ "v*" ]
   pull_request:
-    branches: [ "master" ]
+    branches: [ "master", "linux-port/integration" ]
+  # "Run workflow" button in the Actions tab
+  workflow_dispatch:
 
 jobs:
 
