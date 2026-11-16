@@ -190,13 +190,27 @@ namespace TeddyBench.Core
             Writer = null;
         }
 
+        /* Process.Kill(bool entireProcessTree) exists on .NET Core 3.0+, but not in netstandard2.0 */
+        private static readonly System.Reflection.MethodInfo KillTree = typeof(Process).GetMethod("Kill", new[] { typeof(bool) });
+
+        /// <summary>
+        /// Ends the player including its child processes: a player started through a shell or wrapper
+        /// script runs as a child, which keeps the pipe open (a blocked write would then never end).
+        /// </summary>
         private static void KillPlayer(Process process)
         {
             try
             {
                 if (process != null && !process.HasExited)
                 {
-                    process.Kill();
+                    if (KillTree != null)
+                    {
+                        KillTree.Invoke(process, new object[] { true });
+                    }
+                    else
+                    {
+                        process.Kill();
+                    }
                 }
             }
             catch (Exception)

@@ -103,15 +103,19 @@ namespace TeddyBench.Core.Tests
             }
         }
 
-        [Fact]
-        public void PipeAudioOutput_StopEndsBlockedPlaybackQuickly()
+        /* a "player" that never reads: the pipe fills up and the writer blocks.
+           "sleep 30; true" makes the shell keep sleep as a child process (like dash on Ubuntu always does,
+           while bash would exec it): Stop must also end the child, which still holds the pipe open. */
+        [Theory]
+        [InlineData("sleep 30")]
+        [InlineData("sleep 30; true")]
+        public void PipeAudioOutput_StopEndsBlockedPlaybackQuickly(string script)
         {
             if (OperatingSystem.IsWindows())
             {
                 return;
             }
-            /* a "player" that never reads: the pipe fills up and the writer blocks */
-            var player = new PipeAudioOutput.Player { Command = "sh", Arguments = (rate, ch) => "-c \"sleep 30\"" };
+            var player = new PipeAudioOutput.Player { Command = "sh", Arguments = (rate, ch) => "-c \"" + script + "\"" };
             var stopped = new ManualResetEventSlim();
             Exception error = new Exception("not stopped");
             var output = new PipeAudioOutput(player);
