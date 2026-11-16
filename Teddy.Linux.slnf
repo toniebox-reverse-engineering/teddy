@@ -7,7 +7,9 @@
       "ID3\\ID3.csproj",
       "TonieAudio\\TonieAudio.csproj",
       "TonieAudio.Tests\\TonieAudio.Tests.csproj",
-      "Teddy\\Teddy.csproj"
+      "Teddy\\Teddy.csproj",
+      "TeddyBench.Core\\TeddyBench.Core.csproj",
+      "TeddyBench.Core.Tests\\TeddyBench.Core.Tests.csproj"
     ]
   }
 }

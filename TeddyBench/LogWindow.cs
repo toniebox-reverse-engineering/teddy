@@ -7,31 +7,18 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using TeddyBench.Core;
 
 namespace TeddyBench
 {
+    /// <summary>Displays the UI independent <see cref="Logger"/> and pops up when new messages arrive.</summary>
     public partial class LogWindow : Form
     {
-        protected static LogWindow Instance;
-        protected StringBuilder LogString = new StringBuilder();
-        private DateTime LastWindowUpdate;
-        private DateTime LastTextUpdate;
-
-        public static eLogLevel LogLevel = eLogLevel.Warning;
-
-        public enum eLogLevel
-        {
-            DebugVerbose = 0,
-            Debug = 1,
-            Information = 2,
-            Warning = 3,
-            Error = 4
-        }
+        private DateTime LastWindowUpdate = DateTime.MinValue;
 
         public LogWindow()
         {
             InitializeComponent();
-            Instance = this;
 
             Timer Updatetimer = new Timer();
             Updatetimer.Tick += Updatetimer_Tick;
@@ -49,37 +36,22 @@ namespace TeddyBench
 
         private void Updatetimer_Tick(object sender, EventArgs e)
         {
-            if (LastWindowUpdate < LastTextUpdate)
+            DateTime lastTextUpdate = Logger.LastUpdate;
+
+            if (LastWindowUpdate < lastTextUpdate)
             {
                 if(!Visible)
                 {
                     Show();
                 }
 
-                lock (Instance.LogString)
+                txtLog.Text = Logger.GetText();
+                if (txtLog.Text.Length > 0)
                 {
-                    txtLog.Text = LogString.ToString();
-                    if (txtLog.Text.Length > 0)
-                    {
-                        txtLog.SelectionStart = txtLog.Text.Length - 1;
-                        txtLog.ScrollToCaret();
-                    }
-                    LastWindowUpdate = DateTime.Now;
+                    txtLog.SelectionStart = txtLog.Text.Length - 1;
+                    txtLog.ScrollToCaret();
                 }
-            }
-        }
-
-        public static void Log(eLogLevel level, string message)
-        {
-            if(level < LogLevel)
-            {
-                return;
-            }
-
-            lock (Instance.LogString)
-            {
-                Instance.LogString.AppendLine(message);
-                Instance.LastTextUpdate = DateTime.Now;
+                LastWindowUpdate = lastTextUpdate;
             }
         }
     }

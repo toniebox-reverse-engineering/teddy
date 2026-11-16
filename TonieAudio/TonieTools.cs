@@ -79,6 +79,25 @@ namespace TonieFile
             public string Pic;
         }
 
+        /* Characters invalid in Windows and FAT (SD card) file names. Fixed list instead of
+           Path.GetInvalidFileNameChars(), which on Linux only contains '/' and NUL. */
+        private static readonly char[] PortableInvalidFileNameChars =
+            "\"<>|:*?\\/".ToCharArray().Concat(Enumerable.Range(0, 32).Select(c => (char)c)).ToArray();
+
+        /// <summary>Removes characters that are not allowed in file names on Windows, FAT or Linux.</summary>
+        public static string RemoveInvalidChars(string filename)
+        {
+            return string.Concat(filename.Split(PortableInvalidFileNameChars));
+        }
+
+        /// <summary>Reverses the byte order of a hex UID string, e.g. "E00403500102AB12" &lt;-&gt; "12AB0201500304E0".</summary>
+        public static string ReverseUid(string uid)
+        {
+            List<string> groups = (from Match m in Regex.Matches(uid, @"[A-Fa-f0-9]{2}") select m.Value).ToList();
+            groups.Reverse();
+            return string.Join("", groups.ToArray());
+        }
+
         public static bool DumpInfo(StringBuilder message, eDumpFormat dumpFormat, string file, TonieData[] tonieInfos, string customName = null)
         {
             try

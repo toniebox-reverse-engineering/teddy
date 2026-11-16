@@ -142,7 +142,7 @@ namespace Teddy
 
         public static string RemoveInvalidChars(string filename)
         {
-            return string.Concat(filename.Split(Path.GetInvalidFileNameChars()));
+            return TonieTools.RemoveInvalidChars(filename);
         }
 
         private static string FileChecksum(string filename)
