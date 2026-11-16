@@ -35,8 +35,8 @@ namespace TeddyBench.Core
         }
 
         /// <summary>
-        /// Returns the latest release if its tag differs from <paramref name="thisVersion"/> and its first
-        /// asset is <paramref name="assetName"/> (null: any or no asset, e.g. to just link the release page);
+        /// Returns the latest release if its tag differs from <paramref name="thisVersion"/> and it has an
+        /// asset named <paramref name="assetName"/> (null: no asset needed, e.g. to just link the release page);
         /// null otherwise (also when there is no version to compare).
         /// </summary>
         public async Task<UpdateInfo> CheckAsync(string thisVersion, string assetName = "TeddyBench.zip")
@@ -54,10 +54,15 @@ namespace TeddyBench.Core
                 return null;
             }
 
-            JToken asset = (latestRelease["assets"] as JArray)?.FirstOrDefault();
-            if (assetName != null && (asset == null || (string)asset["name"] != assetName))
+            /* releases carry several files (Windows zip, Linux AppImage/tarball): pick by name */
+            JToken asset = null;
+            if (assetName != null)
             {
-                return null;
+                asset = (latestRelease["assets"] as JArray)?.FirstOrDefault(a => (string)a["name"] == assetName);
+                if (asset == null)
+                {
+                    return null;
+                }
             }
 
             return new UpdateInfo

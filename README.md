@@ -38,6 +38,19 @@ On Linux, TeddyBench keeps its settings, `tonies.json` and `customTonies.json` i
 (default `~/.config/TeddyBench`) and downloaded images in `~/.cache/TeddyBench`. On Windows they stay in the
 current directory as before.
 
+### Install
+
+Download from the [releases](https://github.com/toniebox-reverse-engineering/teddy/releases):
+
+- **`TeddyBench-x86_64.AppImage`**: make it executable (`chmod +x`) and start it. Runs the GUI;
+  `./TeddyBench-x86_64.AppImage cli --help` runs the command line tool.
+- **`TeddyBench-linux-x64.tar.gz`**: unpack and run `./install.sh` (installs for your user into `~/.local`,
+  with menu entry and the commands `teddybench` / `teddy`; `./install.sh --uninstall` removes it).
+
+Both are self-contained (no .NET installation needed) and run on x86_64 distributions with glibc.
+
+### Build
+
 Requirements: [.NET 10 SDK](https://dotnet.microsoft.com/download) (Fedora: `sudo dnf install dotnet-sdk-10.0`).
 
 ```sh
@@ -53,6 +66,9 @@ for p in Teddy/Teddy.csproj TeddyBench.Avalonia/TeddyBench.Avalonia.csproj; do
 done
 
 publish/linux-x64/TeddyBench                   # GUI
+
+# release packages (AppImage + tarball) into artifacts/, as built by CI for v* tags
+packaging/linux/build.sh
 
 publish/linux-x64/Teddy -m encode -o 500304E0 ~/Music/MyAlbum/
 publish/linux-x64/Teddy -m info 500304E0

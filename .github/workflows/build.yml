@@ -3,6 +3,7 @@ name: Build
 on:
   push:
     branches: [ "*" ]
+    tags: [ "v*" ]
   pull_request:
     branches: [ "master" ]
 
@@ -73,25 +74,45 @@ jobs:
     - name: Test
       run: dotnet test Teddy.Linux.slnf -c Release --no-build
 
-    - name: Publish Teddy CLI (self-contained, single file)
-      run: >
-        dotnet publish Teddy/Teddy.csproj -c Release -r linux-x64 --self-contained
-        -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true
-        -p:EnableCompressionInSingleFile=true -p:DebugType=none -o publish/linux-x64
+    # AppImage (GUI + "cli" mode) and tarball with a per-user installer, see packaging/linux
+    - name: Build Linux packages
+      run: packaging/linux/build.sh
 
-    - name: Smoke test published binary
-      run: publish/linux-x64/Teddy --help
-
-    - name: Publish TeddyBench GUI (Avalonia, self-contained, single file)
-      run: >
-        dotnet publish TeddyBench.Avalonia/TeddyBench.Avalonia.csproj -c Release -r linux-x64 --self-contained
-        -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true
-        -p:EnableCompressionInSingleFile=true -p:DebugType=none -o publish/linux-x64
+    - name: Smoke test packages
+      run: |
+        artifacts/work/lib/Teddy --help
+        APPIMAGE_EXTRACT_AND_RUN=1 artifacts/TeddyBench-x86_64.AppImage cli --help
+        tar -tzf artifacts/TeddyBench-linux-x64.tar.gz teddybench-linux-x64/install.sh
 
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: Teddy-linux-x64
+        name: TeddyBench-linux-x64
         path: |
-          publish/linux-x64/Teddy
-          publish/linux-x64/TeddyBench
+          artifacts/TeddyBench-x86_64.AppImage
+          artifacts/TeddyBench-linux-x64.tar.gz
+
+  release:
+    # attach the Linux packages to the GitHub release of a pushed v* tag
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: linux
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+    - name: Download Linux packages
+      uses: actions/download-artifact@v4
+      with:
+        name: TeddyBench-linux-x64
+        path: artifacts
+
+    - name: Create or update release
+      env:
+        GH_TOKEN: ${{ github.token }}
+        GH_REPO: ${{ github.repository }}
+      run: |
+        if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+          gh release upload "$GITHUB_REF_NAME" artifacts/* --clobber
+        else
+          gh release create "$GITHUB_REF_NAME" artifacts/* --title "$GITHUB_REF_NAME" --generate-notes
+        fi
