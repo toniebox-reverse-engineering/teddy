@@ -39,9 +39,12 @@ namespace TeddyBench.Core
     /// </summary>
     public static class PlatformServices
     {
-        public static ICardDetector CardDetector { get; set; } = new DriveInfoCardDetector();
+        private static bool IsLinux => RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
+
+        public static ICardDetector CardDetector { get; set; } = IsLinux ? (ICardDetector)new MountCardDetector() : new DriveInfoCardDetector();
         public static IShell Shell { get; set; } = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? (IShell)new WindowsShell() : new XdgShell();
-        public static ILiveFlag LiveFlag { get; set; } = new FileAttributesLiveFlag();
+        /* Windows: FileAttributes.Hidden; Linux: vfat ioctl; macOS: .NET maps Hidden to chflags */
+        public static ILiveFlag LiveFlag { get; set; } = IsLinux ? (ILiveFlag)new FatIoctlLiveFlag() : new FileAttributesLiveFlag();
 
         /// <summary>Creates the audio output used for previewing tonies. Must be set by the GUI (audio output is not portable in NAudio).</summary>
         public static Func<IWavePlayer> AudioOutputFactory { get; set; }
@@ -115,31 +118,82 @@ namespace TeddyBench.Core
         }
     }
 
-    /// <summary>Basic freedesktop integration via xdg-open (macOS: open).</summary>
+    /// <summary>
+    /// freedesktop integration: xdg-open (macOS: open), and the FileManager1 D-Bus interface to show a
+    /// file selected in the file manager (Nautilus, Dolphin, Nemo, Thunar, ...).
+    /// </summary>
     public class XdgShell : IShell
     {
-        private static string Opener => RuntimeInformation.IsOSPlatform(OSPlatform.OSX) ? "open" : "xdg-open";
+        private static bool IsMac => RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
+        private static string Opener => IsMac ? "open" : "xdg-open";
 
         public void OpenUrl(string url)
         {
-            Start(url);
+            Run(Opener, Quote(url));
         }
 
         public void OpenFolder(string path)
         {
-            Start(path);
+            Run(Opener, Quote(path));
         }
 
         public void RevealFile(string file)
         {
-            Start(Path.GetDirectoryName(file));
+            if (IsMac)
+            {
+                Run("open", "-R " + Quote(file));
+                return;
+            }
+
+            /* the D-Bus call may take a moment (file manager start): do not block the caller */
+            System.Threading.Tasks.Task.Run(() =>
+            {
+                if (!ShowItemsViaDBus(file))
+                {
+                    Run(Opener, Quote(Path.GetDirectoryName(file)));
+                }
+            });
         }
 
-        private static void Start(string target)
+        /// <summary>org.freedesktop.FileManager1.ShowItems(["file://..."], "") via dbus-send.</summary>
+        public static bool ShowItemsViaDBus(string file)
         {
-            /* netstandard2.0 has no ArgumentList: quote for the .NET argument parser */
-            string quoted = "\"" + target.Replace("\"", "\\\"") + "\"";
-            Process.Start(new ProcessStartInfo(Opener, quoted) { UseShellExecute = false });
+            try
+            {
+                string uri = new Uri(Path.GetFullPath(file)).AbsoluteUri;
+                var psi = new ProcessStartInfo("dbus-send",
+                    "--session --print-reply --dest=org.freedesktop.FileManager1 --type=method_call " +
+                    "/org/freedesktop/FileManager1 org.freedesktop.FileManager1.ShowItems " +
+                    Quote("array:string:" + uri) + " " + Quote("string:"))
+                {
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true
+                };
+                using (var process = Process.Start(psi))
+                {
+                    if (!process.WaitForExit(5000))
+                    {
+                        return false;
+                    }
+                    return process.ExitCode == 0;
+                }
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
+        private static void Run(string command, string arguments)
+        {
+            Process.Start(new ProcessStartInfo(command, arguments) { UseShellExecute = false });
+        }
+
+        /* netstandard2.0 has no ArgumentList: quote for the .NET argument parser */
+        public static string Quote(string argument)
+        {
+            return "\"" + argument.Replace("\"", "\\\"") + "\"";
         }
     }
 }

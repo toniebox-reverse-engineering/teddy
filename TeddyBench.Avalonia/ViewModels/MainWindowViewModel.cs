@@ -576,6 +576,15 @@ namespace TeddyBench.Avalonia.ViewModels
                 text += " | " + reader.HardwareType + " (FW: " + (reader.UnlockSupported ? "SLIX-L enabled" : "stock") + voltageString + ") found at " + reader.CurrentPort + ". The UID of the tag will be automatically used where applicable.";
             }
 
+            if (Settings.NfcEnabled && (reader == null || !reader.Connected))
+            {
+                string[] denied = SerialPorts.PermissionDenied;
+                if (denied.Length > 0)
+                {
+                    text += " | No permission to open " + string.Join(", ", denied) + " - add your user to the 'dialout' group and log in again";
+                }
+            }
+
             int tonieCount = Services.Database.Count;
             if (tonieCount == 0)
             {

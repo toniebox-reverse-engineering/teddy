@@ -1,0 +1,17 @@
+# udev rules for the NFC readers used with TeddyBench on Linux.
+#
+# Install:  sudo cp 77-teddybench-readers.rules /etc/udev/rules.d/
+#           sudo udevadm control --reload-rules && sudo udevadm trigger
+#
+# - ModemManager probes new ttyACM devices as modems, which disturbs the Proxmark3
+#   (same device IDs as the Proxmark3 project's own rules).
+# - The device nodes are made accessible to the "dialout" group; add your user to it:
+#   sudo usermod -aG dialout $USER   (then log out and in again)
+
+# Proxmark3 (iceman firmware: RDV4, Easy, ...)
+ACTION=="add|change", SUBSYSTEM=="tty", ATTRS{idVendor}=="9ac4", ATTRS{idProduct}=="4b8f", ENV{ID_MM_DEVICE_IGNORE}="1", MODE="0660", GROUP="dialout"
+ACTION=="add|change", SUBSYSTEM=="usb", ATTRS{idVendor}=="9ac4", ATTRS{idProduct}=="4b8f", ENV{ID_MM_DEVICE_IGNORE}="1"
+
+# Proxmark3 (older firmware)
+ACTION=="add|change", SUBSYSTEM=="tty", ATTRS{idVendor}=="2d2d", ATTRS{idProduct}=="504d", ENV{ID_MM_DEVICE_IGNORE}="1", MODE="0660", GROUP="dialout"
+ACTION=="add|change", SUBSYSTEM=="usb", ATTRS{idVendor}=="2d2d", ATTRS{idProduct}=="504d", ENV{ID_MM_DEVICE_IGNORE}="1"

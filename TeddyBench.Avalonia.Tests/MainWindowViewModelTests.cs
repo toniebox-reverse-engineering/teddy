@@ -355,6 +355,42 @@ namespace TeddyBench.Avalonia.Tests
         }
 
         [Fact]
+        public void StatusBar_ExplainsMissingSerialPermission()
+        {
+            if (OperatingSystem.IsWindows())
+            {
+                return;
+            }
+            var list = SerialPorts.ListPorts;
+            var probe = SerialPorts.Probe;
+            try
+            {
+                SerialPorts.ListPorts = () => new[] { "/dev/ttyACM0" };
+                SerialPorts.Probe = port => throw new UnauthorizedAccessException();
+                SerialPorts.GetAvailablePorts();
+
+                var reader = new FakeReader();
+                using (var h = new Harness(reader: type => reader))
+                {
+                    h.Vm.UpdateStatusBar();
+                    Assert.DoesNotContain("dialout", h.Vm.StatusText);   /* reader detection is off */
+
+                    h.Vm.NfcAutodetect = true;
+                    h.Vm.UpdateStatusBar();
+                    Assert.Contains("No permission to open /dev/ttyACM0 - add your user to the 'dialout' group", h.Vm.StatusText);
+                }
+            }
+            finally
+            {
+                /* reset the remembered state without touching real serial devices */
+                SerialPorts.ListPorts = () => new string[0];
+                SerialPorts.GetAvailablePorts();
+                SerialPorts.ListPorts = list;
+                SerialPorts.Probe = probe;
+            }
+        }
+
+        [Fact]
         public void Reader_SelectsTagsTonieAndDeselectsWhenRemoved()
         {
             var reader = new FakeReader();

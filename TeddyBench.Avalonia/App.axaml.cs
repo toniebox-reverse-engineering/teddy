@@ -22,11 +22,10 @@ namespace TeddyBench.Avalonia
         {
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             {
-                if (OperatingSystem.IsWindows())
-                {
-                    /* Linux/macOS audio output follows in phase 4 */
-                    PlatformServices.AudioOutputFactory = () => new WaveOutEvent();
-                }
+                /* NAudio's output is Windows only; elsewhere PCM is piped to pw-play/paplay/aplay */
+                PlatformServices.AudioOutputFactory = OperatingSystem.IsWindows()
+                    ? () => new WaveOutEvent()
+                    : PipeAudioOutput.TryCreateFactory();
 
                 var window = new MainWindow();
                 var vm = new MainWindowViewModel(new DialogService(window), new AvaloniaUiDispatcher(), new CoverImages(),
