@@ -35,7 +35,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net;
+using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -56,11 +56,11 @@ namespace Teddy
             {
                 if (path.StartsWith("http"))
                 {
-                    HttpWebRequest request = (HttpWebRequest)WebRequest.Create(path);
-                    HttpWebResponse response = (HttpWebResponse)request.GetResponse();
-                    TextReader reader = new StreamReader(response.GetResponseStream());
-
-                    TonieInfos = JsonConvert.DeserializeObject<TonieTools.TonieData[]>(reader.ReadToEnd());
+                    using (var client = new HttpClient())
+                    {
+                        string json = client.GetStringAsync(path).GetAwaiter().GetResult();
+                        TonieInfos = JsonConvert.DeserializeObject<TonieTools.TonieData[]>(json);
+                    }
                 }
                 else if (File.Exists(path))
                 {
@@ -199,9 +199,9 @@ namespace Teddy
             }
             catch (OptionException e)
             {
-                Console.Write("Teddy.exe: ");
+                Console.Write("Teddy: ");
                 Console.WriteLine(e.Message);
-                Console.WriteLine("Try `Teddy.exe --help' for more information.");
+                Console.WriteLine("Try `Teddy --help' for more information.");
                 return;
             }
 
@@ -832,10 +832,10 @@ limitations under the License.
             Console.WriteLine("                         (build " + GetVersion() + ")");
             Console.WriteLine("");
             Console.WriteLine("Start with:");
-            Console.WriteLine("  Teddy.exe -m decode [options] <toniefile>          - Dump tonie file content");
-            Console.WriteLine("  Teddy.exe -m info [options] <toniefile>            - Show header details");
-            Console.WriteLine("  Teddy.exe -m encode [options] <folder>             - Create a tonie file from all MP3 in this folder");
-            Console.WriteLine("  Teddy.exe -m encode [options] <file1> <file2> ...  - Create a tonie file from specified MP3 files");
+            Console.WriteLine("  Teddy -m decode [options] <toniefile>          - Dump tonie file content");
+            Console.WriteLine("  Teddy -m info [options] <toniefile>            - Show header details");
+            Console.WriteLine("  Teddy -m encode [options] <folder>             - Create a tonie file from all MP3 in this folder");
+            Console.WriteLine("  Teddy -m encode [options] <file1> <file2> ...  - Create a tonie file from specified MP3 files");
             Console.WriteLine("");
             Console.WriteLine("Options:");
             p.WriteOptionDescriptions(Console.Out);

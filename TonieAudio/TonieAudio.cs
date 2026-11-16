@@ -313,15 +313,45 @@ namespace TonieFile
             return audio;
         }
 
+        /// <summary>
+        /// Strips surrounding quotes and trailing directory separators.
+        /// Only trailing separators are removed: on Linux a leading '/' is the filesystem root.
+        /// </summary>
+        internal static string NormalizeSourcePath(string source)
+        {
+            string item = source.Trim('"');
+            string trimmed = item.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+
+            /* keep "/" or "C:\" intact */
+            if (trimmed.Length == 0 || trimmed.EndsWith(Path.VolumeSeparatorChar.ToString()))
+            {
+                return item;
+            }
+            return trimmed;
+        }
+
+        /// <summary>
+        /// Lists *.mp3 and *.ogg files in a directory, matching the extension case-insensitively
+        /// (Directory.GetFiles patterns are case-sensitive on Linux, so "*.mp3" would miss "TRACK.MP3").
+        /// </summary>
+        internal static IEnumerable<string> GetAudioFiles(string directory)
+        {
+            return Directory.EnumerateFiles(directory).Where(f =>
+            {
+                string ext = Path.GetExtension(f);
+                return ext.Equals(".mp3", StringComparison.OrdinalIgnoreCase) || ext.Equals(".ogg", StringComparison.OrdinalIgnoreCase);
+            });
+        }
+
         private void BuildFileList(string[] sources)
         {
             foreach (var source in sources)
             {
-                string item = source.Trim('"').Trim(Path.DirectorySeparatorChar);
+                string item = NormalizeSourcePath(source);
 
                 if (Directory.Exists(item))
                 {
-                    var filesInDir = Directory.GetFiles(item, "*.mp3").Concat(Directory.GetFiles(item, "*.ogg")).OrderBy(n => n).ToArray();
+                    var filesInDir = GetAudioFiles(item).OrderBy(n => n).ToArray();
                     string[] sourceFiles = filesInDir;
                     bool failed = false;
 
@@ -435,8 +465,6 @@ namespace TonieFile
             int samplingRate = 48000;
             List<uint> chapters = new List<uint>();
 
-            var outFormat = new WaveFormat(samplingRate, 2);
-
             if(cbr == null)
             {
                 cbr = new EncodeCallback();
@@ -501,35 +529,37 @@ namespace TonieFile
 
                             try
                             {
-                                var prefixStream = new Mp3FileReader(prefixFile);
-                                var prefixResampled = new MediaFoundationResampler(prefixStream, outFormat);
-
-                                while (true)
+                                using (var prefixStream = AudioInput.OpenMp3(prefixFile))
                                 {
-                                    bytesReturned = prefixResampled.Read(buffer, 0, buffer.Length);
+                                    var prefixResampled = AudioInput.ToPcm16(prefixStream, samplingRate, channels);
 
-                                    if (bytesReturned <= 0)
+                                    while (true)
                                     {
-                                        break;
-                                    }
+                                        bytesReturned = prefixResampled.Read(buffer, 0, buffer.Length);
 
-                                    bool isEmpty = (buffer.Where(v => v != 0).Count() == 0);
-                                    if (!isEmpty)
-                                    {
-                                        float[] sampleBuffer = ConvertToFloat(buffer, bytesReturned, channels);
-
-                                        if ((outputData.Length + 0x1000 + sampleBuffer.Length) >= maxSize)
+                                        if (bytesReturned <= 0)
                                         {
                                             break;
                                         }
-                                        oggOut.WriteSamples(sampleBuffer, 0, sampleBuffer.Length);
+
+                                        bool isEmpty = (buffer.Where(v => v != 0).Count() == 0);
+                                        if (!isEmpty)
+                                        {
+                                            float[] sampleBuffer = ConvertToFloat(buffer, bytesReturned, channels);
+
+                                            if ((outputData.Length + 0x1000 + sampleBuffer.Length) >= maxSize)
+                                            {
+                                                break;
+                                            }
+                                            oggOut.WriteSamples(sampleBuffer, 0, sampleBuffer.Length);
+                                        }
+                                        lastIndex = (uint)oggOut.PageCounter;
                                     }
-                                    lastIndex = (uint)oggOut.PageCounter;
                                 }
                             }
                             catch (Exception ex)
                             {
-                                throw new Exception("Failed processing prefix file '" + prefixFile + "'");
+                                throw new Exception("Failed processing prefix file '" + prefixFile + "'", ex);
                             }
                         }
 
@@ -540,11 +570,12 @@ namespace TonieFile
                         switch (type)
                         {
                             case "mp3":
-                                stream = new Mp3FileReader(sourceFile);
+                                stream = AudioInput.OpenMp3(sourceFile);
                                 break;
 
                             case "ogg":
-                                stream = new OpusWaveStream(File.Open(sourceFile, FileMode.Open, FileAccess.Read, FileShare.ReadWrite), bitRate, channels);
+                                /* Opus decoders only accept 8/12/16/24/48 kHz - decode at the output rate (was wrongly passed the bit rate) */
+                                stream = new OpusWaveStream(File.Open(sourceFile, FileMode.Open, FileAccess.Read, FileShare.ReadWrite), samplingRate, channels);
                                 break;
                         }
 
@@ -554,7 +585,7 @@ namespace TonieFile
                             continue;
                         }
 
-                        var streamResampled = new MediaFoundationResampler(stream, outFormat);
+                        var streamResampled = AudioInput.ToPcm16(stream, samplingRate, channels);
 
                         while (true)
                         {
