@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=TeddyBench
+GenericName=Tonie file tool
+Comment=Manage the content of your Toniebox SD card and create custom tonies
+Exec=TeddyBench
+Icon=io.github.toniebox_reverse_engineering.TeddyBench
+Terminal=false
+Categories=AudioVideo;Audio;
+Keywords=Toniebox;Tonie;SD card;Proxmark3;NFC;
+StartupWMClass=TeddyBench

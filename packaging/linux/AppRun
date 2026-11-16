@@ -1,0 +1,10 @@
+#!/bin/sh
+# AppImage entry point.
+#   TeddyBench-x86_64.AppImage              start the GUI
+#   TeddyBench-x86_64.AppImage cli [args]   run the command line tool (Teddy)
+HERE="$(dirname "$(readlink -f "$0")")"
+if [ "$1" = "cli" ]; then
+    shift
+    exec "$HERE/usr/lib/teddybench/Teddy" "$@"
+fi
+exec "$HERE/usr/lib/teddybench/TeddyBench" "$@"

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>io.github.toniebox_reverse_engineering.TeddyBench</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <name>TeddyBench</name>
+  <summary>Manage Toniebox SD cards and create custom tonies</summary>
+  <developer id="io.github.toniebox_reverse_engineering">
+    <name>Team RevvoX</name>
+  </developer>
+  <description>
+    <p>
+      TeddyBench shows the tonie files on the SD card of your Toniebox, creates custom tonies from
+      MP3 or Ogg files, exports and plays their audio and assigns them to NFC tags.
+    </p>
+    <p>
+      An optional Proxmark3 or PN5180 based NFC reader can read the UID of a tag, which is then used
+      automatically.
+    </p>
+  </description>
+  <launchable type="desktop-id">io.github.toniebox_reverse_engineering.TeddyBench.desktop</launchable>
+  <url type="homepage">https://github.com/toniebox-reverse-engineering/teddy</url>
+  <url type="bugtracker">https://github.com/toniebox-reverse-engineering/teddy/issues</url>
+  <provides>
+    <binary>TeddyBench</binary>
+    <binary>Teddy</binary>
+  </provides>
+  <content_rating type="oars-1.1" />
+</component>

@@ -112,6 +112,12 @@ namespace TeddyBench.Core.Tests
             UpdateInfo page = await linkOnly.CheckAsync("v1.0", null);
             Assert.Equal("https://example.invalid/r3", page.ReleaseUrl);
             Assert.Null(page.AssetUrl);
+
+            /* the wanted asset does not have to be the first one */
+            var several = new UpdateChecker(url => Task.FromResult("{\"tag_name\":\"v4\",\"name\":\"R4\",\"assets\":[" +
+                "{\"name\":\"TeddyBench-x86_64.AppImage\",\"browser_download_url\":\"https://example.invalid/a\"}," +
+                "{\"name\":\"TeddyBench.zip\",\"browser_download_url\":\"https://example.invalid/z\"}]}"));
+            Assert.Equal("https://example.invalid/z", (await several.CheckAsync("v1.0")).AssetUrl);
         }
 
         [Fact]
