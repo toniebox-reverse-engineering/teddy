@@ -1001,24 +1001,8 @@ namespace TeddyBench.Core
 
         public bool Detect()
         {
-            string[] ports = SerialPort.GetPortNames();
-            List<string> reallyAvailablePorts = new List<string>();
-
-            /* SerialPort.GetPortNames() also returns stale ports from registry. do a check if they are really available. */
-            foreach (string listedPort in ports)
-            {
-                try
-                {
-                    SerialPort p = new SerialPort(listedPort, 115200);
-
-                    p.Open();
-                    p.Close();
-                    reallyAvailablePorts.Add(listedPort);
-                }
-                catch (Exception e0)
-                {
-                }
-            }
+            /* only usable ports; also notes ports we lack permission for (Linux: dialout group) */
+            List<string> reallyAvailablePorts = SerialPorts.GetAvailablePorts();
 
             /* update seen list */
             foreach (string newPort in reallyAvailablePorts)

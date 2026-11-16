@@ -8,9 +8,20 @@ The command line tool `Teddy` (encode / decode / info) and the cross-platform GU
 (Avalonia, project `TeddyBench.Avalonia`) run natively on Linux. The original WinForms GUI
 (`TeddyBench`, Windows only) is still built on Windows until the Avalonia version replaces it.
 
-Not yet available on Linux (follows with the Linux platform integration): automatic detection of the
-inserted SD card (use *File / Open Directory* on the card's `CONTENT` folder), audio preview, and the
-"live" flag. Proxmark3/PN5180 readers need access to the serial port (`sudo usermod -aG dialout $USER`).
+Linux integration of the GUI:
+
+- **SD card**: an inserted card is opened automatically once the desktop has mounted it (any FAT/exFAT
+  mount with a `CONTENT` folder, usually below `/run/media/$USER`). *File / Open Directory* works too.
+- **Live flag**: set via the FAT hidden attribute (vfat ioctl), so it only works on the mounted card itself.
+- **Audio preview**: played through `pw-play` (PipeWire), `paplay` (PulseAudio) or `aplay` (ALSA),
+  whichever is installed.
+- **Show in file manager**: uses the freedesktop `FileManager1` D-Bus interface (Nautilus, Dolphin, Nemo,
+  Thunar, ...), otherwise opens the folder with `xdg-open`.
+- **NFC readers (Proxmark3, PN5180/ESP32)**: only USB serial ports (`/dev/ttyACM*`, `/dev/ttyUSB*`) are probed.
+  Your user needs access to them: `sudo usermod -aG dialout $USER`, then log out and in again (the status bar
+  tells you when access is missing). To stop ModemManager from grabbing the Proxmark3, install
+  [`packaging/linux/77-teddybench-readers.rules`](packaging/linux/77-teddybench-readers.rules)
+  (instructions inside).
 
 ### Project layout
 
