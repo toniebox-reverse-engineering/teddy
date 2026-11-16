@@ -16,6 +16,8 @@ namespace TeddyBench.Core
         public string ReleaseName;
         public string AssetName;
         public string AssetUrl;
+        /// <summary>The release page on GitHub.</summary>
+        public string ReleaseUrl;
     }
 
     /// <summary>Checks GitHub for a newer TeddyBench release.</summary>
@@ -34,7 +36,8 @@ namespace TeddyBench.Core
 
         /// <summary>
         /// Returns the latest release if its tag differs from <paramref name="thisVersion"/> and its first
-        /// asset is <paramref name="assetName"/>; null otherwise (also when there is no version to compare).
+        /// asset is <paramref name="assetName"/> (null: any or no asset, e.g. to just link the release page);
+        /// null otherwise (also when there is no version to compare).
         /// </summary>
         public async Task<UpdateInfo> CheckAsync(string thisVersion, string assetName = "TeddyBench.zip")
         {
@@ -52,7 +55,7 @@ namespace TeddyBench.Core
             }
 
             JToken asset = (latestRelease["assets"] as JArray)?.FirstOrDefault();
-            if (asset == null || (string)asset["name"] != assetName)
+            if (assetName != null && (asset == null || (string)asset["name"] != assetName))
             {
                 return null;
             }
@@ -61,8 +64,9 @@ namespace TeddyBench.Core
             {
                 LatestVersion = latestVersion,
                 ReleaseName = (string)latestRelease["name"],
-                AssetName = (string)asset["name"],
-                AssetUrl = (string)asset["browser_download_url"]
+                AssetName = (string)asset?["name"],
+                AssetUrl = (string)asset?["browser_download_url"],
+                ReleaseUrl = (string)latestRelease["html_url"]
             };
         }
 

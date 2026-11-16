@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
+    <PackageReference Include="xunit" Version="2.9.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
+    <PackageReference Include="Avalonia.Headless.XUnit" Version="11.3.22" />
+    <PackageReference Include="Avalonia.Skia" Version="11.3.22" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\TeddyBench.Avalonia\TeddyBench.Avalonia.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- reuse the generated audio fixtures of TonieAudio.Tests -->
+    <None Include="..\TonieAudio.Tests\Fixtures\album\**\*" LinkBase="Fixtures\album" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

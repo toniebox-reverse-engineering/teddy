@@ -1,0 +1,19 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="TeddyBench.Avalonia.App"
+             Name="TeddyBench"
+             RequestedThemeVariant="Default">
+  <Application.Styles>
+    <FluentTheme />
+    <Style Selector="TextBlock.hint">
+      <Setter Property="FontSize" Value="12" />
+      <Setter Property="Opacity" Value="0.75" />
+    </Style>
+    <Style Selector="TextBlock.valid">
+      <Setter Property="Foreground" Value="#2E7D32" />
+    </Style>
+    <Style Selector="TextBlock.invalid">
+      <Setter Property="Foreground" Value="#C62828" />
+    </Style>
+  </Application.Styles>
+</Application>

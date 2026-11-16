@@ -106,6 +106,12 @@ namespace TeddyBench.Core.Tests
             Assert.Null(await checker.CheckAsync("v2.0"));
             Assert.Null(await checker.CheckAsync(""));
             Assert.Null(await checker.CheckAsync("v1.0", "TeddyBench-linux-x64.tar.gz"));
+
+            /* without asset filter (Linux: no installable asset yet) the release page is offered */
+            var linkOnly = new UpdateChecker(url => Task.FromResult("{\"tag_name\":\"v3\",\"name\":\"R3\",\"html_url\":\"https://example.invalid/r3\",\"assets\":[]}"));
+            UpdateInfo page = await linkOnly.CheckAsync("v1.0", null);
+            Assert.Equal("https://example.invalid/r3", page.ReleaseUrl);
+            Assert.Null(page.AssetUrl);
         }
 
         [Fact]

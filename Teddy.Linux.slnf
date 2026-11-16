@@ -9,7 +9,9 @@
       "TonieAudio.Tests\\TonieAudio.Tests.csproj",
       "Teddy\\Teddy.csproj",
       "TeddyBench.Core\\TeddyBench.Core.csproj",
-      "TeddyBench.Core.Tests\\TeddyBench.Core.Tests.csproj"
+      "TeddyBench.Core.Tests\\TeddyBench.Core.Tests.csproj",
+      "TeddyBench.Avalonia\\TeddyBench.Avalonia.csproj",
+      "TeddyBench.Avalonia.Tests\\TeddyBench.Avalonia.Tests.csproj"
     ]
   }
 }
