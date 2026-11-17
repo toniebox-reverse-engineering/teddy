@@ -17,6 +17,8 @@ using Xunit;
 namespace TeddyBench.Avalonia.Tests
 {
     /// <summary>The real windows, rendered headless with Skia.</summary>
+    /* both classes change the static AppPaths: never run them in parallel */
+    [Collection("AppPaths")]
     public class UiTests
     {
         private const string Uid1 = "E00403500102AB12";

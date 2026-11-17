@@ -120,6 +120,37 @@ namespace TeddyBench.Core.Tests
             Assert.Equal("https://example.invalid/z", (await several.CheckAsync("v1.0")).AssetUrl);
         }
 
+        [Theory]
+        [InlineData("v2.0.1", "v2.0.0", true)]
+        [InlineData("v2.1.0", "v2.0.9", true)]
+        [InlineData("v10.0.0", "v9.9.9", true)]
+        [InlineData("v2.0.0", "v2.0.0", false)]
+        [InlineData("v1.7.0", "v2.0.0", false)]   /* upstream behind the fork: no downgrade offer */
+        [InlineData("v2.0.0", "v2.0.0-rc.1", true)]
+        [InlineData("v2.0.0-rc.1", "v2.0.0", false)]
+        [InlineData("v2.0.0-rc.2", "v2.0.0-rc.1", true)]
+        [InlineData("2.0", "v1.9.9", true)]
+        [InlineData("nightly", "v2.0.0", true)]   /* not a version: old "differs" rule */
+        [InlineData("v2.0.0", "", true)]
+        [InlineData("", "v2.0.0", false)]
+        public void UpdateChecker_IsNewer(string latest, string current, bool expected)
+        {
+            Assert.Equal(expected, UpdateChecker.IsNewer(latest, current));
+        }
+
+        [Fact]
+        public async Task UpdateChecker_UsesConfiguredRepositoryAndNeverOffersOlderReleases()
+        {
+            string requested = null;
+            var fork = new UpdateChecker(url => { requested = url; return Task.FromResult(Release("v1.7.0", "TeddyBench.zip")); }, "leubedane/teddy-linux");
+
+            Assert.Equal("leubedane/teddy-linux", fork.Repository);
+            Assert.Null(await fork.CheckAsync("v2.0.0"));
+            Assert.Equal("https://api.github.com/repos/leubedane/teddy-linux/releases/latest", requested);
+
+            Assert.Equal(UpdateChecker.DefaultRepository, new UpdateChecker(null, "  ").Repository);
+        }
+
         [Fact]
         public void ImageCache_DownloadsOnceThenServesFromDisk()
         {

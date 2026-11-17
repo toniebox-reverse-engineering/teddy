@@ -1,5 +1,6 @@
 using Avalonia;
 using System;
+using System.Linq;
 
 namespace TeddyBench.Avalonia
 {
@@ -34,5 +35,10 @@ namespace TeddyBench.Avalonia
 
         /// <summary>Last git tag, compared with the latest GitHub release.</summary>
         public static string BaseTag => ThisAssembly.Git.BaseTag;
+
+        /// <summary>GitHub "owner/name" checked for updates (MSBuild property TeddyUpdateRepository).</summary>
+        public static string UpdateRepository => System.Reflection.CustomAttributeExtensions
+            .GetCustomAttributes<System.Reflection.AssemblyMetadataAttribute>(typeof(AppVersion).Assembly)
+            .FirstOrDefault(a => a.Key == "UpdateRepository")?.Value;
     }
 }

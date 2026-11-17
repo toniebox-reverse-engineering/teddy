@@ -6,6 +6,7 @@
 # Needs: .NET 10 SDK, curl, sha256sum, tar. appimagetool and the AppImage runtime are downloaded
 # (pinned versions, checked by SHA-256) into $TEDDY_TOOLS_CACHE (default ~/.cache/teddybench-build).
 # Set SKIP_APPIMAGE=1 to build only the tarball.
+# TEDDY_UPDATE_REPOSITORY=owner/name makes the GUI check that repository's releases (default: upstream).
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
@@ -41,7 +42,8 @@ mkdir -p "$WORK" "$OUT"
 # 1. Both programs, self-contained, into one folder (they share the .NET runtime files)
 LIB="$WORK/lib"
 for project in Teddy/Teddy.csproj TeddyBench.Avalonia/TeddyBench.Avalonia.csproj; do
-    dotnet publish "$ROOT/$project" -c Release -r "$RID" --self-contained -p:DebugType=none -o "$LIB" --nologo -v quiet
+    dotnet publish "$ROOT/$project" -c Release -r "$RID" --self-contained -p:DebugType=none \
+        -p:TeddyUpdateRepository="${TEDDY_UPDATE_REPOSITORY:-}" -o "$LIB" --nologo -v quiet
 done
 test -x "$LIB/Teddy" && test -x "$LIB/TeddyBench"
 

@@ -23,19 +23,24 @@ namespace TeddyBench.Core
     /// <summary>Checks GitHub for a newer TeddyBench release.</summary>
     public class UpdateChecker
     {
-        public const string Owner = "toniebox-reverse-engineering";
-        public const string Repository = "teddy";
+        /// <summary>GitHub repository ("owner/name") whose releases are checked unless the build says otherwise.</summary>
+        public const string DefaultRepository = "toniebox-reverse-engineering/teddy";
 
         private readonly Func<string, Task<string>> Get;
 
+        /// <summary>The GitHub repository ("owner/name") whose releases are checked.</summary>
+        public string Repository { get; }
+
         /// <param name="get">url -> response body. Defaults to an HTTP GET with a TeddyBench user agent.</param>
-        public UpdateChecker(Func<string, Task<string>> get = null)
+        /// <param name="repository">"owner/name"; null or empty: <see cref="DefaultRepository"/> (e.g. a fork's build checks the fork).</param>
+        public UpdateChecker(Func<string, Task<string>> get = null, string repository = null)
         {
             Get = get ?? HttpGet;
+            Repository = string.IsNullOrWhiteSpace(repository) ? DefaultRepository : repository.Trim();
         }
 
         /// <summary>
-        /// Returns the latest release if its tag differs from <paramref name="thisVersion"/> and it has an
+        /// Returns the latest release if its tag is newer than <paramref name="thisVersion"/> and it has an
         /// asset named <paramref name="assetName"/> (null: no asset needed, e.g. to just link the release page);
         /// null otherwise (also when there is no version to compare).
         /// </summary>
@@ -46,10 +51,10 @@ namespace TeddyBench.Core
                 return null;
             }
 
-            JObject latestRelease = JObject.Parse(await Get($"https://api.github.com/repos/{Owner}/{Repository}/releases/latest").ConfigureAwait(false));
+            JObject latestRelease = JObject.Parse(await Get($"https://api.github.com/repos/{Repository}/releases/latest").ConfigureAwait(false));
             string latestVersion = (string)latestRelease["tag_name"];
 
-            if (latestVersion == thisVersion)
+            if (!IsNewer(latestVersion, thisVersion))
             {
                 return null;
             }
@@ -73,6 +78,58 @@ namespace TeddyBench.Core
                 AssetUrl = (string)asset?["browser_download_url"],
                 ReleaseUrl = (string)latestRelease["html_url"]
             };
+        }
+
+        /// <summary>
+        /// Whether release tag <paramref name="latest"/> is newer than <paramref name="current"/>, both like
+        /// "v2.0.1" or "v2.1.0-rc.1" (a final release is newer than its pre-releases). Tags that are not
+        /// versions are compared for inequality, as before (e.g. builds from untagged sources).
+        /// </summary>
+        public static bool IsNewer(string latest, string current)
+        {
+            if (string.IsNullOrEmpty(latest))
+            {
+                return false;
+            }
+            if (!TryParseTag(latest, out Version latestVersion, out string latestLabel) ||
+                !TryParseTag(current, out Version currentVersion, out string currentLabel))
+            {
+                return latest != current;
+            }
+
+            int compare = latestVersion.CompareTo(currentVersion);
+            if (compare != 0)
+            {
+                return compare > 0;
+            }
+            if (latestLabel == null || currentLabel == null)
+            {
+                return latestLabel == null && currentLabel != null;
+            }
+            return string.CompareOrdinal(latestLabel, currentLabel) > 0;
+        }
+
+        private static bool TryParseTag(string tag, out Version version, out string label)
+        {
+            version = null;
+            label = null;
+            if (string.IsNullOrEmpty(tag))
+            {
+                return false;
+            }
+
+            string text = tag.TrimStart('v', 'V');
+            int dash = text.IndexOf('-');
+            if (dash >= 0)
+            {
+                label = text.Substring(dash + 1);
+                text = text.Substring(0, dash);
+            }
+            if (text.IndexOf('.') < 0)
+            {
+                text += ".0";
+            }
+            return Version.TryParse(text, out version);
         }
 
         public static async Task DownloadAsync(string url, string destinationFileName)

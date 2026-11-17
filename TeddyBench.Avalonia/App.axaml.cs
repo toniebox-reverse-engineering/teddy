@@ -29,7 +29,7 @@ namespace TeddyBench.Avalonia
 
                 var window = new MainWindow();
                 var vm = new MainWindowViewModel(new DialogService(window), new AvaloniaUiDispatcher(), new CoverImages(),
-                    MainWindowServices.CreateDefault(AppVersion.Display, AppVersion.BaseTag));
+                    MainWindowServices.CreateDefault(AppVersion.Display, AppVersion.BaseTag, AppVersion.UpdateRepository));
 
                 SafeThread.UnhandledException += vm.ReportException;
                 Dispatcher.UIThread.UnhandledException += (s, e) =>
