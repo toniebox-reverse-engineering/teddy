@@ -2,10 +2,11 @@
 <component type="desktop-application">
   <id>io.github.toniebox_reverse_engineering.TeddyBench</id>
   <metadata_license>CC0-1.0</metadata_license>
+  <project_license>BSD-3-Clause AND MS-PL AND Apache-2.0</project_license>
   <name>TeddyBench</name>
   <summary>Manage Toniebox SD cards and create custom tonies</summary>
-  <developer id="io.github.toniebox_reverse_engineering">
-    <name>Team RevvoX</name>
+  <developer id="io.github.leubedane">
+    <name>Dane Leube, based on TeddyBench by Team RevvoX</name>
   </developer>
   <description>
     <p>
@@ -18,8 +19,8 @@
     </p>
   </description>
   <launchable type="desktop-id">io.github.toniebox_reverse_engineering.TeddyBench.desktop</launchable>
-  <url type="homepage">https://github.com/toniebox-reverse-engineering/teddy</url>
-  <url type="bugtracker">https://github.com/toniebox-reverse-engineering/teddy/issues</url>
+  <url type="homepage">https://github.com/leubedane/teddy-linux</url>
+  <url type="bugtracker">https://github.com/leubedane/teddy-linux/issues</url>
   <provides>
     <binary>TeddyBench</binary>
     <binary>Teddy</binary>

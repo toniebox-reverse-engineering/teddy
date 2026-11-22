@@ -47,7 +47,16 @@ Download from the [releases](../../releases) of this repository:
 - **`TeddyBench-linux-x64.tar.gz`**: unpack and run `./install.sh` (installs for your user into `~/.local`,
   with menu entry and the commands `teddybench` / `teddy`; `./install.sh --uninstall` removes it).
 
-Both are self-contained (no .NET installation needed) and run on x86_64 distributions with glibc.
+- **`TeddyBench-x86_64.flatpak`**: `flatpak install --user TeddyBench-x86_64.flatpak` (fetches the
+  `org.freedesktop.Platform` 25.08 runtime from Flathub if needed), then start it from the menu or with
+  `flatpak run io.github.toniebox_reverse_engineering.TeddyBench`. The command line tool:
+  `flatpak run --command=Teddy io.github.toniebox_reverse_engineering.TeddyBench --help`.
+  The sandbox may access your home folder, removable media (`/run/media`, `/media`), the network, audio
+  and devices (NFC readers). Settings live in `~/.var/app/io.github.toniebox_reverse_engineering.TeddyBench/config/TeddyBench`,
+  not `~/.config/TeddyBench`. For Proxmark3/PN5180 access the udev rules from the tarball
+  (`77-teddybench-readers.rules`) still have to be installed on the host.
+
+All of them are self-contained (no .NET installation needed) and run on x86_64 distributions with glibc.
 
 ### Build
 
@@ -67,7 +76,8 @@ done
 
 publish/linux-x64/TeddyBench                   # GUI
 
-# release packages (AppImage + tarball) into artifacts/, as built by CI for v* tags
+# release packages (AppImage, Flatpak, tarball) into artifacts/, as built by CI for v* tags
+# (Flatpak: needs flatpak + org.freedesktop.Platform//25.08; SKIP_FLATPAK=1 / SKIP_APPIMAGE=1 skip them)
 packaging/linux/build.sh
 
 publish/linux-x64/Teddy -m encode -o 500304E0 ~/Music/MyAlbum/
@@ -78,3 +88,9 @@ publish/linux-x64/Teddy -m decode -o dump/ 500304E0
 MP3 decoding uses the managed [NLayer](https://github.com/naudio/NLayer) decoder and NAudio's WDL resampler
 instead of the Windows ACM / Media Foundation codecs, so generated files are not byte-identical to
 ones produced by older Windows builds (the audio content is equivalent).
+
+## License
+
+BSD 3-Clause License, see [`LICENSE`](LICENSE). Bundled components keep their own licenses
+(Concentus: BSD-3-Clause, Concentus.Oggfile: Ms-PL, ID3: Apache-2.0, NuGet packages: mostly MIT), see
+[`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).

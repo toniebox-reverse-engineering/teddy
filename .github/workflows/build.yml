@@ -77,7 +77,15 @@ jobs:
     - name: Test
       run: dotnet test Teddy.Linux.slnf -c Release --no-build
 
-    # AppImage (GUI + "cli" mode) and tarball with a per-user installer, see packaging/linux
+    # build.sh only repackages into the Flatpak (no flatpak-builder), it needs flatpak and the runtime
+    - name: Install flatpak and the freedesktop runtime
+      run: |
+        sudo apt-get update -q
+        sudo apt-get install -y -q flatpak
+        flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+        flatpak install --user -y --noninteractive flathub org.freedesktop.Platform//25.08
+
+    # AppImage (GUI + "cli" mode), Flatpak bundle and tarball with a per-user installer, see packaging/linux
     - name: Build Linux packages
       run: packaging/linux/build.sh
       env:
@@ -89,6 +97,9 @@ jobs:
         artifacts/work/lib/Teddy --help
         APPIMAGE_EXTRACT_AND_RUN=1 artifacts/TeddyBench-x86_64.AppImage cli --help
         tar -tzf artifacts/TeddyBench-linux-x64.tar.gz teddybench-linux-x64/install.sh
+        # installing checks the bundle and its runtime reference; running needs user namespaces (not on runners)
+        flatpak install --user -y --noninteractive artifacts/TeddyBench-x86_64.flatpak
+        flatpak info --user io.github.toniebox_reverse_engineering.TeddyBench
 
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
@@ -96,6 +107,7 @@ jobs:
         name: TeddyBench-linux-x64
         path: |
           artifacts/TeddyBench-x86_64.AppImage
+          artifacts/TeddyBench-x86_64.flatpak
           artifacts/TeddyBench-linux-x64.tar.gz
 
   release:
